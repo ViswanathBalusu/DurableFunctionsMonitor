@@ -6,9 +6,10 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Azure.Functions.Worker.Http;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Azure.Core;
+using Azure.Core.Pipeline;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -152,18 +153,17 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             return result;
         }
 
-        // Lists all blobs from Azure Blob Container
-        public static async Task<IEnumerable<IListBlobItem>> ListBlobsAsync(this CloudBlobContainer container, string prefix)
+        // Lists the names of all blobs in an Azure Blob Container that start with the given prefix
+        public static async Task<IEnumerable<string>> ListBlobNamesAsync(this BlobContainerClient container, string prefix)
         {
-            var result = new List<IListBlobItem>();
-            BlobContinuationToken token = null;
-            do
+            var result = new List<string>();
+
+            // AsyncPageable transparently follows continuation tokens
+            await foreach (var blob in container.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix, CancellationToken.None))
             {
-                var nextBatch = await container.ListBlobsSegmentedAsync(prefix, token);
-                result.AddRange(nextBatch.Results);
-                token = nextBatch.ContinuationToken;
+                result.Add(blob.Name);
             }
-            while (token != null);
+
             return result;
         }
 
@@ -203,8 +203,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             return result;
         }
         
-        public static async Task<CloudBlobClient> GetCloudBlobClient(string connStringName)
+        public static BlobServiceClient GetBlobServiceClient(string connStringName)
         {
+            var options = new BlobClientOptions();
+            ApplyCustomUserAgent(options);
+
             string connectionString = Environment.GetEnvironmentVariable(connStringName);
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -217,16 +220,54 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     blobServiceUri = $"https://{accountName}.blob.core.windows.net";
                 }
 
-                var identityBasedToken = await IdentityBasedTokenSource.GetTokenAsync();
-                var credentials = new StorageCredentials(new TokenCredential(identityBasedToken));
-
-                return new CloudBlobClient(new Uri(blobServiceUri), credentials);
+                return new BlobServiceClient(new Uri(blobServiceUri), IdentityBasedTokenSource.GetCredential(), options);
             }
             else
             {
                 // Using classic connection string
-                return CloudStorageAccount.Parse(connectionString).CreateCloudBlobClient();
+                return new BlobServiceClient(connectionString, options);
             }
+        }
+
+        /// <summary>
+        /// Stamps DfMon's identifier onto the User-Agent header of every Storage request made
+        /// through these client options. See CustomUserAgentPolicy for why this is a pipeline
+        /// policy rather than ClientOptions.Diagnostics.ApplicationId.
+        /// </summary>
+        public static void ApplyCustomUserAgent(ClientOptions options)
+        {
+            if (!string.IsNullOrEmpty(TableClient.CustomUserAgent))
+            {
+                options.AddPolicy(new CustomUserAgentPolicy(TableClient.CustomUserAgent), HttpPipelinePosition.PerRetry);
+            }
+        }
+
+        /// <summary>
+        /// The secondary (read-access geo-redundant) endpoint for a Blob service URI, following
+        /// the standard "myaccount-secondary" naming. The legacy SDK exposed this as
+        /// CloudBlobClient.StorageUri.SecondaryUri; Azure.Storage.Blobs does not, so we derive it.
+        /// </summary>
+        public static Uri GetSecondaryBlobServiceUri(Uri primaryUri)
+        {
+            string host = primaryUri.Host;
+
+            // Emulator-style URIs (http://127.0.0.1:10000/devstoreaccount1) put the account in the
+            // path, not the host, and have no secondary endpoint at all.
+            if (System.Net.IPAddress.TryParse(host, out _))
+            {
+                return null;
+            }
+
+            int firstDot = host.IndexOf('.');
+            if (firstDot < 0)
+            {
+                return null;
+            }
+
+            return new UriBuilder(primaryUri)
+            {
+                Host = $"{host.Substring(0, firstDot)}-secondary{host.Substring(firstDot)}"
+            }.Uri;
         }
 
         // Shared JSON serialization settings

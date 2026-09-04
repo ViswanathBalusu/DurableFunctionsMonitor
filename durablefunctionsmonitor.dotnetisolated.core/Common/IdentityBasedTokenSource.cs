@@ -6,36 +6,22 @@ using Azure.Core;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
 {
-    // Implements getting and caching identity-based access tokens for Storage
+    // Supplies identity-based credentials for Storage.
+    //
+    // NOTE: this used to hand out raw bearer token strings and cache them itself, because the
+    // legacy WindowsAzure.Storage SDK took a token string. Azure.Data.Tables and
+    // Azure.Storage.Blobs take a TokenCredential and do the fetching, caching and refreshing
+    // themselves, so all that is left here is choosing which credential to hand them.
     class IdentityBasedTokenSource
     {
         // Cannot use DI functionality (our startup method will not be called when installed as a NuGet package),
         // so just leaving this as an internal static variable.
         internal static TokenCredential MockedTokenCredential = null;
 
-        public static async Task<string> GetTokenAsync()
+        // The credential to authenticate Storage requests with
+        public static TokenCredential GetCredential()
         {
-            // Returning cached token, if it is not expired yet (adding a 10 seconds handicap)
-            if (CachedToken.ExpiresOn > (DateTimeOffset.UtcNow + TimeSpan.FromSeconds(TokenExpirationHandicapInSeconds)))
-            {
-                return CachedToken.Token;
-            }
-
-            try
-            {
-                // Obtaining a new token
-                var tokenCredential = MockedTokenCredential ?? GetTokenCredential();
-                var tokenRequestContext = new TokenRequestContext(new string[] { "https://storage.azure.com" });
-                CachedToken = await tokenCredential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
-            }
-            catch (Exception)
-            {
-                // Resetting the cached token. Note that AccessToken is a struct
-                CachedToken = new AccessToken();
-                throw;
-            }
-
-            return CachedToken.Token;
+            return MockedTokenCredential ?? GetTokenCredential();
         }
 
         internal static TokenCredential GetTokenCredential()
@@ -52,8 +38,5 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 return new DefaultAzureCredential();
             }
         }
-
-        private const int TokenExpirationHandicapInSeconds = 10;
-        private static AccessToken CachedToken = new AccessToken();
     }
 }

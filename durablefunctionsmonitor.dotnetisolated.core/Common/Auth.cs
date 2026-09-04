@@ -159,7 +159,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         public static async Task<IEnumerable<string>> GetTaskHubNamesFromStorage(string connStringName)
         {
-            var tableClient = await TableClient.GetTableClient(connStringName);
+            var tableClient = TableClient.GetTableClient(connStringName);
             var tableNames = await tableClient.ListTableNamesAsync();
 
             var hubNames = new HashSet<string>(tableNames

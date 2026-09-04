@@ -3,7 +3,6 @@
 
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Hosting;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
 {
@@ -51,9 +50,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
         /// </summary>
         public static async Task<IEnumerable<string>> GetTaskHubNames(string connName)
         {
-            var tableClient = await TableClient.GetTableClient(connName);
+            var tableClient = TableClient.GetTableClient(connName);
 
-            var partitions = await tableClient.GetAllAsync(PartitionsTableName, new TableQuery<TableEntity>());
+            // No filter - Netherite keeps one row per partition, and we want them all
+            var partitions = await tableClient.GetAllAsync(PartitionsTableName, null);
 
             return partitions.Select(p => p.PartitionKey).Distinct();
         }

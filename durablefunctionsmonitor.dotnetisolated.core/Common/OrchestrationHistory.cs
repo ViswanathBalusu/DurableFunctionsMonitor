@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 using Microsoft.DurableTask.Client;
-using Microsoft.WindowsAzure.Storage.Table;
+using Azure.Data.Tables;
 using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
@@ -16,56 +16,44 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// </summary>
         public static async Task<IEnumerable<HistoryEvent>> GetHistoryDirectlyFromTable(DurableTaskClient durableClient, string connName, string hubName, string instanceId)
         {
-            var tableClient = await TableClient.GetTableClient(connName);
+            var tableClient = TableClient.GetTableClient(connName);
 
             // Need to fetch executionId first
 
-            var instanceEntity = (await tableClient.ExecuteAsync($"{hubName}Instances", TableOperation.Retrieve(instanceId, string.Empty)))
-                .Result as DynamicTableEntity;
+            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty);
 
-            string executionId = instanceEntity.Properties.ContainsKey("ExecutionId") ? 
-                instanceEntity.Properties["ExecutionId"].StringValue : 
-                null;
+            // Coalescing to string.Empty because the legacy SDK's GenerateFilterCondition did the
+            // same for a null value; CreateQueryFilter would instead emit "eq null", which Table
+            // Storage rejects.
+            string executionId = instanceEntity.GetString("ExecutionId") ?? string.Empty;
 
-            var instanceIdFilter = TableQuery.CombineFilters
-            (
-                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, instanceId),
-                TableOperators.And,
-                TableQuery.GenerateFilterCondition("ExecutionId", QueryComparisons.Equal, executionId)
-            );
+            // CreateQueryFilter escapes the interpolated values, so instanceId cannot break out of the filter
+            string instanceIdFilter = Azure.Data.Tables.TableClient.CreateQueryFilter(
+                $"PartitionKey eq {instanceId} and ExecutionId eq {executionId}");
 
             // Fetching _all_ correlated events with a separate parallel query. This seems to be the only option.
-            var correlatedEventsQuery = new TableQuery<HistoryEntity>().Where
-            (
-                TableQuery.CombineFilters
-                (
-                    instanceIdFilter,
-                    TableOperators.And,
-                    TableQuery.GenerateFilterConditionForInt("TaskScheduledId", QueryComparisons.GreaterThanOrEqual, 0)
-                )
-            );
+            string correlatedEventsFilter = $"{instanceIdFilter} and TaskScheduledId ge 0";
 
             var correlatedEventsTask = tableClient
-                .GetAllAsync($"{hubName}History", correlatedEventsQuery)
+                .GetAllAsync($"{hubName}History", correlatedEventsFilter)
                 .ContinueWith(t => {
 
                     // It turned out that there can be entities with duplicated TaskScheduleId (not sure why).
                     // So creating this map manually (instead of using .ToDictionary())
                     var correlatedEventsMap = new Dictionary<int, HistoryEntity>();
 
-                    foreach (var historyEntity in t.Result)
+                    foreach (var entity in t.Result)
                     {
+                        var historyEntity = HistoryEntity.From(entity);
                         correlatedEventsMap[historyEntity.TaskScheduledId.Value] = historyEntity;
                     }
 
                     return correlatedEventsMap;
                 });
 
-            // Fetching the history
-            var query = new TableQuery<HistoryEntity>().Where(instanceIdFilter);
-
-            // Intentionally using synchronous method, since not all results might be iterated
-            var queryResults = tableClient.GetAll($"{hubName}History", query);
+            // Fetching the history.
+            // Intentionally using the synchronous method, since not all results might be iterated
+            var queryResults = tableClient.GetAll($"{hubName}History", instanceIdFilter).Select(HistoryEntity.From);
 
             return EnumerateEvents(queryResults, correlatedEventsTask);
         }
@@ -207,8 +195,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public string SubOrchestrationId { get; set; }
     }
 
-    // Represents an record in XXXHistory table
-    class HistoryEntity : TableEntity
+    // Represents a record in the XXXHistory table.
+    //
+    // Mapped by hand rather than relying on Azure.Data.Tables' property binder, so that the exact
+    // set of Storage columns DfMon depends on stays visible - including "_Timestamp", which the
+    // Durable Task Framework writes alongside the system-managed "Timestamp".
+    class HistoryEntity
     {
         public string InstanceId { get; set; }
         public string EventType { get; set; }
@@ -220,5 +212,22 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public string FailureDetails { get; set; }
         public int EventId { get; set; }
         public int? TaskScheduledId { get; set; }
+
+        public static HistoryEntity From(TableEntity entity)
+        {
+            return new HistoryEntity
+            {
+                InstanceId = entity.GetString("InstanceId"),
+                EventType = entity.GetString("EventType"),
+                Name = entity.GetString("Name"),
+                _Timestamp = entity.GetDateTimeOffset("_Timestamp") ?? default,
+                Input = entity.GetString("Input"),
+                Result = entity.GetString("Result"),
+                Details = entity.GetString("Details"),
+                FailureDetails = entity.GetString("FailureDetails"),
+                EventId = entity.GetInt32("EventId") ?? default,
+                TaskScheduledId = entity.GetInt32("TaskScheduledId")
+            };
+        }
     }
 }

@@ -1,33 +1,35 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-using Microsoft.WindowsAzure.Storage.Table;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
+using Azure.Data.Tables;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
 {
-    // CloudTableClient wrapper interface. Seems to be the only way to unit-test.
+    // TableServiceClient wrapper interface. Seems to be the only way to unit-test.
     public interface ITableClient
     {
         // Gets the list of table names
         Task<IEnumerable<string>> ListTableNamesAsync();
 
-        // Synchronously retrieves all results from Azure Table
-        IEnumerable<TEntity> GetAll<TEntity>(string tableName, TableQuery<TEntity> query) where TEntity : TableEntity, new();
+        // Synchronously retrieves all entities matching an OData filter (null == no filter).
+        // Intentionally lazy - the consuming code does not always iterate through all of it.
+        IEnumerable<TableEntity> GetAll(string tableName, string filter);
 
-        // Asynchronously retrieves all results from Azure Table
-        Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(string tableName, TableQuery<TEntity> query) where TEntity : TableEntity, new();
-        
-        // Asynchronously retrieves all results from Azure Table
-        Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(string tableName, TableQuery<TEntity> query, CancellationToken ct) where TEntity : TableEntity, new();
+        // Asynchronously retrieves all entities matching an OData filter (null == no filter)
+        Task<IEnumerable<TableEntity>> GetAllAsync(string tableName, string filter);
 
-        // Executes a TableOperation
-        Task<TableResult> ExecuteAsync(string tableName, TableOperation operation);
+        // Asynchronously retrieves all entities matching an OData filter (null == no filter)
+        Task<IEnumerable<TableEntity>> GetAllAsync(string tableName, string filter, CancellationToken ct);
+
+        // Retrieves a single entity, or null if it does not exist
+        Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey);
+
+        // Replaces an entity. Fails if the entity was modified after it was read.
+        Task ReplaceEntityAsync(string tableName, TableEntity entity);
     }
 
-    // CloudTableClient wrapper. Seems to be the only way to unit-test.
-    class TableClient: ITableClient
+    // TableServiceClient wrapper. Seems to be the only way to unit-test.
+    class TableClient : ITableClient
     {
         // Cannot use DI functionality (our startup method will not be called when installed as a NuGet package),
         // so just leaving this as an internal static variable.
@@ -40,38 +42,38 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// </summary>
         public static string CustomUserAgent { get; set; }
 
-        public static async Task<ITableClient> GetTableClient(string connStringName)
+        public static ITableClient GetTableClient(string connStringName)
         {
             if (MockedTableClient != null)
             {
                 return MockedTableClient;
             }
 
+            var options = new TableClientOptions();
+            Globals.ApplyCustomUserAgent(options);
+
             string connectionString = Environment.GetEnvironmentVariable(connStringName);
             if (string.IsNullOrEmpty(connectionString))
             {
                 // Trying with Managed Identity/local Azure login
-                
+
                 string tableServiceUri = Environment.GetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingTableServiceUriSuffix);
                 if (string.IsNullOrEmpty(tableServiceUri))
                 {
                     string accountName = Environment.GetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingAccountNameSuffix);
                     tableServiceUri = $"https://{accountName}.table.core.windows.net";
                 }
-                
-                var identityBasedToken = await IdentityBasedTokenSource.GetTokenAsync();
-                var credentials = new StorageCredentials(new TokenCredential(identityBasedToken));
 
-                return new TableClient(new CloudTableClient(new Uri(tableServiceUri), credentials), CustomUserAgent);
+                return new TableClient(new TableServiceClient(new Uri(tableServiceUri), IdentityBasedTokenSource.GetCredential(), options));
             }
             else
             {
                 // Using classic connection string
-                return new TableClient(CloudStorageAccount.Parse(connectionString).CreateCloudTableClient(), CustomUserAgent);
+                return new TableClient(new TableServiceClient(connectionString, options));
             }
         }
 
-        private TableClient(CloudTableClient client, string customUserAgent)
+        private TableClient(TableServiceClient client)
         {
             this._client = client;
         }
@@ -79,95 +81,60 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// <inheritdoc/>
         public async Task<IEnumerable<string>> ListTableNamesAsync()
         {
-            // Overriding User-Agent header
-            var operationContext = new OperationContext
-            {
-                CustomUserAgent = CustomUserAgent
-            };
-
             var result = new List<string>();
-            TableContinuationToken token = null;
-            do
+
+            // AsyncPageable transparently follows continuation tokens
+            await foreach (var table in this._client.QueryAsync())
             {
-                var nextBatch = await this._client.ListTablesSegmentedAsync(null, null, token, null, operationContext);
-                result.AddRange(nextBatch.Results.Select(r => r.Name));
-                token = nextBatch.ContinuationToken;
+                result.Add(table.Name);
             }
-            while (token != null);
-            return result;
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<TEntity> GetAll<TEntity>(string tableName, TableQuery<TEntity> query)
-            where TEntity : TableEntity, new()
-        {
-            var table = this._client.GetTableReference(tableName);
-
-            // Overriding User-Agent header
-            var operationContext = new OperationContext
-            {
-                CustomUserAgent = CustomUserAgent
-            };
-
-            TableContinuationToken token = null;
-            do
-            {
-                var nextBatch = table.ExecuteQuerySegmentedAsync(query, token, null, operationContext).Result;
-
-                foreach (var evt in nextBatch.Results)
-                {
-                    yield return evt;
-                }
-
-                token = nextBatch.ContinuationToken;
-            }
-            while (token != null);
-        }
-
-        /// <inheritdoc/>
-        public Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(string tableName, TableQuery<TEntity> query)
-            where TEntity : TableEntity, new() => this.GetAllAsync(tableName, query, CancellationToken.None);
-
-        /// <inheritdoc/>
-        public async Task<IEnumerable<TEntity>> GetAllAsync<TEntity>(string tableName, TableQuery<TEntity> query, CancellationToken ct)
-            where TEntity : TableEntity, new()
-        {
-            var table = this._client.GetTableReference(tableName);
-
-            // Overriding User-Agent header
-            var operationContext = new OperationContext
-            {
-                CustomUserAgent = CustomUserAgent
-            };
-
-            var result = new List<TEntity>();
-            TableContinuationToken token = null;
-            do
-            {
-                ct.ThrowIfCancellationRequested();
-
-                var nextBatch = await table.ExecuteQuerySegmentedAsync(query, token, null, operationContext, ct);
-
-                result.AddRange(nextBatch.Results);
-                token = nextBatch.ContinuationToken;
-            }
-            while (token != null);
 
             return result;
         }
 
         /// <inheritdoc/>
-        public Task<TableResult> ExecuteAsync(string tableName, TableOperation operation)
+        public IEnumerable<TableEntity> GetAll(string tableName, string filter)
         {
-            // Overriding User-Agent header
-            var operationContext = new OperationContext
-            {
-                CustomUserAgent = CustomUserAgent
-            };
-
-            return this._client.GetTableReference(tableName).ExecuteAsync(operation, null, operationContext);
+            // Pageable only fetches the next page once the current one is exhausted,
+            // so abandoning this enumeration early also stops querying.
+            return this._client.GetTableClient(tableName).Query<TableEntity>(filter);
         }
 
-        private readonly CloudTableClient _client;
+        /// <inheritdoc/>
+        public Task<IEnumerable<TableEntity>> GetAllAsync(string tableName, string filter)
+            => this.GetAllAsync(tableName, filter, CancellationToken.None);
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<TableEntity>> GetAllAsync(string tableName, string filter, CancellationToken ct)
+        {
+            var result = new List<TableEntity>();
+
+            await foreach (var entity in this._client.GetTableClient(tableName).QueryAsync<TableEntity>(filter, cancellationToken: ct))
+            {
+                result.Add(entity);
+            }
+
+            return result;
+        }
+
+        /// <inheritdoc/>
+        public async Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey)
+        {
+            // GetEntityIfExistsAsync (rather than GetEntityAsync) so that a missing entity comes
+            // back as null instead of throwing, which is what the legacy TableOperation.Retrieve did.
+            var response = await this._client.GetTableClient(tableName).GetEntityIfExistsAsync<TableEntity>(partitionKey, rowKey);
+
+            return response.HasValue ? response.Value : null;
+        }
+
+        /// <inheritdoc/>
+        public Task ReplaceEntityAsync(string tableName, TableEntity entity)
+        {
+            // Passing the entity's own ETag keeps the optimistic concurrency check that
+            // the legacy TableOperation.Replace performed.
+            return this._client.GetTableClient(tableName).UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);
+        }
+
+        private readonly TableServiceClient _client;
     }
 }
