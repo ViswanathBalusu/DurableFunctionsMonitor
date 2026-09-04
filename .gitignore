@@ -1,1 +1,42 @@
-.vs
+# Repo-wide ignores.
+#
+# Individual projects also carry their own .gitignore, but those only protect the folders that
+# still have one. When a project is deleted its .gitignore goes with it and its leftover build
+# output suddenly shows up as untracked - which is exactly what happened to custom-backends after
+# the in-process backends were removed. Keep the build output rules here so they apply everywhere,
+# including to projects that no longer exist.
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# Test results / coverage
+[Tt]est[Rr]esult*/
+coverage/
+*.coverage
+*.trx
+
+# Azure Functions local settings - these hold connection strings, never commit them
+local.settings.json
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Packages
+*.nupkg
+*.vsix
+
+# Storage emulator state, written by the integration tests
+.azurite/
+__azurite_db*.json
+__blobstorage__/
+__queuestorage__/
