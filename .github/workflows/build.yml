@@ -20,6 +20,27 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
+    env:
+      # nuget.config authenticates the 'github' fallback source through these. Without them restore
+      # still works - it just warns and falls back to nuget.org - but prerelease
+      # DurableFunctionsMonitor.* packages would not resolve.
+      GITHUB_USER: ${{ github.actor }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # The integration tests skip themselves when no Storage emulator is listening, so that a
+      # developer without one can still run the whole suite. In CI that would silently hide a broken
+      # storage layer, so here an unreachable emulator has to be a failure instead.
+      DFM_TEST_REQUIRE_STORAGE: "true"
+
+    services:
+      # Storage emulator for tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests
+      azurite:
+        image: mcr.microsoft.com/azure-storage/azurite
+        ports:
+          - 10000:10000
+          - 10001:10001
+          - 10002:10002
+
     steps:
     - uses: actions/checkout@v4
 
@@ -47,8 +68,25 @@ jobs:
       with:
         dotnet-version: 10.0.x
 
+    - name: wait for Azurite
+      run: |
+        set -euo pipefail
+        for i in $(seq 1 30); do
+          # Any HTTP response means it is listening; unauthenticated requests answer 403
+          if curl -s -o /dev/null --max-time 2 http://127.0.0.1:10000/devstoreaccount1; then
+            echo "Azurite is up"
+            exit 0
+          fi
+          sleep 1
+        done
+        echo "::error::Azurite did not become reachable on port 10000"
+        exit 1
+
     - name: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.tests
       run: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.tests/*.csproj -c Release
+
+    - name: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests
+      run: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests/*.csproj -c Release
 
     - name: copy durablefunctionsmonitor.dotnetisolated to ArtifactStagingDirectory
       run: cp -r durablefunctionsmonitor.dotnetisolated drop/durablefunctionsmonitor.dotnetisolated
