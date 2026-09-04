@@ -678,7 +678,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var settings = new DfmSettings();
 
             // Act & Assert
-            var ex = await Assert.ThrowsExceptionAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
+            var ex = await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
             Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
         }
 
@@ -696,7 +696,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var settings = new DfmSettings();
 
             // Act & Assert
-            var ex = await Assert.ThrowsExceptionAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
+            var ex = await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
             Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
         }
 
@@ -766,7 +766,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 var settings = new DfmSettings();
 
                 // Act & Assert
-                var ex = await Assert.ThrowsExceptionAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
+                var ex = await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
                 Assert.AreEqual("The incoming 'x-ms-client-principal' header is not legitimate. Call is rejected.", ex.Message);
             }
             finally
@@ -794,7 +794,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 var settings = new DfmSettings();
 
                 // Act & Assert
-                var ex = await Assert.ThrowsExceptionAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
+                var ex = await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
                 Assert.IsTrue(ex.Message.StartsWith("Failed to parse the 'x-ms-client-principal' header."));
             }
             finally
@@ -877,7 +877,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var settings = new DfmSettings();
 
             // Act & Assert
-            var ex = await Assert.ThrowsExceptionAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
+            var ex = await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(() => Auth.GetClaimsPrincipal(request, settings));
             Assert.AreEqual("No access token provided. Call is rejected.", ex.Message);
         }
     }

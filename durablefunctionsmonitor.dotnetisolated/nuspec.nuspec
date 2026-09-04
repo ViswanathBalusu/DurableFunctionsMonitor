@@ -10,21 +10,21 @@
         <license type="file">LICENSE.txt</license>
 
         <dependencies>
-            <dependency id="Microsoft.Azure.Functions.Worker" version="2.51.0" />
-            <dependency id="Microsoft.Azure.Functions.Worker.Sdk" version="2.0.7" />
-            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.16.3" />
-            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.Http" version="3.1.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker" version="2.52.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Sdk" version="2.1.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.19.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.Http" version="3.3.0" />
             <dependency id="WindowsAzure.Storage" version="9.3.3" />
-            <dependency id="Azure.Identity" version="1.11.4" />
-            <dependency id="Microsoft.IdentityModel.Protocols.OpenIdConnect" version="7.5.2" />
-            <dependency id="Fluid.Core" version="2.7.0" />
+            <dependency id="Azure.Identity" version="1.21.0" />
+            <dependency id="Microsoft.IdentityModel.Protocols.OpenIdConnect" version="8.22.0" />
+            <dependency id="Fluid.Core" version="2.40.0" />
         </dependencies>
 
     </metadata>
 
     <files>
-        <file src="..\output\durablefunctionsmonitor.dotnetisolated.core.dll" target="lib/netcoreapp2.1" />
-        <file src="..\output\durablefunctionsmonitor.dotnetisolated.core.xml" target="lib/netcoreapp2.1" />
+        <file src="..\output\durablefunctionsmonitor.dotnetisolated.core.dll" target="lib/net10.0" />
+        <file src="..\output\durablefunctionsmonitor.dotnetisolated.core.xml" target="lib/net10.0" />
         <file src="..\output\durablefunctionsmonitor.dotnetisolated.targets" target="build/$id$.targets" />
         <file src="..\output\*" target="/" />
         <file src="..\output\.azurefunctions\**" target="/.azurefunctions" />

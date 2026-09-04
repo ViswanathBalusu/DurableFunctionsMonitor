@@ -1,0 +1,40 @@
+<Solution>
+
+  <!--
+    Every project in the repo, .NET and Node alike. The Node projects are wrapped in .esproj files
+    driven by Microsoft.VisualStudio.JavaScript.SDK, which just shells out to their npm scripts.
+
+    The .esproj projects need the explicit Platform mapping below: the JavaScript SDK declares its
+    platform as "AnyCPU" while the solution's is "Any CPU", and without the mapping MSBuild skips
+    them with "not selected for building in solution configuration".
+  -->
+
+  <Folder Name="/backends/">
+    <Project Path="durablefunctionsmonitor.dotnetisolated.core/durablefunctionsmonitor.dotnetisolated.core.csproj" />
+    <Project Path="durablefunctionsmonitor.dotnetisolated/durablefunctionsmonitor.dotnetisolated.csproj" />
+    <Project Path="durablefunctionsmonitor.dotnetisolated.mssql/durablefunctionsmonitor.dotnetisolated.mssql.csproj" />
+    <Project Path="durablefunctionsmonitor.dotnetisolated.netherite/durablefunctionsmonitor.dotnetisolated.netherite.csproj" />
+  </Folder>
+
+  <Folder Name="/custom-backends/">
+    <Project Path="custom-backends/dotnetIsolated/Dfm.DotNetIsolated.csproj" />
+    <Project Path="custom-backends/dotnetIsolated-mssql/Dfm.DotNetIsolatedMsSql.csproj" />
+    <Project Path="custom-backends/dotnetIsolated-netherite/Dfm.DotNetIsolatedNetherite.csproj" />
+  </Folder>
+
+  <Folder Name="/clients/">
+    <Project Path="durablefunctionsmonitor.react/durablefunctionsmonitor.react.esproj">
+      <Platform Solution="*|*" Project="AnyCPU" />
+      <Build Solution="*|*" Project="true" />
+    </Project>
+    <Project Path="durablefunctionsmonitor-vscodeext/durablefunctionsmonitor-vscodeext.esproj">
+      <Platform Solution="*|*" Project="AnyCPU" />
+      <Build Solution="*|*" Project="true" />
+    </Project>
+  </Folder>
+
+  <Folder Name="/tests/">
+    <Project Path="tests/durablefunctionsmonitor.dotnetisolated.core.tests/durablefunctionsmonitor.dotnetisolated.core.tests.csproj" />
+  </Folder>
+
+</Solution>

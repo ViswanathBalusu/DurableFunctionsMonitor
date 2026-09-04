@@ -1,10 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <AzureFunctionsVersion>v4</AzureFunctionsVersion>
-
     <OutputType>Exe</OutputType>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,8 +8,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Netherite" Version="1.5.4" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.1.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Netherite" Version="3.1.1" />
   </ItemGroup>
 
   <!-- Copying statics -->

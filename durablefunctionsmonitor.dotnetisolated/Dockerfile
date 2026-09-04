@@ -3,14 +3,14 @@
 #
 #   docker build -f durablefunctionsmonitor.dotnetisolated/Dockerfile .
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS installer-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS installer-env
 
 COPY . /src
 RUN cd /src && \
     mkdir -p /home/site/wwwroot && \
     dotnet publish durablefunctionsmonitor.dotnetisolated/durablefunctionsmonitor.dotnetisolated.csproj --output /home/site/wwwroot
 
-FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0
+FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated10.0
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 

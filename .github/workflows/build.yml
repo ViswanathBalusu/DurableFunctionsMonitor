@@ -45,7 +45,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
 
     - name: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.tests
       run: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.tests/*.csproj -c Release

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.SDK/1.0.6578810">
+
+  <!--
+    Wraps the VsCode extension as an MSBuild project so it can live in DurableFunctionsMonitor.slnx.
+    Building it runs "tsc -p ./" into out/. Packaging the VSIX still goes through "npm run package",
+    which needs the published backends copied in first - see .github/workflows/build.yml.
+  -->
+
+  <PropertyGroup>
+    <BuildCommand>npm run compile</BuildCommand>
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\out</BuildOutputFolder>
+
+    <ShouldRunNpmAudit>false</ShouldRunNpmAudit>
+  </PropertyGroup>
+
+</Project>

@@ -121,7 +121,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                     .DfmServeStaticsFunction(request, "a", "b", "c");
 
             // Assert
-            await Assert.ThrowsExceptionAsync<DfmUnauthorizedException>(() => task);
+            await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(() => task);
         }
     }
 }
