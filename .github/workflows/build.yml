@@ -115,6 +115,24 @@ jobs:
       if: 'false'
       run: npm run test
       working-directory: durablefunctionsmonitor-vscodeext
+    - name: stamp VSIX version and publisher
+      env:
+        VERSION: ${{ inputs.version }}
+        VSCE_PUBLISHER: ${{ vars.VSCE_PUBLISHER }}
+      working-directory: durablefunctionsmonitor-vscodeext
+      run: |
+        set -euo pipefail
+        # The VsCode Marketplace only accepts major.minor.patch, so drop any prerelease suffix.
+        # Only push-to-vscode-marketplace.yml actually publishes, and it passes a clean version.
+        VSIX_VERSION="${VERSION%%-*}"
+        npm version "$VSIX_VERSION" --no-git-tag-version --allow-same-version
+        # The upstream publisher id cannot be published to from this fork. Override it when
+        # the VSCE_PUBLISHER repository variable is set.
+        if [ -n "${VSCE_PUBLISHER}" ]; then
+          node -e "const f='package.json',j=require('./'+f);j.publisher=process.env.VSCE_PUBLISHER;require('fs').writeFileSync(f,JSON.stringify(j,null,4)+'\n')"
+        fi
+        node -e "const j=require('./package.json');console.log('VSIX will be '+j.publisher+'.'+j.name+' v'+j.version)"
+
     - name: package durablefunctionsmonitor-vscodeext to VSIX-file
       run: npm run package
       working-directory: durablefunctionsmonitor-vscodeext

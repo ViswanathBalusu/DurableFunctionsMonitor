@@ -2,7 +2,7 @@
     "name": "durablefunctionsmonitor",
     "displayName": "Durable Functions Monitor",
     "description": "Monitoring/debugging UI tool for Azure Durable Functions",
-    "version": "6.8.1",
+    "version": "6.9.0",
     "engines": {
         "vscode": "^1.39.0"
     },
@@ -10,13 +10,13 @@
         "Other",
         "Debuggers"
     ],
-    "homepage": "https://github.com/microsoft/DurableFunctionsMonitor",
+    "homepage": "https://github.com/ViswanathBalusu/DurableFunctionsMonitor",
     "repository": {
         "type": "git",
-        "url": "https://github.com/microsoft/DurableFunctionsMonitor"
+        "url": "https://github.com/ViswanathBalusu/DurableFunctionsMonitor"
     },
     "bugs": {
-        "url": "https://github.com/microsoft/DurableFunctionsMonitor/issues"
+        "url": "https://github.com/ViswanathBalusu/DurableFunctionsMonitor/issues"
     },
     "icon": "logo.png",
     "keywords": [
