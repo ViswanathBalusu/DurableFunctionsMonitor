@@ -9,6 +9,9 @@
 # production
 /build
 
+# MSBuild intermediate output from durablefunctionsmonitor.react.esproj
+/obj
+
 # misc
 .DS_Store
 .env.local

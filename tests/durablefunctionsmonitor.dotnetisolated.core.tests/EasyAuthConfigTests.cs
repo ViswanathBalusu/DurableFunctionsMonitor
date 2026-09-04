@@ -39,7 +39,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 .DfmGetEasyAuthConfigFunction(request);
 
             // Assert
-            await Assert.ThrowsExceptionAsync<DfmUnauthorizedException>(() => task);
+            await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(() => task);
         }
 
         [TestMethod]

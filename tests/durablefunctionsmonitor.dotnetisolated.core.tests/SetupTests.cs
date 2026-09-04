@@ -24,7 +24,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Environment.SetEnvironmentVariable(EnvVariableNames.DFM_ALLOWED_READ_ONLY_APP_ROLES, "");
 
             // Act & Assert
-            Assert.ThrowsException<System.NotSupportedException>(() => {
+            Assert.ThrowsExactly<System.NotSupportedException>(() => {
                 new DfmSettings();
             });
         }

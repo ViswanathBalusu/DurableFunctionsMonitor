@@ -100,9 +100,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string dfmUserNameClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_USERNAME_CLAIM_NAME);
             string dfmRolesClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ROLES_CLAIM_NAME);
 
-            var allowedAppRoles = dfmAllowedAppRoles == null ? null : dfmAllowedAppRoles.Split(',');
-            var allowedFullAccessAppRoles = dfmAllowedFullAccessAppRoles == null ? null : dfmAllowedFullAccessAppRoles.Split(',');
-            var allowedReadOnlyAppRoles = dfmAllowedReadOnlyAppRoles == null ? null : dfmAllowedReadOnlyAppRoles.Split(',');
+            // NOTE: an unset setting and a setting explicitly set to an empty string both mean
+            // "no restriction" and must map to null. Up to .NET 9 an empty value could only ever
+            // arrive here as null, because Environment.SetEnvironmentVariable(name, "") deleted the
+            // variable. As of .NET 10 it stores the empty string instead, so "" reaches us verbatim.
+            // Splitting that would yield [""] - a single allowed role named empty-string, which
+            // locks every user out - so the check has to be IsNullOrEmpty, not == null.
+            var allowedAppRoles = SplitOrNull(dfmAllowedAppRoles);
+            var allowedFullAccessAppRoles = SplitOrNull(dfmAllowedFullAccessAppRoles);
+            var allowedReadOnlyAppRoles = SplitOrNull(dfmAllowedReadOnlyAppRoles);
 
             // Validating that same app role does not appear in multiple settings
             if (AreAppRoleListsIntersecting(allowedAppRoles, allowedFullAccessAppRoles, allowedReadOnlyAppRoles))
@@ -112,12 +118,21 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             this.DisableAuthentication = dfmNonce == Auth.ISureKnowWhatIAmDoingNonce;
             this.Mode = dfmMode == DfmMode.ReadOnly.ToString() ? DfmMode.ReadOnly : DfmMode.Normal;
-            this.AllowedUserNames = dfmAllowedUserNames == null ? null : dfmAllowedUserNames.Split(',');
+            this.AllowedUserNames = SplitOrNull(dfmAllowedUserNames);
             this.AllowedAppRoles = allowedAppRoles;
             this.AllowedFullAccessAppRoles = allowedFullAccessAppRoles;
             this.AllowedReadOnlyAppRoles = allowedReadOnlyAppRoles;
             this.UserNameClaimName = string.IsNullOrEmpty(dfmUserNameClaimName) ? Auth.PreferredUserNameClaim : dfmUserNameClaimName;
             this.RolesClaimName = string.IsNullOrEmpty(dfmRolesClaimName) ? Auth.RolesClaim : dfmRolesClaimName;
+        }
+
+        /// <summary>
+        /// Splits a comma-separated config value, mapping both "not set" and "set to an empty
+        /// string" to null, which is how the rest of DfMon spells "no restriction configured".
+        /// </summary>
+        private static string[] SplitOrNull(string value)
+        {
+            return string.IsNullOrEmpty(value) ? null : value.Split(',');
         }
 
         private static bool AreAppRoleListsIntersecting(params string[][] appRoleLists)

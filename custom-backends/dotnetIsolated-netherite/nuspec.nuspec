@@ -10,16 +10,16 @@
         <license type="file">LICENSE.txt</license>
 
         <dependencies>
-            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Netherite" version="1.5.4" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Netherite" version="3.1.1" />
             <dependency id="WindowsAzure.Storage" version="9.3.3" />
         </dependencies>
 
     </metadata>
 
     <files>
-        <file src="..\output\durablefunctionsmonitor.dotnetisolated.core.dll" target="lib/netcoreapp2.1" />
-        <file src="..\output\durablefunctionsmonitor.dotnetisolated.netherite.dll" target="lib/netcoreapp2.1" />
-        <file src="..\output\durablefunctionsmonitor.dotnetisolated.netherite.xml" target="lib/netcoreapp2.1" />
+        <file src="..\output\durablefunctionsmonitor.dotnetisolated.core.dll" target="lib/net10.0" />
+        <file src="..\output\durablefunctionsmonitor.dotnetisolated.netherite.dll" target="lib/net10.0" />
+        <file src="..\output\durablefunctionsmonitor.dotnetisolated.netherite.xml" target="lib/net10.0" />
         <file src="..\..\durablefunctionsmonitor.dotnetisolated\durablefunctionsmonitor.dotnetisolated.targets" target="build/$id$.targets" />
         <file src="..\output\*" target="/" />
         <file src="..\output\.azurefunctions\**" target="/.azurefunctions" />
