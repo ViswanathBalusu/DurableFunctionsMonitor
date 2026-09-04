@@ -23,6 +23,20 @@ jobs:
         if [ -z "$PREFIX" ]; then echo "::error::VersionPrefix not found in Directory.Build.props"; exit 1; fi
         echo "version=$PREFIX" >> "$GITHUB_OUTPUT"
 
+    - name: publisher must be set
+      env:
+        VSCE_PUBLISHER: ${{ vars.VSCE_PUBLISHER }}
+      run: |
+        if [ -z "${VSCE_PUBLISHER}" ]; then
+          echo "::error::Repository variable VSCE_PUBLISHER is not set."
+          echo "::error::package.json still names the upstream publisher 'DurableFunctionsMonitor', which this"
+          echo "::error::fork cannot publish to. Create your own publisher at https://marketplace.visualstudio.com/manage"
+          echo "::error::and set VSCE_PUBLISHER to its id. Clear this check only if you are a member of the"
+          echo "::error::upstream publisher."
+          exit 1
+        fi
+        echo "Publishing as publisher '${VSCE_PUBLISHER}'"
+
   build:
     needs: version
     uses: ./.github/workflows/build.yml
