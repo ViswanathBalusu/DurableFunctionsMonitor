@@ -14,7 +14,8 @@
             <dependency id="Microsoft.Azure.Functions.Worker.Sdk" version="2.1.0" />
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.19.0" />
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.Http" version="3.3.0" />
-            <dependency id="WindowsAzure.Storage" version="9.3.3" />
+            <dependency id="Azure.Data.Tables" version="12.12.0" />
+            <dependency id="Azure.Storage.Blobs" version="12.29.2" />
             <dependency id="Azure.Identity" version="1.21.0" />
             <dependency id="Microsoft.IdentityModel.Protocols.OpenIdConnect" version="8.22.0" />
             <dependency id="Fluid.Core" version="2.40.0" />

@@ -2,12 +2,11 @@
 // Licensed under the MIT license.
 
 using Newtonsoft.Json.Linq;
-using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Table;
+using Azure.Data.Tables;
 using Microsoft.DurableTask.Client;
 using Microsoft.DurableTask.Client.Entities;
 
@@ -85,7 +84,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         internal static async Task<string> GetParentInstanceIdDirectlyFromTable(DurableTaskClient durableClient, string connEnvVariableName, string hubName, string instanceId)
         {
-            var tableClient = await TableClient.GetTableClient(connEnvVariableName);
+            var tableClient = TableClient.GetTableClient(connEnvVariableName);
             IEnumerable<TableEntity> tableResult;
 
             // Checking if instanceId looks like a suborchestration (old format)
@@ -94,12 +93,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 string parentExecutionId = match.Groups[1].Value;
 
-                var executionIdQuery = new TableQuery<TableEntity>().Where
-                (
-                    TableQuery.GenerateFilterCondition("ExecutionId", QueryComparisons.Equal, parentExecutionId)
-                );
+                // CreateQueryFilter escapes the interpolated value, so it cannot break out of the filter
+                string executionIdFilter = Azure.Data.Tables.TableClient.CreateQueryFilter(
+                    $"ExecutionId eq {parentExecutionId}");
 
-                tableResult = await tableClient.GetAllAsync($"{durableClient.Name}Instances", executionIdQuery);
+                tableResult = await tableClient.GetAllAsync($"{durableClient.Name}Instances", executionIdFilter);
             }
             else
             {
@@ -114,10 +112,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     return null;
                 }
 
-                var instanceEntity = (await tableClient.ExecuteAsync($"{durableClient.Name}Instances", TableOperation.Retrieve(instanceId, string.Empty)))
-                    .Result as DynamicTableEntity;
+                var instanceEntity = await tableClient.GetEntityAsync($"{durableClient.Name}Instances", instanceId, string.Empty);
 
-                var createdTime = instanceEntity?.Properties["CreatedTime"].DateTimeOffsetValue;
+                var createdTime = instanceEntity?.GetDateTimeOffset("CreatedTime");
                 if (createdTime == null)
                 {
                     return null;
@@ -126,24 +123,13 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 var notBefore = createdTime.Value - TimeSpan.FromSeconds(5);
                 var notAfter = createdTime.Value + TimeSpan.FromSeconds(5);
 
-                var executionIdQuery = new TableQuery<TableEntity>().Where
-                (
-                    TableQuery.CombineFilters
-                    (
-                        TableQuery.CombineFilters
-                        (
-                            TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.GreaterThan, notBefore),
-                            TableOperators.And,
-                            TableQuery.GenerateFilterConditionForDate("Timestamp", QueryComparisons.LessThan, notAfter)
-                        ),
-                        TableOperators.And,
-                        TableQuery.GenerateFilterCondition("InstanceId", QueryComparisons.Equal, instanceId)
-                    )
-                );
+                // CreateQueryFilter escapes the interpolated values, so instanceId cannot break out of the filter
+                string executionIdFilter = Azure.Data.Tables.TableClient.CreateQueryFilter(
+                    $"Timestamp gt {notBefore} and Timestamp lt {notAfter} and InstanceId eq {instanceId}");
 
                 // This scan can still take long time, so we'll have to hard-limit it to a few seconds. TaskCancelledException will be handled by upper code.
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(GetParentInstanceIdTimeoutInSeconds));
-                tableResult = await tableClient.GetAllAsync($"{durableClient.Name}History", executionIdQuery, cts.Token);
+                tableResult = await tableClient.GetAllAsync($"{durableClient.Name}History", executionIdFilter, cts.Token);
             }
 
             return tableResult.FirstOrDefault()?.PartitionKey;

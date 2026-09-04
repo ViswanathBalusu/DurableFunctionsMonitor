@@ -11,7 +11,7 @@
 
         <dependencies>
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Netherite" version="3.1.1" />
-            <dependency id="WindowsAzure.Storage" version="9.3.3" />
+            <dependency id="Azure.Data.Tables" version="12.12.0" />
         </dependencies>
 
     </metadata>

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System;
 using System.Threading;
 using Azure.Core;
+using Azure.Identity;
 
 namespace durablefunctionsmonitor.dotnetisolated.core.tests
 {
@@ -40,52 +41,38 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
     public class IdentityBasedTokenSourceTests
     {
 
+        // NOTE: there used to be a test here for hand-rolled bearer token caching. That caching
+        // existed only because the legacy WindowsAzure.Storage SDK took a raw token string.
+        // Azure.Data.Tables and Azure.Storage.Blobs take the TokenCredential itself and do their
+        // own fetching, caching and refreshing, so all that is left to cover is which credential
+        // gets handed to them.
+
         [TestMethod]
-        public async Task ReturnsTokenAndRethrowsExceptions()
+        public void HandsOutTheMockedCredentialWhenOneIsSet()
         {
             // Arrange
 
             var mockedTokenCredential = new MockedTokenCredential();
-            IdentityBasedTokenSource.MockedTokenCredential = mockedTokenCredential;
+
             try
             {
+                IdentityBasedTokenSource.MockedTokenCredential = mockedTokenCredential;
+
                 // Act
 
-                // Should return the same token twice
-                string token1 = await IdentityBasedTokenSource.GetTokenAsync();
-                string token2 = await IdentityBasedTokenSource.GetTokenAsync();
-
-                await Task.Delay(TimeSpan.FromSeconds(3));
-
-                // At this point the first token should expire. 
-                // Forcing the token generation method to throw.
-                mockedTokenCredential.ShouldThrow = true;
-
-                try
-                {
-                    string token3 = await IdentityBasedTokenSource.GetTokenAsync();
-
-                    Assert.Fail("IdentityBasedTokenSource.GetTokenAsync() should have thrown");
-                }
-                catch(Exception ex)
-                {
-                    Assert.AreEqual(mockedTokenCredential.ExceptionText, ex.Message);
-                }
-
-                // Enabling token generation back
-                mockedTokenCredential.ShouldThrow = false;
-
-                // Making yet another token
-                string token4 = await IdentityBasedTokenSource.GetTokenAsync();
+                var credential = IdentityBasedTokenSource.GetCredential();
 
                 // Assert
-                Assert.AreEqual(token1, token2);
-                Assert.AreNotEqual(token2, token4);
+
+                Assert.AreSame(mockedTokenCredential, credential);
             }
             finally
             {
                 IdentityBasedTokenSource.MockedTokenCredential = null;
             }
+
+            // And falls back to the real credential chain once the mock is removed
+            Assert.IsInstanceOfType(IdentityBasedTokenSource.GetCredential(), typeof(DefaultAzureCredential));
         }
 
         [TestMethod]

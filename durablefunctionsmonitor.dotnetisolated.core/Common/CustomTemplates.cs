@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-using Microsoft.WindowsAzure.Storage;
 using System.Text;
 using System.Collections.Concurrent;
 using System.Reflection;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage.Auth;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
 {
@@ -62,21 +59,19 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var result = new LiquidTemplatesMap();
             try
             {
-                var blobClient = await Globals.GetCloudBlobClient(EnvVariableNames.AzureWebJobsStorage);
+                var blobClient = Globals.GetBlobServiceClient(EnvVariableNames.AzureWebJobsStorage);
 
                 // Listing all blobs in durable-functions-monitor/tab-templates folder
-                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
+                var container = blobClient.GetBlobContainerClient(Globals.TemplateContainerName);
 
                 string templateFolderName = Globals.TabTemplateFolderName + "/";
-                var templateNames = await container.ListBlobsAsync(templateFolderName);
+                var blobNames = await container.ListBlobNamesAsync(templateFolderName);
 
                 // Loading blobs in parallel
-                await Task.WhenAll(templateNames.Select(async templateName =>
+                await Task.WhenAll(blobNames.Select(async blobName =>
                 {
-                    var blob = await blobClient.GetBlobReferenceFromServerAsync(templateName.Uri);
-
                     // Expecting the blob name to be like "[Tab Name].[EntityTypeName].liquid" or just "[Tab Name].liquid"
-                    var nameParts = blob.Name.Substring(templateFolderName.Length).Split('.');
+                    var nameParts = blobName.Substring(templateFolderName.Length).Split('.');
                     if (nameParts.Length < 2 || nameParts.Last() != "liquid")
                     {
                         return;
@@ -87,7 +82,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
                     using (var stream = new MemoryStream())
                     {
-                        await blob.DownloadToStreamAsync(stream);
+                        await container.GetBlobClient(blobName).DownloadToAsync(stream);
                         string templateText = Encoding.UTF8.GetString(stream.ToArray());
 
                         result.GetOrAdd(entityTypeName, new ConcurrentDictionary<string, string>())[tabName] = templateText;
@@ -144,9 +139,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             try
             {
-                var blobClient = await Globals.GetCloudBlobClient(EnvVariableNames.AzureWebJobsStorage);
-                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
-                var blob = container.GetBlobReference(Globals.CustomMetaTagBlobName);
+                var blobClient = Globals.GetBlobServiceClient(EnvVariableNames.AzureWebJobsStorage);
+                var container = blobClient.GetBlobContainerClient(Globals.TemplateContainerName);
+                var blob = container.GetBlobClient(Globals.CustomMetaTagBlobName);
 
                 if (!(await blob.ExistsAsync()))
                 {
@@ -155,7 +150,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
                 using (var stream = new MemoryStream())
                 {
-                    await blob.DownloadToStreamAsync(stream);
+                    await blob.DownloadToAsync(stream);
                     return Encoding.UTF8.GetString(stream.ToArray());
                 }
             } 
@@ -194,21 +189,19 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var result = new FunctionMapsMap();
             try
             {
-                var blobClient = await Globals.GetCloudBlobClient(EnvVariableNames.AzureWebJobsStorage);
+                var blobClient = Globals.GetBlobServiceClient(EnvVariableNames.AzureWebJobsStorage);
 
                 // Listing all blobs in durable-functions-monitor/function-maps folder
-                var container = blobClient.GetContainerReference(Globals.TemplateContainerName);
+                var container = blobClient.GetBlobContainerClient(Globals.TemplateContainerName);
 
                 string functionMapFolderName = Globals.FunctionMapFolderName + "/";
-                var fileNames = await container.ListBlobsAsync(functionMapFolderName);
+                var blobNames = await container.ListBlobNamesAsync(functionMapFolderName);
 
                 // Loading blobs in parallel
-                await Task.WhenAll(fileNames.Select(async templateName =>
+                await Task.WhenAll(blobNames.Select(async blobName =>
                 {
-                    var blob = await blobClient.GetBlobReferenceFromServerAsync(templateName.Uri);
-
                     // Expecting the blob name to be like "dfm-function-map.[TaskHubName].json" or just "dfm-function-map.json"
-                    var nameParts = blob.Name.Substring(functionMapFolderName.Length).Split('.');
+                    var nameParts = blobName.Substring(functionMapFolderName.Length).Split('.');
                     if (nameParts.Length < 2 || nameParts.First() != Globals.FunctionMapFilePrefix || nameParts.Last() != "json")
                     {
                         return;
@@ -218,7 +211,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
                     using (var stream = new MemoryStream())
                     {
-                        await blob.DownloadToStreamAsync(stream);
+                        await container.GetBlobClient(blobName).DownloadToAsync(stream);
                         string templateText = Encoding.UTF8.GetString(stream.ToArray());
 
                         result.TryAdd(taskHubName, templateText);
