@@ -35,6 +35,7 @@
 
   <Folder Name="/tests/">
     <Project Path="tests/durablefunctionsmonitor.dotnetisolated.core.tests/durablefunctionsmonitor.dotnetisolated.core.tests.csproj" />
+    <Project Path="tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests/durablefunctionsmonitor.dotnetisolated.core.integrationtests.csproj" />
   </Folder>
 
 </Solution>

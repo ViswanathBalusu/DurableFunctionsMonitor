@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+
+    <!--
+      Opted out of the repo-wide ImplicitUsings for the same reason as the unit test project:
+      MSTest 4 contributes a global using whose RetryContext collides with the Functions Worker one.
+    -->
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="4.4.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\durablefunctionsmonitor.dotnetisolated.core\durablefunctionsmonitor.dotnetisolated.core.csproj" />
+  </ItemGroup>
+
+</Project>
