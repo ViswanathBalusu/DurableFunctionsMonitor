@@ -50,6 +50,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public string Name { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public JToken Input { get; set; }
+
+        /// <summary>
+        /// Set when the stored payload could not be read; Input then shows what the history record itself holds
+        /// </summary>
+        public string InputError { get; set; }
+
         public bool IsLast { get; set; }
         public Dictionary<string, InputEventOperationInfo> Operations { get; set; } = new Dictionary<string, InputEventOperationInfo>();
 

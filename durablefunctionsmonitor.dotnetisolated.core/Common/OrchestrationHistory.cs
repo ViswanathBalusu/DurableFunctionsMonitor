@@ -22,6 +22,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // Need to fetch executionId first
 
             var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty);
+            if (instanceEntity == null)
+            {
+                // No such instance (or it was purged). Nothing to correlate against, so nothing to return.
+                return Enumerable.Empty<HistoryEvent>();
+            }
 
             // Coalescing to string.Empty because the legacy SDK's GenerateFilterCondition did the
             // same for a null value; CreateQueryFilter would instead emit "eq null", which Table

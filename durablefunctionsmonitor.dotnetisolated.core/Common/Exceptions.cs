@@ -58,4 +58,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
     {
         public DfmNotSupportedException(string msg) : base(msg) {}
     }
+
+    /// <summary>
+    /// Reading Task Hub storage failed before anything was changed. Answered with 500.
+    /// </summary>
+    internal class DfmStorageException : Exception
+    {
+        public DfmStorageException(string msg, Exception inner) : base(msg, inner) {}
+    }
 }

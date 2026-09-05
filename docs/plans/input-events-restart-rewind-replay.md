@@ -72,7 +72,7 @@ Stale messages: when a message batch targets an instance that is not executable,
 
 ## 4. Endpoints
 
-All routes are under the existing prefix `durable-functions-monitor/a/p/i/{connName}-{hubName}`. They live in a new class `Functions/InputEvents.cs` (`InputEvents : DfmFunctionBase`), so each can carry its own `OperationKind`. The literal action segments coexist with the existing `orchestrations('{instanceId}')/{action?}` route the same way `custom-tab-markup('{templateName}')` already does (literal segments take precedence over the parameter segment).
+All routes are under the existing prefix `durable-functions-monitor/a/p/i/{connName}-{hubName}`. They live in a new class `Functions/InputEvents.cs` (`InputEvents : DfmFunctionBase`), so each can carry its own `OperationKind`. The write operations sit under `orchestrations('{instanceId}')/input-events/...`, two path segments below the instance, because the Functions host resolves HTTP routes first-match in function-name order rather than by literal precedence: a single-segment action such as `orchestrations('{instanceId}')/replay` is swallowed by the existing `orchestrations('{instanceId}')/{action?}` route, whose function sorts first (verified against a running host). `custom-tab-markup('{templateName}')` only escapes that because its function name sorts before `DfmPostOrchestrationFunction`; `RouteTests` now checks every pair of routes in the assembly for this.
 
 Status codes used by all four: 400 malformed body, entity instance ID (`@name@key`), or storage provider that does not support the operation; 403 from the middleware (dangerous operations disabled, read-only mode or role); 404 instance or event not found; 409 a precondition failed (wrong status, not the last input event, external events present, sub-orchestration, terminate timeout, history changed since the caller read it); 413 input larger than the inline limit (v1, section 6.2).
 
@@ -127,11 +127,11 @@ Rules (pure function over runtime status, parent ID, history and the two capabil
 
 `input` is the parsed JSON when the stored string is JSON, otherwise the raw string; payloads stored in blob form are downloaded (section 6.1).
 
-### 4.2 `POST orchestrations('{instanceId}')/restart-in-place` (Dangerous)
+### 4.2 `POST orchestrations('{instanceId}')/input-events/restart-in-place` (Dangerous)
 
 Request: `{ "input": <any JSON value, optional> }`. When `input` is omitted the current execution's `ExecutionStarted` input is reused verbatim.
 
-Validation, in order: not an entity; instance exists; status is `Failed` (409 for every other status, Completed and Terminated included); the current execution has no `EventRaised` (409); `ParentInstanceId` is empty (409).
+Validation, in order: not an entity; instance exists; status is `Failed` (409 for every other status, Completed and Terminated included); the current execution has no `EventRaised` (409); `ParentInstanceId` is empty (409). The parent lookup and the read of the stored input must succeed (500 otherwise, nothing touched): an unknown parent is not treated as "no parent", and a payload that cannot be read is not treated as empty, because the purge would delete it.
 
 Steps:
 
@@ -142,7 +142,7 @@ Steps:
 
 Failure window: if step 3 fails after step 2 succeeded, the instance is gone. Return 500 with the captured name and input in the body so the caller can re-create it through the existing start endpoint, and log at Error. Child sub-orchestrations of the old execution (`{oldExecutionId}:n`) are not purged; the client SDK exposes a recursive purge option but the host ignores it in the version read, so an optional follow-up is to find children through a `PartitionKey ge '{executionId}:'` range on the Instances table and purge them one by one.
 
-### 4.3 `POST orchestrations('{instanceId}')/update-input-and-rewind` (Write)
+### 4.3 `POST orchestrations('{instanceId}')/input-events/update-input-and-rewind` (Write)
 
 Request: `{ "sequenceNumber": 27, "input": <any JSON value>, "reason": "optional rewind reason" }`.
 
@@ -158,11 +158,11 @@ If step 2 fails, the input stays updated. Return 409 or 500 with a message sayin
 
 What the user sees afterwards is the normal rewind picture: the failed steps re-run, `TaskScheduled`/`TaskFailed` rows show as `GenericEvent` "Rewound: ...", and the orchestrator's code after the event computes its activity inputs from the edited payload during replay. Steps that already completed are not re-run and keep their results.
 
-### 4.4 `POST orchestrations('{instanceId}')/replay` (Dangerous recommended)
+### 4.4 `POST orchestrations('{instanceId}')/input-events/replay` (Dangerous recommended)
 
 Request: `{ "sequenceNumber": 27, "input": <any JSON value, optional>, "terminateIfRunning": false }`. When `input` is omitted the event's stored input is raised again unchanged.
 
-Validation: not an entity; instance exists; `storageSupports.truncateHistory` (400); `sequenceNumber` is the last `EventRaised` of the current execution (409; `ExecutionStarted` gets "use restart-in-place"); status terminal or `terminateIfRunning` (409).
+Validation: not an entity; instance exists; `storageSupports.truncateHistory` (400); `sequenceNumber` is the last `EventRaised` of the current execution (409; `ExecutionStarted` gets "use restart-in-place"); status terminal or `terminateIfRunning` (409); the stored input must be readable (500 otherwise, nothing touched). The storage routine itself refuses with 409 when work scheduled before the event has no completion recorded before it (section 6.3, step 4).
 
 Steps:
 
@@ -218,13 +218,15 @@ Let `S` be the sequence number of the target `EventRaised` row and `X = X16(S)`.
 
 1. Read the Instances row (ETag, `ExecutionId`, `RuntimeStatus`) and the target row; verify it is an `EventRaised` of the current execution.
 2. Choose the cut point `C`. If row `S-1` is `OrchestratorStarted` (the event opened its episode), `C = S-1`, so the dangling episode opener goes too. Otherwise `C = S`.
-3. Query the rows to delete: `PartitionKey eq {instanceId} and RowKey ge {X16(C)} and RowKey ne 'sentinel' and ExecutionId eq {executionId}`, built with `Azure.Data.Tables.TableClient.CreateQueryFilter` so the values are escaped. Collect every `*BlobName` value from those rows.
-4. Delete the rows in transaction batches of up to 100 (same partition). Older-generation rows beyond the current execution are left alone; both readers already ignore them, and the engine's upsert-replace overwrites them as the history grows again.
-5. If row `C-1` is not `OrchestratorCompleted` (the event arrived mid-batch, after other events of the same episode), upsert an `OrchestratorCompleted` row at `C`: `EventType = OrchestratorCompleted`, `EventId = -1`, `IsPlayed = true`, `_Timestamp = now`, `ExecutionId = executionId`. The kept history is then a sequence of complete episodes, and the engine's next checkpoint starts at `C+1`.
-6. Delete the collected blobs, best effort.
-7. Reopen the instance: on the Instances row set `RuntimeStatus = "Running"`, `LastUpdatedTime = now`, remove `Output` and `CompletedTime`, keep everything else, and replace with the ETag captured in step 1 (a concurrent change yields 412, surfaced as 409).
-8. Optional hardening: merge the sentinel with unchanged values (`ExecutionId`, `IsCheckpointComplete = true`). That bumps its ETag, so a worker that still holds an extended session for this instance fails its next checkpoint with the engine's split-brain detection instead of writing stale rows over the edit. The precondition of a terminal instance already makes this a corner case; keep it if the integration test in section 9 shows it is harmless.
-9. Return the number of deleted rows.
+3. Query the rows to delete: `PartitionKey eq {instanceId} and RowKey ge {X16(C)} and RowKey ne 'sentinel' and ExecutionId eq {executionId}`, built with `Azure.Data.Tables.TableClient.CreateQueryFilter` so the values are escaped, ordered by `RowKey` descending. Collect every `*BlobName` value from those rows. Older-generation rows beyond the current execution are left alone; both readers already ignore them, and the engine's upsert-replace overwrites them as the history grows again.
+4. Refuse (409) when the kept rows contain a `TaskScheduled` or `SubOrchestrationInstanceCreated` whose completion (`TaskCompleted`, `TaskFailed`, `SubOrchestrationInstanceCompleted` or `SubOrchestrationInstanceFailed` with the same id) is not among the kept rows, for example because the event arrived while a `Task.WhenAll` activity was still running. After a replay the orchestrator would wait for that completion forever. Timers are exempt: a timer the orchestrator no longer awaits can fire or not without consequence.
+5. First write, conditional: replace the Instances row (`LastUpdatedTime = now`) with the ETag from step 1. A 412 means someone else is working on the instance (a rewind, a restart), so stop with 409 before anything is deleted. Re-read the row for the ETag the reopen needs.
+6. Write the sentinel back unchanged, with its ETag. That bumps the ETag the engine checkpoints against, so a worker that still holds a session for this instance fails its next checkpoint as split-brain instead of writing stale rows over the edit.
+7. Delete the rows in transaction batches of up to 100 (same partition), highest key first, with the remainder in the first batch so that the last batch is a full one. The target row and the episode opener it may drag along are deleted last, together, so an interrupted run leaves a contiguous prefix that still contains the target, and the same request can simply be retried.
+8. If row `C-1` is not `OrchestratorCompleted` (the event arrived mid-batch, after other events of the same episode), upsert an `OrchestratorCompleted` row at `C`: `EventType = OrchestratorCompleted`, `EventId = -1`, `IsPlayed = true`, `_Timestamp = now`, `ExecutionId = executionId`. The kept history is then a sequence of complete episodes, and the engine's next checkpoint starts at `C+1`.
+9. Delete the collected blobs, best effort.
+10. Reopen the instance: on the Instances row set `RuntimeStatus = "Running"`, `LastUpdatedTime = now`, remove `Output` and `CompletedTime`, keep everything else, and replace with the ETag from step 5. On a 412, re-read once and retry only if the instance is still terminal; otherwise 409.
+11. Return the number of deleted rows.
 
 Worked example on the history in the request: rows `... OrchestratorStarted (k) | EventRaised RequestTrackerApproval (k+1) | SubOrchestrationInstanceCreated 4 | OrchestratorCompleted | ... | ExecutionCompleted | OrchestratorCompleted`. `S = k+1`, row `k` is `OrchestratorStarted`, so `C = k`; every row from `k` on is deleted, row `k-1` is the previous episode's `OrchestratorCompleted`, so nothing is added. After the re-raise the engine writes `OrchestratorStarted (k) | EventRaised (k+1) | SubOrchestrationInstanceCreated 4 (k+2) | ...`, and child `{executionId}:4` starts a new generation.
 
@@ -240,16 +242,19 @@ Worked example on the history in the request: rows `... OrchestratorStarted (k) 
 - R3, control-flow changes. After update-and-rewind the orchestrator replays with the edited input. If the edit changes which activities the code calls before the failed step, the engine reports non-determinism and the instance fails again; the answer is Replay. Same for orchestrator code that changed since the instance ran.
 - R4, failures inside a sub-orchestration. Rewind re-runs the child with the child's original input; the parent's edited input does not reach it. Use Replay to re-create the child with new input.
 - R5, sub-orchestrations as targets. Restart in place is refused for them (the parent would never hear back). Replay and update-and-rewind are allowed with a warning; the child's completion message still reaches a parent that is waiting.
-- R6, extended sessions. An in-memory session that survived while the instance was edited would checkpoint over the edit. Terminal instances have no live session; the optional sentinel touch in 6.3 step 8 is the belt-and-braces.
+- R6, extended sessions. An in-memory session that survived while the instance was edited would checkpoint over the edit. Terminal instances have no live session, and the sentinel rewrite in 6.3 step 6 turns any survivor's next checkpoint into a split-brain failure rather than a corrupted history.
 - R7, purge-then-schedule window in restart in place. Covered in 4.2: the response carries what is needed to re-create the instance by hand.
 - R8, large payloads. v1 rejects edited inputs over the inline limit; stored large inputs are still read correctly. Replay and restart are unaffected because the engine writes those payloads itself.
-- R9, concurrency. Every write re-validates status and "is still the last input event" and uses ETags on the rows it replaces; a concurrent change is a 409, never a silent overwrite.
+- R9, concurrency. Every write re-validates status and "is still the last input event" and uses ETags on the rows it replaces; replay additionally makes a conditional write on the Instances row before its first delete. A concurrent change is a 409, never a silent overwrite.
+- R10, work still running when the event arrived. A `TaskScheduled` or `SubOrchestrationInstanceCreated` before the cut whose completion is not before the cut would leave the replayed orchestrator waiting forever, so replay refuses those instances (6.3 step 4). Update-input-and-rewind and restart-in-place remain available for them.
+- R11, degraded reads on destructive paths. The read endpoint falls back to the history record when an offloaded payload cannot be downloaded, and says so in `inputError`. Restart in place and replay never fall back: they stop with 500 and touch nothing, because their next step deletes the payload. Likewise, restart in place stops when it cannot determine whether the instance is a sub-orchestration, instead of assuming it is not.
 
 ## 9. Tests
 
 Unit (`tests/durablefunctionsmonitor.dotnetisolated.core.tests`, MSTest and Moq, no storage):
 
 - `AuthTests`: the cases in 3.2, plus `DfmSettings` parsing of the flag (unset, empty, `true`, `TRUE`, `false`).
+- `RouteTests`: every pair of HTTP routes in the assembly, checked the way the host resolves them (first match, function-name order): a route that also accepts another function's paths must belong to the function that sorts first.
 - `InputEventsTests`: the eligibility matrix over synthetic `HistoryEvent[]` and statuses: no `EventRaised`; several `EventRaised` (only the last gets operations); Failed vs Completed vs Running (restart in place only on Failed; `requiresTerminate` only on replay); flag off; capability flags off; sub-orchestration warning.
 - `OrchestrationHistoryTests`: `SequenceNumber` parsed from `RowKey` (`0000000000000011` gives 17, `sentinel` gives null) and carried through the merged task rows.
 - `InputEventsFunctionTests` with a mocked `DurableTaskClient` and a mocked `ITableClient`: status codes for each validation branch, and the ordering guarantees (terminate before purge, truncate before raise, input updated before rewind).
@@ -283,4 +288,4 @@ Real host (manual checklist, no harness in this repo): run the standalone `durab
 3. Update-and-rewind is limited to the last input-bearing event. Allowing any `EventRaised` is the same code path; only the eligibility rule changes.
 4. v1 rejects edited inputs above the engine's 60 KB inline limit with 413.
 5. MSSQL and Netherite return 400 for update and replay until they get their own routines.
-6. Endpoint names: `input-events`, `restart-in-place`, `update-input-and-rewind`, `replay`.
+6. Endpoint names: `input-events`, `input-events/restart-in-place`, `input-events/update-input-and-rewind`, `input-events/replay`.

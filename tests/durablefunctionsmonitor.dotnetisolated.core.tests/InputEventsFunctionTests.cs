@@ -137,6 +137,83 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             var result = await ReadJsonAsync(response);
             Assert.IsTrue(result["events"][0]["input"].Value<int>("a") == 1);
+
+            // ...but says so, since the record may only hold the empty marker of an offloaded payload
+            StringAssert.Contains(result["events"][0].Value<string>("inputError"), "storage is down");
+        }
+
+        [TestMethod]
+        public async Task GetInputEventsStillAnswersWhenTheParentCannotBeDetermined()
+        {
+            // Arrange
+
+            this._extensionPoints.GetParentInstanceIdRoutine = (client, connName, hubName, instanceId) => throw new TimeoutException("history scan timed out");
+
+            // Act
+
+            var response = await this.Function.DfmGetInputEventsFunction(new FakeJsonRequest(), this._durableClient, "-", HubName, InstanceId);
+
+            // Assert
+
+            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [TestMethod]
+        public async Task RestartInPlaceRefusesWhenTheStoredInputCannotBeRead()
+        {
+            // Arrange
+
+            this.UseHistoryWithoutRaisedEvents();
+            this._extensionPoints.GetHistoryEventInputRoutine = (client, connName, hubName, instanceId, sequenceNumber) => throw new InvalidOperationException("blob container is gone");
+
+            // Act
+
+            var response = await this.Function.DfmRestartInPlaceFunction(new FakeJsonRequest(), this._durableClient, "-", HubName, InstanceId);
+
+            // Assert
+
+            // The purge would have deleted the very payload that could not be read
+            Assert.AreEqual(HttpStatusCode.InternalServerError, response.StatusCode);
+            StringAssert.Contains(await ReadBodyAsync(response), "Nothing was changed");
+            CollectionAssert.DoesNotContain(this._durableClient.Calls, $"Purge:{InstanceId}");
+        }
+
+        [TestMethod]
+        public async Task RestartInPlaceRefusesWhenTheParentCannotBeDetermined()
+        {
+            // Arrange
+
+            this.UseHistoryWithoutRaisedEvents();
+            this._extensionPoints.GetParentInstanceIdRoutine = (client, connName, hubName, instanceId) => throw new TimeoutException("history scan timed out");
+
+            // Act
+
+            var response = await this.Function.DfmRestartInPlaceFunction(new FakeJsonRequest(), this._durableClient, "-", HubName, InstanceId);
+
+            // Assert
+
+            // A sub-orchestration re-created as a top-level instance would leave its parent waiting forever
+            Assert.AreEqual(HttpStatusCode.InternalServerError, response.StatusCode);
+            StringAssert.Contains(await ReadBodyAsync(response), "sub-orchestration");
+            CollectionAssert.DoesNotContain(this._durableClient.Calls, $"Purge:{InstanceId}");
+        }
+
+        [TestMethod]
+        public async Task ReplayRefusesWhenTheStoredInputCannotBeRead()
+        {
+            // Arrange
+
+            this._extensionPoints.GetHistoryEventInputRoutine = (client, connName, hubName, instanceId, sequenceNumber) => throw new InvalidOperationException("blob container is gone");
+
+            // Act
+
+            var response = await this.Function.DfmReplayFunction(new FakeJsonRequest("{ \"sequenceNumber\": 11 }"), this._durableClient, "-", HubName, InstanceId);
+
+            // Assert
+
+            Assert.AreEqual(HttpStatusCode.InternalServerError, response.StatusCode);
+            CollectionAssert.DoesNotContain(this._storageCalls, "Truncate:11");
+            CollectionAssert.DoesNotContain(this._durableClient.Calls, $"Raise:{InstanceId}:Approval2");
         }
 
         [TestMethod]
