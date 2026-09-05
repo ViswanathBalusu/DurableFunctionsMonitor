@@ -30,7 +30,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsTrue(capabilities.Batch);
             Assert.IsFalse(capabilities.StorageHealth);
             Assert.IsFalse(capabilities.Audit);
-            Assert.IsFalse(capabilities.Entities);
+            Assert.IsTrue(capabilities.Entities); // B4-S2-T1: always true, via DurableTaskClient.Entities
 
             // Azure Storage's default editing routines are set out of the box (input-events replay plan).
             Assert.IsTrue(capabilities.UpdateInput);
@@ -77,6 +77,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsTrue(capabilities.Batch);
             Assert.IsTrue(capabilities.PurgeHistory);
             Assert.IsTrue(capabilities.ConditionalGet);
+            Assert.IsTrue(capabilities.Entities);
         }
 
         [TestMethod]
@@ -106,6 +107,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsFalse(capabilities.Children);
             Assert.IsFalse(capabilities.StorageHealth);
             Assert.IsFalse(capabilities.EpisodeMarkers);
+            Assert.IsTrue(capabilities.Entities); // Independent of provider - see AzureStorageDefaultsReportTheAzureStorageCapabilitySet
         }
 
         [TestMethod]
@@ -138,8 +140,8 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             // defaults to false (an operator must opt in). See AuditCapabilityRequiresBothTheSettingAndTheRoutine.
             Assert.IsFalse(capabilities.Audit);
 
-            // Entities stays false until B4-S3-T1 wires the endpoint through the client API.
-            Assert.IsFalse(capabilities.Entities);
+            // Entities is always true (B4-S2-T1): it does not depend on any DfmExtensionPoints routine.
+            Assert.IsTrue(capabilities.Entities);
         }
 
         [TestMethod]

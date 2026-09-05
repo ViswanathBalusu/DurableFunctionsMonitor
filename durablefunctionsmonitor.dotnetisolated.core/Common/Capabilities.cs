@@ -33,7 +33,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// <summary>/audit is enabled and implemented for the current storage provider.</summary>
         public bool Audit { get; init; }
 
-        /// <summary>/entities is implemented. Stays false until B4-S3-T1 wires the endpoint through the client API.</summary>
+        /// <summary>/entities is implemented. Always true: it lists through DurableTaskClient.Entities,
+        /// which every storage provider's client implementation supports, not through DfmExtensionPoints.</summary>
         public bool Entities { get; init; }
 
         /// <summary>update-input-and-rewind is implemented for the current storage provider.</summary>
@@ -87,8 +88,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 // storage provider that implements the read side (ReadAuditRecordsRoutine).
                 Audit = settings.AuditEnabled && ext.ReadAuditRecordsRoutine != null,
 
-                // TODO(B4-S3-T1): flip to 'true' once /entities is implemented through the client API.
-                Entities = false,
+                // Implemented in B4-S2-T1 through DurableTaskClient.Entities (client API), so it does not
+                // depend on DfmExtensionPoints or the storage provider.
+                Entities = true,
 
                 UpdateInput = ext.UpdateHistoryEventInputRoutine != null,
                 TruncateHistory = ext.TruncateHistoryRoutine != null,
