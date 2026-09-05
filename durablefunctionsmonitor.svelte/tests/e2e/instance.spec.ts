@@ -83,11 +83,13 @@ test('opens the workspace of the running order', async ({ page }) => {
   await expect(meta).toContainText(/history \d+/);
 
   // The tabs this instance has. Summary is always in the strip and hidden above 1100px by CSS;
-  // Timeline is there because this backend announces /spans, and the last tab is the hub's own
-  // Liquid template - the backend really does list one, and the app really does offer it
+  // Timeline is there because this backend announces /spans; Graph because the seed publishes a
+  // function map this orchestrator is on; and the last tab is the hub's own Liquid template - the
+  // backend really does list one, and the app really does offer it
   const labels = (await tabs(page).allTextContents()).map((label) => label.trim());
 
-  expect(labels.slice(0, 6)).toEqual(['Summary', 'Timeline', 'History', 'Inputs', 'Sequence', 'Raw']);
+  expect(labels.slice(0, 5)).toEqual(['Summary', 'Timeline', 'History', 'Inputs', 'Sequence']);
+  expect(labels).toContain('Raw');
   expect(labels.length).toBeGreaterThan(6);
 });
 
@@ -174,8 +176,9 @@ test('offers a Graph tab only when this instance is on a function map', async ({
   const graph = page.getByRole('tab', { name: 'Graph' });
 
   if ((await graph.count()) === 0) {
-    // The host publishes the flag, but the tab needs a map this instance is actually on - and no
-    // function map blob is seeded, so there is nothing to draw and nothing is offered (React rule)
+    // The seed publishes a function map, so this normally has one; a host reading a storage account
+    // that has no map blob serves IsFunctionGraphAvailable=0, and then there is nothing to draw and
+    // nothing is offered (React rule)
     await expect(page.getByRole('tab', { name: 'Raw' })).toBeVisible();
     return;
   }

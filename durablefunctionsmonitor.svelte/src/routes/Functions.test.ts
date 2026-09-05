@@ -4,6 +4,7 @@
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { BackendClient } from '$lib/api/client';
+import { normalizeAbout } from '$lib/api/endpoints';
 import type { Capabilities } from '$lib/api/types';
 import { ACTIVITY_NOTE } from '$lib/functions/FunctionsTable.svelte';
 import type { AppState } from '$lib/state/app.svelte';
@@ -109,6 +110,22 @@ describe('Functions: the page', () => {
 
     // There is no choice to offer when there is only one half
     expect(screen.queryByRole('group', { name: 'Layout' })).toBeNull();
+  });
+
+  it('asks for the numbers as soon as /about says the backend can count', async () => {
+    const rendered = mount({ capabilities: {} });
+
+    // Every screen renders before /about has answered, so this one opens as the graph alone
+    await waitFor(() => expect(document.querySelector('.graph')).not.toBeNull());
+
+    expect(document.querySelector('table.tbl')).toBeNull();
+
+    appOf(rendered).about = normalizeAbout({
+      hubName: 'DurableFunctionsHub',
+      capabilities: { stats: true } as Capabilities,
+    });
+
+    await waitFor(() => expect(document.querySelector('tbody tr')).not.toBeNull());
   });
 
   it('is the graph alone when the backend does not count', async () => {

@@ -28,7 +28,7 @@ import { pathToFileURL } from 'node:url';
 import { TableClient, TableServiceClient } from '@azure/data-tables';
 import { BlobServiceClient } from '@azure/storage-blob';
 import { QueueServiceClient } from '@azure/storage-queue';
-import { buildSeedData, DEFAULT_HUB } from './fixtures.mjs';
+import { buildFunctionMap, buildSeedData, DEFAULT_HUB, FUNCTION_MAP_BLOB, TEMPLATE_CONTAINER } from './fixtures.mjs';
 
 /**
  * The well-known Azurite development account, the same one
@@ -409,6 +409,20 @@ export async function seedHub(options = {}) {
     PartitionCount: PARTITION_COUNT,
   });
   await leases.getBlockBlobClient('taskhub.json').upload(taskHubJson, Buffer.byteLength(taskHubJson), {
+    blobHTTPHeaders: { blobContentType: 'application/json' },
+  });
+
+  // The function map the host publishes as `IsFunctionGraphAvailable`. It is an account-level blob,
+  // not a hub-level one - the backend reads it from `durable-functions-monitor/function-maps` and a
+  // name without a hub segment describes every hub of the account - and it has to be written before
+  // the host starts, because the host reads it once and caches it for its lifetime.
+  const templates = blobService.getContainerClient(TEMPLATE_CONTAINER);
+
+  await templates.createIfNotExists();
+
+  const functionMapJson = JSON.stringify(buildFunctionMap(), null, 2);
+
+  await templates.getBlockBlobClient(FUNCTION_MAP_BLOB).upload(functionMapJson, Buffer.byteLength(functionMapJson), {
     blobHTTPHeaders: { blobContentType: 'application/json' },
   });
 

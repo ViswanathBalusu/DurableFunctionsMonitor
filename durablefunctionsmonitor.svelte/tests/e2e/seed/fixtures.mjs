@@ -812,6 +812,64 @@ export function buildSeedData(hub = DEFAULT_HUB, now = new Date(), options = {})
   return { hub, now, instances, orchestrations, entities, blobs, historyRowCount };
 }
 
+/** Where the backend looks for a function map: `durable-functions-monitor/function-maps` (Globals). */
+export const TEMPLATE_CONTAINER = 'durable-functions-monitor';
+
+/** A map for every hub of the account, which is what a name without a hub segment means. */
+export const FUNCTION_MAP_BLOB = 'function-maps/dfm-func-map.json';
+
+/** The orchestrators of the seeded hub, which the Functions screen lists and draws. */
+export const ORCHESTRATORS = {
+  processOrder: PROCESS_ORDER,
+  reconcileLedger: RECONCILE_LEDGER,
+  onboardTenant: ONBOARD_TENANT,
+  notifyCustomer: NOTIFY_CUSTOMER,
+};
+
+/**
+ * The function map the seed publishes for this account: the hub the seed writes, described the way
+ * az-func-as-a-graph describes a project. It is what makes `IsFunctionGraphAvailable` true on the
+ * host, so the Functions screen has a graph to draw and the workspace has a Graph tab.
+ *
+ * The names are the ones the instances carry, so the table and the graph are about the same hub:
+ * three triggers, three orchestrators, one sub-orchestration, five activities and the entity.
+ *
+ * @returns {{ functions: Record<string, object>; proxies: Record<string, object> }}
+ */
+export function buildFunctionMap() {
+  /**
+   * @param {string} trigger
+   * @param {object} [extra]
+   * @returns {object}
+   */
+  const fn = (trigger, extra = {}) => ({ bindings: [{ type: trigger, direction: 'in' }], ...extra });
+
+  return {
+    functions: {
+      StartOrder: fn('httpTrigger'),
+      NightlyReconcile: fn('timerTrigger'),
+      OnPaymentSettled: fn('serviceBusTrigger'),
+      StartOnboarding: fn('httpTrigger'),
+
+      [PROCESS_ORDER]: fn('orchestrationTrigger', { isCalledBy: ['StartOrder', 'OnPaymentSettled'] }),
+      [RECONCILE_LEDGER]: fn('orchestrationTrigger', { isCalledBy: ['NightlyReconcile'] }),
+      [ONBOARD_TENANT]: fn('orchestrationTrigger', { isCalledBy: ['StartOnboarding'] }),
+
+      // Called by an orchestration, which is what makes it a sub-orchestration
+      [NOTIFY_CUSTOMER]: fn('orchestrationTrigger', { isCalledBy: [PROCESS_ORDER] }),
+
+      ReserveInventory: fn('activityTrigger', { isCalledBy: [PROCESS_ORDER] }),
+      ChargePayment: fn('activityTrigger', { isCalledBy: [PROCESS_ORDER] }),
+      SendConfirmation: fn('activityTrigger', { isCalledBy: [PROCESS_ORDER] }),
+      ExportReport: fn('activityTrigger', { isCalledBy: [RECONCILE_LEDGER] }),
+      ArchiveBlob: fn('activityTrigger', { isCalledBy: [RECONCILE_LEDGER] }),
+
+      Counter: fn('entityTrigger', { isSignalledBy: [{ name: PROCESS_ORDER, signalName: 'add' }] }),
+    },
+    proxies: {},
+  };
+}
+
 /**
  * A failed instance that received an external event before it failed - the one state the Inputs tab
  * exists for, and the one the mockup's own rows do not cover: the initial input can no longer be

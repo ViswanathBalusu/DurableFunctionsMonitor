@@ -52,8 +52,6 @@
   );
 
   onMount(() => {
-    void overview.load();
-
     overview.startAutoRefresh();
 
     // The header counts up, so the clock has to tick - the workspace header drives it the same way
@@ -69,14 +67,23 @@
   });
 
   /**
-   * The shared range lives in the URL, so a change from anywhere - the top bar, the palette, the
-   * throughput brush - is a new load. Queued rather than started inside the effect, which is not
-   * the place to be writing state.
+   * What is on screen was loaded for a range, and for what `/about` had said at the time. Both can
+   * change under it: the shared range lives in the URL, so a change from anywhere - the top bar, the
+   * palette, the throughput brush - is a new load; and the capabilities arrive after the first
+   * render, so a screen that asked for nothing while they were unknown has to ask again once they
+   * are known. Queued rather than started inside the effect, which is not the place to be writing
+   * state (the progress counter, the rows).
    */
+  let loadedKey = '';
+
   $effect(() => {
-    if (JSON.stringify(app.timeRange) === overview.loadedRangeKey) {
+    const key = JSON.stringify([app.timeRange, overview.supported]);
+
+    if (key === loadedKey) {
       return;
     }
+
+    loadedKey = key;
 
     queueMicrotask(() => void overview.load());
   });

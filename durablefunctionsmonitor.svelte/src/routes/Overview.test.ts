@@ -3,6 +3,7 @@
 
 import { render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
+import { normalizeAbout } from '$lib/api/endpoints';
 import type { Capabilities, StatsResponse } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
 import { NO_STATS_TEXT, NO_STATS_TITLE } from '$lib/state/overview.svelte';
@@ -208,6 +209,24 @@ describe('Overview: the panels that need a capability', () => {
 });
 
 describe('Overview: without the stats capability', () => {
+  it('asks again as soon as /about says the backend can count', async () => {
+    const onStats = vi.fn();
+    const rendered = mount({ capabilities: {}, onStats });
+
+    // Every screen renders before /about has answered, and every capability is false until it has
+    await waitFor(() => expect(screen.getByRole('heading', { name: NO_STATS_TITLE })).toBeInTheDocument());
+
+    expect(onStats).not.toHaveBeenCalled();
+
+    appOf(rendered).about = normalizeAbout({
+      hubName: 'DurableFunctionsHub',
+      capabilities: { stats: true } as Capabilities,
+    });
+
+    await waitFor(() => expect(onStats).toHaveBeenCalledOnce());
+    await waitFor(() => expect(document.querySelector('.tiles')).not.toBeNull());
+  });
+
   it('says what is missing and where the app still works, and asks the backend nothing', async () => {
     const onStats = vi.fn();
 

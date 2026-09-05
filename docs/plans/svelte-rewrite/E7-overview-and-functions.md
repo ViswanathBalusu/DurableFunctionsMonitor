@@ -134,3 +134,25 @@ Do:
 Accept:
 - [ ] Green.
 Test: themselves.
+
+**Deviation, E7-S4-T1 (2026-09-05).** Three things the specs found against the real host.
+
+(1) The plan seeds the function map through a `DFM_CUSTOM_TEMPLATES` folder, which the standalone
+host has no setting for - `CustomTemplatesFolderName` is set in code, not from the environment. The
+mechanism a real deployment uses is the storage account, so the seed writes
+`durable-functions-monitor/function-maps/dfm-func-map.json` before the host starts (the host reads it
+once and caches it for its lifetime). That also gives the workspace a Graph tab, so the tab-strip
+assertion of E5's instance spec no longer expects `Raw` in sixth place.
+
+(2) `DFM_STATS_CAP=5` goes on the second host the suite already runs (the deployment with its
+switches turned down), with a `stats-capped` project pointing at it, rather than on a third host.
+
+(3) Both screens loaded nothing at all against the real host: they ask for what a capability
+announces, and every capability is false until `/about` answers - which is after the first render.
+Each screen now watches the capability alongside the range, so it asks again the moment the backend
+says what it can do. Unit tests cover it in both.
+
+The mockups' "top orchestrators lists ProcessOrderOrchestrator first" is asserted as "sorted by
+started, descending": the seeded hub has a filler orchestrator with sixty runs, which is genuinely
+busier. The entities tile is asserted over seven days, because the seeded entities were last touched
+three days ago and a 24-hour window does not hold them.

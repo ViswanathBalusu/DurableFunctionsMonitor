@@ -59,18 +59,27 @@
   const rangeValue = $derived(isPreset(app.timeRange) ? app.timeRange.preset : 'custom');
 
   onMount(() => {
-    void functions.load();
-
     const stopRefresh = app.onRefresh(() => void functions.load());
 
     return stopRefresh;
   });
 
-  /** The shared range lives in the URL, so a change from anywhere is a new set of numbers. */
+  /**
+   * What is on screen was loaded for a range, and for the halves that existed at the time. The range
+   * lives in the URL, so a change from anywhere is a new set of numbers; the `stats` capability
+   * arrives with `/about`, after the first render, so a screen that asked for nothing while it was
+   * unknown has to ask again once it is known.
+   */
+  let loadedKey = '';
+
   $effect(() => {
-    if (JSON.stringify(app.timeRange) === functions.loadedRangeKey) {
+    const key = JSON.stringify([app.timeRange, functions.hasStats, functions.hasGraph]);
+
+    if (key === loadedKey) {
       return;
     }
+
+    loadedKey = key;
 
     queueMicrotask(() => void functions.load());
   });

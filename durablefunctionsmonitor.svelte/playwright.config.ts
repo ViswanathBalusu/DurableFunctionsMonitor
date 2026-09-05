@@ -19,14 +19,19 @@ const hub = process.env.DFM_E2E_HUB ?? 'DurableFunctionsHub';
 export const baseURL = process.env.DFM_E2E_BASE_URL ?? `http://localhost:${port}/durable-functions-monitor/`;
 
 /**
- * A second host of the same build, with `DFM_DANGEROUS_OPERATIONS_ENABLED=false`. The Inputs tab
- * behaves differently for a deployment that has the switch off, and that is not something a spec can
- * fake: /about says so, and the backend refuses the two dangerous operations with a reason naming
- * the environment variable. So the suite runs a second host and a project that points at it.
+ * A second host of the same build, running the deployment whose switches are turned down:
+ * `DFM_DANGEROUS_OPERATIONS_ENABLED=false` and a `DFM_STATS_CAP` of five rows. Neither is something
+ * a spec can fake - /about says the first, and the backend refuses the two dangerous operations with
+ * a reason naming the environment variable; the second is what makes /stats answer `partial: true`,
+ * which is the banner the Overview screen shows over numbers that are a lower bound. So the suite
+ * runs a second host, and two projects point at it.
  */
 const dangerousOffPort = Number(process.env.DFM_E2E_PORT_DANGEROUS_OFF ?? port + 1);
 
 export const dangerousOffBaseURL = `http://localhost:${dangerousOffPort}/durable-functions-monitor/`;
+
+/** How many rows that host scans before it gives up and reports what it has (B1's DFM_STATS_CAP). */
+export const STATS_CAP = '5';
 
 /** What the webServer waits for: /about answers only once the host is really up. */
 const readyUrl = `${baseURL}a/p/i/--${hub}/about`;
@@ -54,13 +59,19 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: ['**/*.mobile.spec.ts', '**/*.dangerous-off.spec.ts'],
+      testIgnore: ['**/*.mobile.spec.ts', '**/*.dangerous-off.spec.ts', '**/*.capped.spec.ts'],
     },
     // The same UI against the host that has dangerous operations switched off
     {
       name: 'dangerous-off',
       use: { ...devices['Desktop Chrome'], baseURL: dangerousOffBaseURL },
       testMatch: '**/*.dangerous-off.spec.ts',
+    },
+    // The same host again, for the specs that need a backend which stops counting early
+    {
+      name: 'stats-capped',
+      use: { ...devices['Desktop Chrome'], baseURL: dangerousOffBaseURL },
+      testMatch: '**/*.capped.spec.ts',
     },
     // 390px wide, and only the specs written for it: the bottom nav, the More sheet and the stacked
     // table cards are what lives below 768px (contracts §14)
@@ -101,6 +112,8 @@ export default defineConfig({
         DFM_NONCE: process.env.DFM_NONCE ?? 'i_sure_know_what_i_am_doing',
         DFM_DANGEROUS_OPERATIONS_ENABLED: 'false',
         DFM_AUDIT_ENABLED: process.env.DFM_AUDIT_ENABLED ?? 'true',
+        // Low enough that the seeded hub does not fit in it, which is what `partial` means
+        DFM_STATS_CAP: STATS_CAP,
         DFM_E2E_HUB: hub,
       },
     },
