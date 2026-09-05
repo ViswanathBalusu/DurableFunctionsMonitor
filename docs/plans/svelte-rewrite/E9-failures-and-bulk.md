@@ -32,6 +32,33 @@ Accept:
 - [ ] Restart in place carries the disabled reason when dangerous is off.
 Test: component tests.
 
+**Deviation, E9-S1-T1 and E9-S2-T1 (2026-09-05).** Four things, three of them B3 answering back.
+
+(1) A group's buttons act on the ids the group carries, not on its count. `FailuresAggregator` counts
+every instance that failed (`Count = members.Count`) and carries the newest fifty of them
+(`MaxInstancesPerGroup`), so a group of 340 offers `Rewind all 50` and its footer reads
+`the newest 50 of 340 · …`. The chip keeps the true count; a button that said "all 340" would be
+promising 290 ids the screen has never been told.
+
+(2) The reason opens the peek with what `/failures` reported and nothing else. The mockup passes a
+made-up `custom: '{"error":"…"}'`, and there is no custom status in `FailureInstance` - showing the
+reason under the `customStatus` label would be reporting a value the backend never sent (contracts
+§9). Where the provider wrote no `completedTime`, the peek's `updated` is `createdTime + durationMs`:
+B3 measures the duration from `CompletedTime ?? LastUpdatedTime`, so that is arithmetic on the
+backend's own answer rather than a guess.
+
+(3) The route has an empty state for a backend without the capability (`Failures needs the failures
+endpoint`), with a button to the Instances screen filtered to `Failed` over the same range - the same
+fallback E7's Failed tile takes. The nav item is hidden without the capability, but the URL is not.
+
+(4) `summary` pluralises: `9 failed in 3 groups`, `6 failed in 1 group`. The mockup only ever shows
+three groups, so it does not say what one should read.
+
+The unit fixture was made faithful to `FailuresAggregator` while writing these: `signature` is the
+whole normalised reason (`InventoryUnavailable: SKU-* is out of stock`), not the exception class;
+`key` is `{name}|{signature}`; a group's `count` equals the instances it carries; and `totalFailed`
+is the sum of the group counts, while `scanned` counts every row the table returned.
+
 #### E9-S2-T2 Row and group confirm dialogs
 Files: `src/lib/failures/FailureActionDialog.svelte`, tests
 Depends: E1-S4-T2, E4-S6-T4
