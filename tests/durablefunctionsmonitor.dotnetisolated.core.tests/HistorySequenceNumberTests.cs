@@ -68,6 +68,121 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        public void MapsTimerIdAndFireAtFromTheRow()
+        {
+            // Arrange
+
+            var fireAt = DateTimeOffset.UtcNow.AddMinutes(5);
+
+            var entity = new TableEntity("my-instance", "0000000000000002")
+            {
+                ["EventType"] = "TimerFired",
+                ["TimerId"] = 3,
+                ["FireAt"] = fireAt
+            };
+
+            // Act
+
+            var historyEntity = HistoryEntity.From(entity);
+
+            // Assert
+
+            Assert.AreEqual(3, historyEntity.TimerId);
+            Assert.AreEqual(fireAt, historyEntity.FireAt);
+        }
+
+        [TestMethod]
+        public void LeavesTimerIdAndFireAtNullWhenTheRowHasNoSuchColumns()
+        {
+            // Arrange
+
+            var entity = new TableEntity("my-instance", "0000000000000001")
+            {
+                ["EventType"] = "TaskScheduled"
+            };
+
+            // Act
+
+            var historyEntity = HistoryEntity.From(entity);
+
+            // Assert
+
+            Assert.IsNull(historyEntity.TimerId);
+            Assert.IsNull(historyEntity.FireAt);
+        }
+
+        [TestMethod]
+        public async Task HistoryEventsCarryTimerIdAndFireAt()
+        {
+            // Arrange
+
+            const string instanceId = "my-instance";
+            const string executionId = "exec-1";
+
+            var fireAt = DateTimeOffset.UtcNow.AddMinutes(5);
+
+            var rows = new[]
+            {
+                Row(0, "OrchestratorStarted"),
+                Row(1, "TimerCreated", eventId: 3, fireAt: fireAt),
+                Row(2, "TimerFired", timerId: 3, fireAt: fireAt),
+                Row(3, "OrchestratorCompleted")
+            };
+
+            var tableClient = new Mock<ITableClient>();
+
+            tableClient
+                .Setup(c => c.GetEntityAsync("HubInstances", instanceId, string.Empty))
+                .ReturnsAsync(new TableEntity(instanceId, string.Empty) { ["ExecutionId"] = executionId });
+
+            tableClient
+                .Setup(c => c.GetAll("HubHistory", It.IsAny<string>()))
+                .Returns(rows);
+
+            tableClient
+                .Setup(c => c.GetAllAsync("HubHistory", It.Is<string>(filter => filter.Contains("TaskScheduledId ge 0"))))
+                .ReturnsAsync(rows.Where(r => r.ContainsKey("TaskScheduledId")).ToList());
+
+            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = tableClient.Object;
+
+            // Act
+
+            var history = (await OrchestrationHistory.GetHistoryDirectlyFromTable(null, "SomeConnString", "Hub", instanceId))
+                .Where(e => e.EventType == "TimerCreated" || e.EventType == "TimerFired")
+                .ToList();
+
+            // Assert
+
+            Assert.AreEqual(2, history.Count);
+
+            var timerCreated = history[0];
+            Assert.AreEqual("TimerCreated", timerCreated.EventType);
+            Assert.IsNull(timerCreated.TimerId);
+            Assert.AreEqual(fireAt, timerCreated.FireAt);
+
+            var timerFired = history[1];
+            Assert.AreEqual("TimerFired", timerFired.EventType);
+            Assert.AreEqual(3, timerFired.TimerId);
+            Assert.AreEqual(fireAt, timerFired.FireAt);
+
+            static TableEntity Row(long sequenceNumber, string eventType, int? eventId = null, int? timerId = null, DateTimeOffset? fireAt = null)
+            {
+                var row = new TableEntity(instanceId, sequenceNumber.ToString("X16"))
+                {
+                    ["ExecutionId"] = executionId,
+                    ["EventType"] = eventType,
+                    ["_Timestamp"] = DateTimeOffset.UtcNow,
+                    ["EventId"] = eventId ?? -1
+                };
+
+                if (timerId.HasValue) row["TimerId"] = timerId.Value;
+                if (fireAt.HasValue) row["FireAt"] = fireAt.Value;
+
+                return row;
+            }
+        }
+
+        [TestMethod]
         public async Task ReturnsAnEmptyHistoryForAnUnknownInstance()
         {
             // Arrange

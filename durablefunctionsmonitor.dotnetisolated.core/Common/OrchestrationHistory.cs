@@ -145,7 +145,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 Details = evt.Details ?? evt.FailureDetails,
                 SubOrchestrationId = subOrchestrationId ?? evt.InstanceId,
                 ScheduledTime = scheduledTime,
-                DurationInMs = scheduledTime.HasValue ? (evt._Timestamp - scheduledTime.Value).TotalMilliseconds : 0
+                DurationInMs = scheduledTime.HasValue ? (evt._Timestamp - scheduledTime.Value).TotalMilliseconds : 0,
+                TimerId = evt.TimerId,
+                FireAt = evt.FireAt
             };
         }
 
@@ -228,6 +230,16 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public string Details { get; set; }
         public double? DurationInMs { get; set; }
         public string SubOrchestrationId { get; set; }
+        /// <summary>
+        /// For a 'TimerFired' event, the EventId of the 'TimerCreated' event it fired for.
+        /// Null if the storage provider does not report it (e.g. MSSQL).
+        /// </summary>
+        public int? TimerId { get; set; }
+        /// <summary>
+        /// The moment a timer is due to fire, as recorded on 'TimerCreated'/'TimerFired' rows.
+        /// Null if the storage provider does not report it (e.g. MSSQL).
+        /// </summary>
+        public DateTimeOffset? FireAt { get; set; }
     }
 
     // Represents a record in the XXXHistory table.
@@ -251,6 +263,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public string FailureDetails { get; set; }
         public int EventId { get; set; }
         public int? TaskScheduledId { get; set; }
+        // Set on 'TimerFired' rows: the EventId of the 'TimerCreated' row it correlates to.
+        public int? TimerId { get; set; }
+        // Set on 'TimerCreated'/'TimerFired' rows: the moment the timer is (was) due to fire.
+        public DateTimeOffset? FireAt { get; set; }
 
         public static HistoryEntity From(TableEntity entity)
         {
@@ -267,7 +283,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 Details = entity.GetString("Details"),
                 FailureDetails = entity.GetString("FailureDetails"),
                 EventId = entity.GetInt32("EventId") ?? default,
-                TaskScheduledId = entity.GetInt32("TaskScheduledId")
+                TaskScheduledId = entity.GetInt32("TaskScheduledId"),
+                TimerId = entity.GetInt32("TimerId"),
+                FireAt = entity.GetDateTimeOffset("FireAt")
             };
         }
 
