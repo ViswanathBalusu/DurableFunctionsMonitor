@@ -82,7 +82,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 Assert.IsTrue(capabilities["spans"].Value<bool>());
                 Assert.IsTrue(capabilities["batch"].Value<bool>());
                 Assert.IsTrue(capabilities["conditionalGet"].Value<bool>());
-                Assert.IsFalse(capabilities["stats"].Value<bool>());
+                Assert.IsTrue(capabilities["stats"].Value<bool>()); // stats routines landed in B1-S2-T2 (Azure Storage default) and B1-S2-T4 (MSSQL)
                 Assert.IsFalse(capabilities["purgeEntities"].Value<bool>());
 
                 // templates is always present with its four contract fields, whatever custom templates
