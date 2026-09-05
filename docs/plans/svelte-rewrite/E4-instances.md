@@ -270,3 +270,15 @@ Do:
 Accept:
 - [ ] Spec green locally and in CI.
 Test: itself.
+
+**Deviation, E4-S9-T1 (2026-09-05).** The paging rows are the seed's own: `buildSeedData` takes a
+`filler` count and `global-setup` passes `DFM_E2E_FILLER` (60 by default), rather than a flag only
+this spec sets - a hub that pages is closer to a real one, and `DFM_E2E_FILLER=0` gives back the
+mockup's rows alone. Two things the plan expected of the backend are not what it does, and the spec
+says what it does instead: an unknown orchestrator name is *accepted* (the host has no list to check
+one against, so it queues the instance - the spec starts one and checks it is really there), and
+`Resume` on the instances it has just suspended is refused, because nothing consumes the control
+queue of a seeded hub and they never actually became Suspended; that failure is asserted, together
+with the result dialog that lists it. Two defects it found are fixed in their own commits: every
+dialog was unclickable in a browser (the overlay covered it), and the column the list is sorted by
+could not be flipped.

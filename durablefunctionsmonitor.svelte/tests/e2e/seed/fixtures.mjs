@@ -18,6 +18,12 @@
 /** The task hub the e2e suite seeds unless `DFM_E2E_HUB` says otherwise. */
 export const DEFAULT_HUB = 'DurableFunctionsHub';
 
+/** The orchestrator of the filler rows, which exist only so the list has a second page. */
+export const FILLER_ORCHESTRATOR = 'PagingFillerOrchestrator';
+
+/** Their ids all start with this, and with nothing the mockup's own rows start with. */
+export const FILLER_INSTANCE_PREFIX = 'filler-';
+
 /** The `RuntimeStatus` the mockup's entity rows carry (ScreenInstances.dc.html L201-L202). */
 export const ENTITY_RUNTIME_STATUS = 'Pending';
 
@@ -361,9 +367,11 @@ function largeTenantInput() {
  *
  * @param {string} [hub] only used for the `TaskHubName` column
  * @param {Date} [now] the moment the fixtures are relative to
+ * @param {object} [options]
+ * @param {number} [options.filler] extra completed instances, so the list has more than one page
  * @returns {SeedData}
  */
-export function buildSeedData(hub = DEFAULT_HUB, now = new Date()) {
+export function buildSeedData(hub = DEFAULT_HUB, now = new Date(), options = {}) {
   /** @type {SeedInstance[]} */
   const instances = [];
 
@@ -761,6 +769,25 @@ export function buildSeedData(hub = DEFAULT_HUB, now = new Date()) {
         row(2, 'EventRaised', created, 91, { name: 'add', input: '{"amount":1}' }),
         row(3, 'OrchestratorCompleted', created, 100),
       ],
+    });
+  }
+
+  // Enough rows for the table to page (E4-S9-T1): the mockup's nine cannot fill a 50-row page.
+  // They are dull on purpose - one name, one status, a minute apart - so a spec can tell them from
+  // the rows the mockups care about, and they are older than every one of those.
+  for (let index = 0; index < (options.filler ?? 0); index += 1) {
+    const createdSecondsAgo = 4000 + index * 60;
+
+    add({
+      instanceId: `${FILLER_INSTANCE_PREFIX}${String(index).padStart(3, '0')}`,
+      name: FILLER_ORCHESTRATOR,
+      executionId: `filler-${String(index).padStart(4, '0')}-0000-4000-8000-000000000000`,
+      runtimeStatus: 'Completed',
+      createdSecondsAgo,
+      durationMs: 30_000,
+      terminal: true,
+      input: JSON.stringify({ index }),
+      output: JSON.stringify({ ok: true }),
     });
   }
 

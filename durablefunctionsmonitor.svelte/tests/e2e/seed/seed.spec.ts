@@ -29,7 +29,9 @@ interface ListedInstance {
 }
 
 async function listInstances(request: APIRequestContext) {
-  const query = new URLSearchParams({ $top: '50', $filter: everySeededInstance });
+  // One page big enough to hold the whole hub: the paging filler of E4-S9-T1 and the instances the
+  // specs themselves start would otherwise push the mockup's own rows off a 50-row page
+  const query = new URLSearchParams({ $top: '1000', $filter: everySeededInstance });
   // Relative: Playwright's baseURL carries the host's route prefix, which a leading slash would drop
   const response = await request.get(`a/p/i/--${hub}/orchestrations?${query}`);
 

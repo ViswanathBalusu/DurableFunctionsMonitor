@@ -357,6 +357,7 @@ async function upsertBatch(tableClient, entities) {
  * @param {string} [options.connectionString]
  * @param {string} [options.hub]
  * @param {boolean} [options.reset] drop the tables and the offloaded payloads first
+ * @param {number} [options.filler] extra dull instances, so the list has more than one page
  * @param {Date} [options.now] the moment the fixtures are relative to
  * @param {(message: string) => void} [options.log]
  * @returns {Promise<SeedSummary>}
@@ -369,7 +370,7 @@ export async function seedHub(options = {}) {
   const tables = tableNames(hub);
   const containers = containerNames(hub);
   const queues = queueNames(hub);
-  const seed = buildSeedData(hub, options.now ?? new Date());
+  const seed = buildSeedData(hub, options.now ?? new Date(), { filler: options.filler ?? 0 });
 
   const tableService = TableServiceClient.fromConnectionString(connectionString, { allowInsecureConnection: true });
   const blobService = BlobServiceClient.fromConnectionString(connectionString);

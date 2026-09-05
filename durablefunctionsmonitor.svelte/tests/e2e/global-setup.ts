@@ -9,7 +9,12 @@ import { seedHub } from './seed/seed-hub.mjs';
 
 export default async function globalSetup(): Promise<void> {
   const reset = process.env.DFM_E2E_RESET === '1';
-  const summary = await seedHub({ hub: process.env.DFM_E2E_HUB, reset });
+
+  // More rows than a page holds, so the Instances table really pages (E4-S9-T1). `DFM_E2E_FILLER=0`
+  // seeds only the rows the mockups describe, which is what a short debugging run wants.
+  const filler = Number(process.env.DFM_E2E_FILLER ?? 60);
+
+  const summary = await seedHub({ hub: process.env.DFM_E2E_HUB, reset, filler });
 
   console.log(
     `seeded ${summary.orchestrations} orchestrations, ${summary.entities} entities, ` +
