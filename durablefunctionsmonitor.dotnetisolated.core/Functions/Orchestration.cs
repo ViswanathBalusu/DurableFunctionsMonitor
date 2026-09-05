@@ -177,66 +177,37 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             switch (action)
             {
-                case "suspend":
-                    await durableClient.SuspendInstanceAsync(instanceId, bodyString);
-                    break;
-                case "resume":
-                    await durableClient.ResumeInstanceAsync(instanceId, bodyString);
-                    break;
-                case "purge":
-                    await durableClient.PurgeInstanceAsync(instanceId);
-                    break;
-                case "rewind":
-                    await durableClient.RewindInstanceAsync(instanceId, bodyString);
-                    break;
-                case "terminate":
-                    await durableClient.TerminateInstanceAsync(instanceId, bodyString);
-                    break;
-                case "raise-event":
+                case OrchestrationActionNames.Suspend:
+                case OrchestrationActionNames.Resume:
+                case OrchestrationActionNames.Purge:
+                case OrchestrationActionNames.Rewind:
+                case OrchestrationActionNames.Terminate:
 
-                    var bodyObject = System.Text.Json.JsonSerializer.Deserialize<JsonNode>(bodyString);
-                    string eventName = bodyObject["name"].ToString();
-                    var eventData = bodyObject["data"];
-
-                    // if this looks like an Entity
-                    if (ExpandedOrchestrationStatus.TryGetEntityInstanceId(instanceId, out var entityInstanceId))
-                    {
-                        // then sending signal
-                        await durableClient.Entities.SignalEntityAsync(entityInstanceId, eventName, eventData);
-                    }
-                    else
-                    {
-                        // otherwise raising event
-                        await durableClient.RaiseEventAsync(instanceId, eventName, eventData);
-                    }
+                    // The raw body string is the 'reason' every one of these five actions either uses or ignores
+                    await OrchestrationActions.ExecuteAsync(durableClient, connName, instanceId, action, new JsonObject { ["reason"] = bodyString });
 
                     break;
-                case "set-custom-status":
+                case OrchestrationActionNames.RaiseEvent:
 
-                    // Updating the table directly, as there is no other known way
-                    var tableClient = TableClient.GetTableClient(Globals.GetFullConnectionStringEnvVariableName(connName));
-                    string tableName = $"{durableClient.Name}Instances";
+                    var raiseEventPayload = System.Text.Json.JsonSerializer.Deserialize<JsonNode>(bodyString) as JsonObject;
+                    await OrchestrationActions.ExecuteAsync(durableClient, connName, instanceId, action, raiseEventPayload);
 
-                    var orcEntity = await tableClient.GetEntityAsync(tableName, instanceId, string.Empty);
+                    break;
+                case OrchestrationActionNames.SetCustomStatus:
 
-                    if (string.IsNullOrEmpty(bodyString))
-                    {
-                        orcEntity.Remove("CustomStatus");
-                    }
-                    else
+                    var setCustomStatusPayload = new JsonObject();
+                    if (!string.IsNullOrEmpty(bodyString))
                     {
                         // Ensuring that it is at least a valid JSON
-                        string customStatus = JObject.Parse(bodyString).ToString();
-                        orcEntity["CustomStatus"] = customStatus;
+                        setCustomStatusPayload["customStatus"] = JsonNode.Parse(JObject.Parse(bodyString).ToString());
                     }
-
-                    await tableClient.ReplaceEntityAsync(tableName, orcEntity);
+                    await OrchestrationActions.ExecuteAsync(durableClient, connName, instanceId, action, setCustomStatusPayload);
 
                     break;
-                case "restart":
+                case OrchestrationActionNames.Restart:
 
                     bool restartWithNewInstanceId = ((dynamic)JObject.Parse(bodyString)).restartWithNewInstanceId;
-                    await durableClient.RestartAsync(instanceId, restartWithNewInstanceId);
+                    await OrchestrationActions.ExecuteAsync(durableClient, connName, instanceId, action, new JsonObject { ["restartWithNewInstanceId"] = restartWithNewInstanceId });
 
                     break;
                 case "input":
