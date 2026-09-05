@@ -9,12 +9,15 @@
   import InstancesTable from '$lib/instances/InstancesTable.svelte';
   import BulkActionBar from '$lib/instances/BulkActionBar.svelte';
   import BulkConfirmDialog from '$lib/instances/BulkConfirmDialog.svelte';
-  import type { BulkAction } from '$lib/instances/bulk-defs';
+  import BulkResultDialog from '$lib/instances/BulkResultDialog.svelte';
+  import { bulkDef, type BulkAction, type BulkPayload } from '$lib/instances/bulk-defs';
+  import { bulkToast, runBulk } from '$lib/instances/bulk';
   import HistogramView from '$lib/instances/HistogramView.svelte';
   import SavedViewsMenu from '$lib/instances/SavedViewsMenu.svelte';
   import TimelineView from '$lib/instances/TimelineView.svelte';
   import ViewStrip from '$lib/instances/ViewStrip.svelte';
   import { label as rangeLabel } from '$lib/filters/time-range';
+  import type { BatchResultItem } from '$lib/api/types';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Instances } from '$lib/state/instances.svelte';
 
@@ -30,6 +33,42 @@
 
   /** The bulk action being confirmed; the bar opens it, the dialog runs it. */
   let bulkAction = $state<BulkAction | null>(null);
+
+  let bulkBusy = $state(false);
+
+  /** The outcome, shown only when something failed: the rest is said by the toast. */
+  let bulkResult = $state<{ title: string; results: BatchResultItem[] } | null>(null);
+
+  /**
+   * One request per instance (or one batch request, where the backend has that): every id's outcome
+   * is reported, the selection is spent either way, and the list is reloaded because what it shows
+   * is now out of date.
+   */
+  async function runBulkAction(action: BulkAction, payload: BulkPayload): Promise<void> {
+    const ids = instances.selection.list;
+    const label = bulkDef(action, ids.length).confirm;
+
+    bulkBusy = true;
+
+    try {
+      const response = await runBulk(app, { action, ids, payload });
+
+      bulkAction = null;
+      bulkToast(app, label, response);
+      instances.selection.clear();
+
+      if (response.failedCount > 0) {
+        bulkResult = { title: label, results: response.results };
+      }
+
+      await instances.reload();
+    } catch (error) {
+      // Only the batch endpoint can fail as a whole; the fan-out reports per id
+      app.toast.fromError(label, error);
+    } finally {
+      bulkBusy = false;
+    }
+  }
 
   onMount(() => {
     startOpen = instances.takeFlag('start');
@@ -148,10 +187,23 @@
       }
       action={bulkAction}
       ids={instances.selection.list}
-      onConfirm={() => {
-        // The runner behind the confirm is E4-S6-T4
-        bulkAction = null;
-      }}
+      busy={bulkBusy}
+      onConfirm={(payload) => void runBulkAction(bulkAction as BulkAction, payload)}
+    />
+  {/if}
+
+  {#if bulkResult}
+    <BulkResultDialog
+      bind:open={
+        () => bulkResult !== null,
+        (next) => {
+          if (!next) {
+            bulkResult = null;
+          }
+        }
+      }
+      title={bulkResult.title}
+      results={bulkResult.results}
     />
   {/if}
 </Page>
