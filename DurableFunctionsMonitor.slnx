@@ -23,7 +23,7 @@
   </Folder>
 
   <Folder Name="/clients/">
-    <Project Path="durablefunctionsmonitor.react/durablefunctionsmonitor.react.esproj">
+    <Project Path="durablefunctionsmonitor.svelte/durablefunctionsmonitor.svelte.esproj">
       <Platform Solution="*|*" Project="AnyCPU" />
       <Build Solution="*|*" Project="true" />
     </Project>

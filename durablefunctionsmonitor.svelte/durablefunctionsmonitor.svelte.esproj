@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.VisualStudio.JavaScript.SDK/1.0.6578810">
+
+  <!--
+    Wraps the Svelte front-end as an MSBuild project so it can live in DurableFunctionsMonitor.slnx
+    alongside the C# projects. All it does is shell out to the npm scripts in package.json - npm
+    remains the source of truth for how this app is built.
+  -->
+
+  <PropertyGroup>
+    <StartupCommand>npm run dev</StartupCommand>
+
+    <!--
+      "npm run build-and-copy" = vite build into build/ + copy-build-artifacts.js. That copy step is
+      what places the statics into durablefunctionsmonitor.dotnetisolated\DfmStatics, so building this
+      project is what the host, the Dockerfiles and the VS Code extension rely on for their statics.
+    -->
+    <BuildCommand>npm run build-and-copy</BuildCommand>
+    <BuildOutputFolder>$(MSBuildProjectDirectory)\build</BuildOutputFolder>
+
+    <JavaScriptTestRoot>tests\</JavaScriptTestRoot>
+    <JavaScriptTestFramework>Playwright</JavaScriptTestFramework>
+
+    <!-- npm audit findings in the dev-tool dependency tree are not a build signal. -->
+    <ShouldRunNpmAudit>false</ShouldRunNpmAudit>
+  </PropertyGroup>
+
+</Project>
