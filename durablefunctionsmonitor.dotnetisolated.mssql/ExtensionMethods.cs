@@ -60,6 +60,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
             {
                 optionsBuilder?.Invoke(settings);
 
+                extPoints.ProviderName = "MsSql";
+
                 extPoints.GetInstanceHistoryRoutine = (client, connName, hubName, instanceId) => Task.FromResult(GetInstanceHistory(client, connName, hubName, instanceId));
                 extPoints.GetParentInstanceIdRoutine = GetParentInstanceId;
                 extPoints.GetTaskHubNamesRoutine = GetTaskHubNames;

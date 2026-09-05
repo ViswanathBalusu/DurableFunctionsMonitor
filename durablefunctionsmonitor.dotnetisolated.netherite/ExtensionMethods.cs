@@ -28,6 +28,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
             {
                 optionsBuilder?.Invoke(settings);
 
+                extPoints.ProviderName = "Netherite";
+
                 // Netherite does not maintain the XXXInstances/XXXHistory tables the default routine
                 // looks for, so Task Hub names have to be read from its own partitions table instead.
                 extPoints.GetTaskHubNamesRoutine = GetTaskHubNames;
