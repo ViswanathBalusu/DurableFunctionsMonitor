@@ -85,6 +85,14 @@
     app.begin();
   }
 
+  export function toasts() {
+    return app.toast;
+  }
+
+  export function peekState() {
+    return app.peek;
+  }
+
   export function go(name: string): void {
     app.router.navigate({ name: name as HubRouteName, hub: app.hub });
   }

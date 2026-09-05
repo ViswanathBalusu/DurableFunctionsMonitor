@@ -7,6 +7,7 @@
   import MoreSheet from './MoreSheet.svelte';
   import PeekPanel from './PeekPanel.svelte';
   import SideNav from './SideNav.svelte';
+  import ToastHost from './ToastHost.svelte';
   import TopBar from './TopBar.svelte';
   import { installShortcuts } from './shortcuts';
 
@@ -45,8 +46,7 @@
   (240px, 64px collapsed - the class is all the CSS needs), a sticky top bar over a scrolling
   content area, and the bottom tab bar that the responsive rules swap in below 768px.
 
-  The palette and the toast host are added by the tasks that own them; this is the frame they
-  hang in.
+  The palette is added by the task that owns it; this is the frame it hangs in.
 -->
 <div class={`shell${app.prefs.navCollapsed ? ' collapsed' : ''}`}>
   <SideNav {failuresCount} />
@@ -68,5 +68,6 @@
 
 <MoreSheet bind:open={moreOpen} {onOpenPalette} />
 
-<!-- Outside `.shell`: the peek is an overlay over the whole app, not part of the content column -->
+<!-- Outside `.shell`: these are overlays over the whole app, not part of the content column -->
 <PeekPanel />
+<ToastHost />

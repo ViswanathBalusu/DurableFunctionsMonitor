@@ -16,6 +16,7 @@ import { Router } from '../router.svelte';
 import { ViewStateStorage } from '../storage/view-state-storage';
 import { Peek } from './peek.svelte';
 import { Prefs } from './prefs.svelte';
+import { Toasts } from './toast.svelte';
 
 /** The context key every component uses: `getContext<AppState>(APP_CONTEXT_KEY)`. */
 export const APP_CONTEXT_KEY = 'dfm';
@@ -37,6 +38,9 @@ export class AppState {
 
   /** The peeked row of whatever list is on screen (E2-S4); the panel lives in the shell. */
   readonly peek = new Peek();
+
+  /** The one toast at a time (E2-S6); the host lives in the shell. */
+  readonly toast = new Toasts();
 
   /** What `/about` answered, or null until it has. */
   about = $state<About | null>(null);
