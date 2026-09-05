@@ -24,6 +24,8 @@ export interface SwimlaneBar {
 export interface Swimlane {
   key: string;
   label: string;
+  /** Where the label points: the lane is a thing in its own right (an instance, a span). */
+  href?: string;
   bars: SwimlaneBar[];
   /** A label drawn after a bar too narrow to hold its own text. */
   lbl?: string;

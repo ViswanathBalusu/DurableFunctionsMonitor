@@ -14,6 +14,7 @@
   let {
     screen,
     path = '/DurableFunctionsHub/instances',
+    client = {},
     endpoints = {},
     capabilities = {},
     readOnly = false,
@@ -23,6 +24,8 @@
     /** The route component under test. */
     screen: Component;
     path?: string;
+    /** Only what the screen under test calls: saving an SVG, opening a second window. */
+    client?: Partial<BackendClient>;
     /** Whatever the test answers with; anything not given simply is not called. */
     endpoints?: Partial<Endpoints>;
     capabilities?: Partial<Capabilities>;
@@ -45,7 +48,7 @@
   // svelte-ignore state_referenced_locally
   const app = new AppState({
     host,
-    client: {} as BackendClient,
+    client: client as BackendClient,
     endpoints: endpoints as Endpoints,
     router: new Router({ mode: 'history', routePrefix: '' }),
     prefs,

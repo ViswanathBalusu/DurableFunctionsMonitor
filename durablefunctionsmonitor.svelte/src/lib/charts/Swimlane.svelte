@@ -1,4 +1,5 @@
 <script lang="ts">
+  import LinkButton from '$lib/components/LinkButton.svelte';
   import { cn } from '$lib/utils';
   import { domainTicks, type Swimlane, type TimeDomain } from './swimlane';
 
@@ -7,7 +8,7 @@
     domain: TimeDomain;
     /** How many tick labels the axis shows. */
     ticks?: number;
-    formatTick?: (date: Date) => string;
+    formatTick?: (date: Date, index: number) => string;
     /** The axis label above the lane labels ("span"). */
     axisLabel?: string;
     /** The lane (or bar) to outline, for the hover linkage with the History table. */
@@ -16,8 +17,14 @@
     minWidth?: number;
     ariaLabel: string;
     class?: string;
+    /** The inline sizing a screen sets on the frame (the view strip leaves no top border). */
+    style?: string;
     onLaneEnter?: (key: string) => void;
     onLaneLeave?: () => void;
+    /** A click anywhere on the lane that is not its label (which follows its own href). */
+    onLaneClick?: (key: string) => void;
+    /** A click on a lane's label, for a caller that navigates itself rather than through the href. */
+    onLaneLabelClick?: (key: string, event: MouseEvent) => void;
     onBarClick?: (laneKey: string, bar: { key: string; sequenceNumbers?: number[] }) => void;
   }
 
@@ -31,8 +38,11 @@
     minWidth = 720,
     ariaLabel,
     class: className,
+    style,
     onLaneEnter,
     onLaneLeave,
+    onLaneClick,
+    onLaneLabelClick,
     onBarClick,
   }: Props = $props();
 
@@ -105,25 +115,35 @@
   HTML lanes rather than SVG, exactly as ScreenInstance.dc.html L89-L98 draws them: `.swim > .swim-in
   > .axis + .lane*`, each lane a label and a `.track` of absolutely positioned `.bar`s.
 -->
-<div bind:this={root} class={cn('swim', className)} role="group" aria-label={ariaLabel}>
+<div bind:this={root} class={cn('swim', className)} {style} role="group" aria-label={ariaLabel}>
   <div class="swim-in" style={`min-width:${minWidth}px`}>
     <div class="axis">
       <span class="meta">{axisLabel}</span>
       <span class="ticks">
         {#each tickTimes as tick, index (index)}
-          <span>{formatTick(tick)}</span>
+          <span>{formatTick(tick, index)}</span>
         {/each}
       </span>
     </div>
 
     {#each lanes as lane (lane.key)}
-      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
       <div
         class={cn('lane', highlightKey === lane.key ? 'hl' : '')}
         onmouseenter={() => onLaneEnter?.(lane.key)}
         onmouseleave={() => onLaneLeave?.()}
+        onclick={() => onLaneClick?.(lane.key)}
       >
-        <span class="lbl" title={lane.label}>{lane.label}</span>
+        <span class="lbl" title={lane.label}>
+          {#if lane.href}
+            <!-- A real link, so the lane can be copied and opened in a new tab (the peek is the click) -->
+            <LinkButton mono stopPropagation href={lane.href} onclick={(event) => onLaneLabelClick?.(lane.key, event)}>
+              {lane.label}
+            </LinkButton>
+          {:else}
+            {lane.label}
+          {/if}
+        </span>
         <div class="track">
           {#each lane.bars as bar (bar.key)}
             <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->

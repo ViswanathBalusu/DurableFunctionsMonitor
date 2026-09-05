@@ -8,6 +8,7 @@
   import FilterRail from '$lib/instances/FilterRail.svelte';
   import InstancesTable from '$lib/instances/InstancesTable.svelte';
   import SavedViewsMenu from '$lib/instances/SavedViewsMenu.svelte';
+  import TimelineView from '$lib/instances/TimelineView.svelte';
   import ViewStrip from '$lib/instances/ViewStrip.svelte';
   import { label as rangeLabel } from '$lib/filters/time-range';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
@@ -114,8 +115,10 @@
 
       {#if instances.view === 'table'}
         <InstancesTable {instances} />
+      {:else if instances.view === 'timeline'}
+        <TimelineView {instances} />
       {:else}
-        <!-- The timeline and the histogram are E4-S4 and E4-S5 -->
+        <!-- The histogram is E4-S5 -->
         <p class="meta" style="padding:16px">This view is not built yet.</p>
       {/if}
     </div>

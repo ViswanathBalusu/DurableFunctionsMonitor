@@ -138,6 +138,17 @@ Accept:
 - [ ] 9 seeded instances produce 9 lanes ordered by created ascending; running instance bar reaches the right edge.
 Test: as above.
 
+**Deviation, E4-S4-T1 (2026-09-05).** Lane order is the grouping of item 1: the names in the order
+they first appear, the rows of a name in creation order. With one orchestrator name - the seeded hub
+the acceptance is written against - that is exactly created ascending; with several, grouping wins,
+which is what React's mermaid sections did visually. Four additions to E1-S8-T4's swimlane were
+needed and are used by the workspace later: `href` on a lane (its label is a real link to the
+instance, `stopPropagation` so the lane click stays the peek), `onLaneClick` and `onLaneLabelClick`,
+a `style` prop (the view strip leaves the frame without a top border), and `formatTick` now receives
+the tick index, so an axis can label a run of ticks rather than each one on its own (the day is shown
+when it changes: `Sep 3 23:50`, then `02:40`). `tests/unit/harnesses/ScreenHarness.svelte` gained a
+`client` prop, so a screen test can watch what goes to the host - here `saveAs`.
+
 ### E4-S5 Histogram view
 
 #### E4-S5-T1 histogram.svelte.ts and HistogramView
