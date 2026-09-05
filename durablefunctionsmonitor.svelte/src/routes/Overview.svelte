@@ -17,6 +17,7 @@
   import { fmtInt } from '$lib/format/number';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import StatTiles from '$lib/overview/StatTiles.svelte';
+  import ThroughputPanel from '$lib/overview/ThroughputPanel.svelte';
   import { NO_STATS_TEXT, NO_STATS_TITLE, Overview } from '$lib/state/overview.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
@@ -155,6 +156,10 @@
       </EmptyState>
     {:else if overview.stats}
       <StatTiles stats={overview.stats} />
+
+      <div class="panels">
+        <ThroughputPanel stats={overview.stats} />
+      </div>
     {/if}
   {/if}
 </Page>
