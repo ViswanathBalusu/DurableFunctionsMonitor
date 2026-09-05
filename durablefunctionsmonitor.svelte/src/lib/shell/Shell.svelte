@@ -8,6 +8,7 @@
   import PeekPanel from './PeekPanel.svelte';
   import SideNav from './SideNav.svelte';
   import TopBar from './TopBar.svelte';
+  import { installShortcuts } from './shortcuts';
 
   interface Props {
     /** The badge on the Failures nav item; E9 fills it from the failures screen state. */
@@ -28,6 +29,15 @@
   }
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
+
+  // The keyboard map lives exactly as long as the shell does (contracts §13); E2-S5-T2 replaces the
+  // toggle with the palette's own, which also reports whether it is open.
+  $effect(() =>
+    installShortcuts(app, {
+      focusJump,
+      togglePalette: () => onOpenPalette?.(),
+    }),
+  );
 </script>
 
 <!--

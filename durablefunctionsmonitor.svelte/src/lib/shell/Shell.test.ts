@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { render, screen } from '@testing-library/svelte';
-import { describe, expect, it } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { describe, expect, it, vi } from 'vitest';
 import ShellHarness from '../../../tests/unit/harnesses/ShellHarness.svelte';
 
 describe('Shell', () => {
@@ -29,6 +29,21 @@ describe('Shell', () => {
     (component as unknown as { begin: () => void }).begin();
 
     expect(await screen.findByRole('progressbar', { name: 'Loading' })).toHaveClass('progress');
+  });
+
+  it('installs the keyboard map for as long as it is on screen', async () => {
+    const onOpenPalette = vi.fn();
+    const { unmount } = render(ShellHarness, { props: { path: '/DurableFunctionsHub', onOpenPalette } });
+
+    await fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(onOpenPalette).toHaveBeenCalledOnce();
+
+    await fireEvent.keyDown(window, { key: '/' });
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('combobox', { name: 'Find instance' })));
+
+    unmount();
+    await fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+    expect(onOpenPalette).toHaveBeenCalledOnce();
   });
 });
 
