@@ -7,46 +7,37 @@
 
   interface Props {
     instance: InstanceState;
-    /**
-     * What `/spans` reports about this execution (E8). Every one of these is an em dash until it
-     * does: an execution id nobody has asked for is not the same as one that is not there.
-     */
-    executionId?: string | null;
-    generation?: number | null;
-    historyBytes?: number | null;
-    largeMessageBlobs?: number | null;
-    /** The rows `/spans` counted; until E8 it is what the History tab has loaded. */
-    historyRows?: number | null;
     /** Rendered above the Execution heading (E8's Children panel). */
     children?: Snippet;
   }
 
-  let {
-    instance,
-    executionId = null,
-    generation = null,
-    historyBytes = null,
-    largeMessageBlobs = null,
-    historyRows = null,
-    children,
-  }: Props = $props();
+  let { instance, children }: Props = $props();
+
+  /**
+   * What `/spans` reports about this execution. Every one of these is an em dash until it answers:
+   * an execution id nobody has asked for is not the same as one that is not there.
+   */
+  const spans = $derived(instance.spans.response);
 
   const tags = $derived(Object.entries(instance.details?.tags ?? {}));
 
-  /** `31 rows`, `31 rows · 18.2 KB` once E8 knows the size. */
+  /** `31 rows`, and `31 rows · 18.2 KB` where the provider also measures what they weigh. */
   const history = $derived.by(() => {
-    const rows = historyRows ?? instance.history.rows.length;
-    const counted = `${rows}${instance.history.hasMore && historyRows === null ? '+' : ''} rows`;
+    const counted = spans
+      ? `${spans.historyRows} rows`
+      : `${instance.history.rows.length}${instance.history.hasMore ? '+' : ''} rows`;
 
-    return historyBytes === null ? counted : `${counted} · ${fmtBytes(historyBytes)}`;
+    const bytes = spans?.historyBytes ?? null;
+
+    return bytes === null ? counted : `${counted} · ${fmtBytes(bytes)}`;
   });
 
   const rows = $derived.by<KvRow[]>(() => {
     const list: KvRow[] = [
-      { k: 'executionId', v: executionId ?? '—', mono: true },
-      { k: 'generation', v: generation === null ? '—' : String(generation), mono: true },
+      { k: 'executionId', v: spans?.executionId ?? '—', mono: true },
+      { k: 'generation', v: spans == null || spans.generation === null ? '—' : String(spans.generation), mono: true },
       { k: 'history', v: history, mono: true },
-      { k: 'large blobs', v: largeMessageBlobs === null ? '—' : String(largeMessageBlobs), mono: true },
+      { k: 'large blobs', v: spans?.largeMessageBlobs?.toString() ?? '—', mono: true },
     ];
 
     // Tags are absent far more often than they are empty, so the row is not drawn without them

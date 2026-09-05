@@ -1,3 +1,11 @@
+<script lang="ts" module>
+  /**
+   * The width below which the Summary column stops being a column and becomes a tab (dfm-ui.css
+   * L395-L403). The CSS decides it; this is how the header asks what it decided.
+   */
+  export const SUMMARY_TAB_QUERY = '(max-width:1100px)';
+</script>
+
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { getContext } from 'svelte';
@@ -9,6 +17,7 @@
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { isTerminal, type InstanceState } from '$lib/state/instance.svelte';
   import { cn } from '$lib/utils';
+  import { CHILDREN_PANEL_ID } from './ChildrenPanel.svelte';
 
   interface Props {
     instance: InstanceState;
@@ -59,6 +68,19 @@
       ? `${instance.history.rows.length}${instance.history.hasMore ? '+' : ''} rows`
       : `${historyRows} rows`,
   );
+
+  /**
+   * The children line points at the panel that lists them. Below 1100 px that panel is not on screen
+   * at all - dfm-ui.css hides the Summary column and offers it as a tab instead - so there the link
+   * switches to that tab first, and scrolls once the panel is in the DOM.
+   */
+  function goChildren(): void {
+    if (globalThis.matchMedia?.(SUMMARY_TAB_QUERY).matches) {
+      instance.setTab('summary');
+    }
+
+    queueMicrotask(() => document.getElementById(CHILDREN_PANEL_ID)?.scrollIntoView({ block: 'nearest' }));
+  }
 
   function goInstances(event: MouseEvent): void {
     if (!isRouterClick(event)) {
@@ -125,7 +147,7 @@
       {#if typeof childCount === 'number'}
         <span>
           children:
-          <LinkButton mono onclick={() => instance.setTab('summary')}>{childCount}</LinkButton>
+          <LinkButton mono onclick={goChildren}>{childCount}</LinkButton>
         </span>
       {/if}
 

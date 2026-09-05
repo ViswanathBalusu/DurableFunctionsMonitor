@@ -4,13 +4,14 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Endpoints } from '$lib/api/endpoints';
-import type { OrchestrationDetails } from '$lib/api/types';
+import type { OrchestrationDetails, SpansResponse } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
 import type { InstanceState } from '$lib/state/instance.svelte';
 import WorkspaceHarness from '../../../tests/unit/harnesses/WorkspaceHarness.svelte';
 import SummaryColumn from './SummaryColumn.svelte';
 import { details as detailsFixture, storedInput } from '../../../tests/unit/fixtures/details';
 import { history as historyFixture } from '../../../tests/unit/fixtures/history';
+import { spansResponse } from '../../../tests/unit/fixtures/spans';
 
 const INSTANCE_ID = 'order-2026-09-04-000913';
 
@@ -20,6 +21,8 @@ function mount(
     details?: OrchestrationDetails;
     readOnly?: boolean;
     onDownload?: (instanceId: string, field: string) => void;
+    /** What `/spans` answers, for the Execution rows only it knows (E8-S3-T2). */
+    spans?: SpansResponse;
   } = {},
 ) {
   const rendered = render(WorkspaceHarness, {
@@ -27,9 +30,11 @@ function mount(
       component: SummaryColumn,
       instanceId: options.instanceId ?? INSTANCE_ID,
       readOnly: options.readOnly ?? false,
+      capabilities: options.spans ? { spans: true } : {},
       endpoints: {
         getOrchestration: async () => options.details ?? detailsFixture(),
         getHistory: async () => ({ history: historyFixture }),
+        spans: async () => options.spans,
         downloadField: async (instanceId: string, field: string) => options.onDownload?.(instanceId, field),
       } as unknown as Endpoints,
     },
@@ -170,6 +175,33 @@ describe('SummaryColumn', () => {
 
     // The fixture carries one tag, rendered as a chip
     expect(kv().tags).toBe('channel:web');
+  });
+
+  it('says what /spans knows about the execution once it has answered', async () => {
+    const { instance } = mount({ spans: spansResponse() });
+
+    await waitFor(() => expect(instance.details).not.toBeNull());
+    await instance.spans.load();
+
+    await waitFor(() => expect(kv().executionId).toBe('3f7a9c1e8b2d4f60a1c5e7d9b3f10248'));
+
+    expect(kv().generation).toBe('1');
+    expect(kv()['large blobs']).toBe('0');
+
+    // The provider's count of the whole history, and what it weighs
+    expect(kv().history).toBe('31 rows · 18.2 KB');
+  });
+
+  it('counts the rows without weighing them where the provider does not weigh them', async () => {
+    const { instance } = mount({ spans: spansResponse({ historyBytes: null, generation: 0 }) });
+
+    await waitFor(() => expect(instance.details).not.toBeNull());
+    await instance.spans.load();
+
+    await waitFor(() => expect(kv().history).toBe('31 rows'));
+
+    // Generation 0 is a generation, not a missing one
+    expect(kv().generation).toBe('0');
   });
 
   it('leaves the tags row out when the instance has none', async () => {

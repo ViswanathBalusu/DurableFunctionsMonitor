@@ -7,7 +7,8 @@ import type { Endpoints } from '$lib/api/endpoints';
 import type { OrchestrationDetails } from '$lib/api/types';
 import type { InstanceState } from '$lib/state/instance.svelte';
 import WorkspaceHarness from '../../../tests/unit/harnesses/WorkspaceHarness.svelte';
-import InstanceHeader from './InstanceHeader.svelte';
+import { CHILDREN_PANEL_ID } from './ChildrenPanel.svelte';
+import InstanceHeader, { SUMMARY_TAB_QUERY } from './InstanceHeader.svelte';
 import { childDetails, details as detailsFixture } from '../../../tests/unit/fixtures/details';
 import { history as historyFixture } from '../../../tests/unit/fixtures/history';
 
@@ -181,5 +182,41 @@ describe('InstanceHeader', () => {
 
     expect(hmeta()).toContain('children: 1');
     expect(screen.getByRole('button', { name: '1' })).toHaveClass('link', 'mono');
+  });
+
+  it('scrolls to the children rather than moving away from the tab that is open', async () => {
+    const scrollIntoView = vi.fn();
+    const panel = document.createElement('div');
+
+    panel.id = CHILDREN_PANEL_ID;
+    panel.scrollIntoView = scrollIntoView;
+    document.body.appendChild(panel);
+
+    const { instance } = mount({ props: { childCount: 1 } });
+
+    await vi.advanceTimersByTimeAsync(0);
+    await screen.getByRole('button', { name: '1' }).click();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(scrollIntoView).toHaveBeenCalledOnce();
+    expect(instance.tab).toBe('history');
+
+    panel.remove();
+  });
+
+  it('opens the Summary tab first on a screen too narrow to have a Summary column', async () => {
+    // Below 1100 px the column is display:none, so there is nothing to scroll to until the tab opens
+    const matchMedia = vi.fn((query: string) => ({ matches: query === SUMMARY_TAB_QUERY }) as MediaQueryList);
+
+    vi.stubGlobal('matchMedia', matchMedia);
+
+    const { instance } = mount({ props: { childCount: 1 } });
+
+    await vi.advanceTimersByTimeAsync(0);
+    await screen.getByRole('button', { name: '1' }).click();
+
+    await waitFor(() => expect(instance.tab).toBe('summary'));
+
+    vi.unstubAllGlobals();
   });
 });

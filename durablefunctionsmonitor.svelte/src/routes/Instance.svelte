@@ -10,6 +10,7 @@
   import RawTab from '$lib/instance/RawTab.svelte';
   import RecoveryDialog from '$lib/instance/RecoveryDialog.svelte';
   import SequenceTab from '$lib/instance/SequenceTab.svelte';
+  import ChildrenPanel from '$lib/instance/ChildrenPanel.svelte';
   import SummaryColumn from '$lib/instance/SummaryColumn.svelte';
   import TimelineTab from '$lib/instance/TimelineTab.svelte';
   import WhereTheTimeWent from '$lib/instance/WhereTheTimeWent.svelte';
@@ -115,6 +116,13 @@
         <!-- Only once /spans has said where it went: a panel of em dashes is worse than no panel -->
         {#if instance.spans.totals}
           <WhereTheTimeWent totals={instance.spans.totals} />
+        {/if}
+      {/snippet}
+
+      {#snippet childrenPanel()}
+        <!-- A backend that cannot look for children says nothing about them (E5-S3-T1) -->
+        {#if instance.spans.children}
+          <ChildrenPanel response={instance.spans.children} />
         {/if}
       {/snippet}
     </SummaryColumn>
