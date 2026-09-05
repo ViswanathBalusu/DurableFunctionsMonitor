@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+using System.Globalization;
+
 namespace DurableFunctionsMonitor.DotNetIsolated
 {
     /// <summary>
@@ -92,6 +94,24 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public bool AuditEnabled { get; set; }
 
         /// <summary>
+        /// For how many seconds the aggregation endpoints (/stats, /failures, /storage, ...) may serve a
+        /// previously computed result for the same Task Hub and the same (normalized) query, instead of
+        /// scanning storage again. Implements decision D10 of the rewrite plan: auto-refreshing clients and
+        /// several simultaneous users never trigger concurrent full-hub scans against the same Task Hub.
+        /// Defaults to 30 seconds; 0 turns caching off.
+        /// Can also be set by setting DFM_AGGREGATION_CACHE_SECONDS to a number of seconds.
+        /// </summary>
+        public int AggregationCacheSeconds { get; set; }
+
+        /// <summary>
+        /// Maximum number of instance rows a single /stats scan is allowed to read. The scan stops there and
+        /// the response says so (partial == true), so a huge Task Hub cannot turn one request into an
+        /// unbounded table scan. Defaults to 50000.
+        /// Can also be set by setting DFM_STATS_CAP to a number of rows.
+        /// </summary>
+        public int StatsScanCap { get; set; }
+
+        /// <summary>
         /// Custom prefix for 'User-Agent' header for requests to Azure Storage.
         /// When specified, the final 'User-Agent' header will look like this: 
         /// "CustomUserAgentPrefix/{DfMon's Version}"
@@ -117,6 +137,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string dfmRolesClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ROLES_CLAIM_NAME);
             string dfmDangerousOperationsEnabled = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_DANGEROUS_OPERATIONS_ENABLED);
             string dfmAuditEnabled = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_AUDIT_ENABLED);
+            string dfmAggregationCacheSeconds = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_AGGREGATION_CACHE_SECONDS);
+            string dfmStatsCap = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_STATS_CAP);
 
             // NOTE: an unset setting and a setting explicitly set to an empty string both mean
             // "no restriction" and must map to null. Up to .NET 9 an empty value could only ever
@@ -148,6 +170,25 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             // Same "literal true, any casing" rule as DangerousOperationsEnabled: unset, empty or anything else keeps auditing off.
             this.AuditEnabled = string.Equals(dfmAuditEnabled?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+
+            // Numeric counterpart of the same rule: unset, empty, not a number or outside the supported
+            // range all mean "use the documented default" rather than failing startup.
+            this.AggregationCacheSeconds = ParseIntOrDefault(dfmAggregationCacheSeconds, DefaultAggregationCacheSeconds, 0, MaxAggregationCacheSeconds);
+            this.StatsScanCap = ParseIntOrDefault(dfmStatsCap, DefaultStatsScanCap, 1, int.MaxValue);
+        }
+
+        /// <summary>
+        /// Reads a numeric config value, mapping "not set", "set to an empty string", "not a number" and
+        /// "outside the supported range" all to <paramref name="defaultValue"/>.
+        /// </summary>
+        private static int ParseIntOrDefault(string value, int defaultValue, int min, int max)
+        {
+            if (string.IsNullOrEmpty(value) || !int.TryParse(value.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int result))
+            {
+                return defaultValue;
+            }
+
+            return result < min || result > max ? defaultValue : result;
         }
 
         /// <summary>
@@ -158,6 +199,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             return string.IsNullOrEmpty(value) ? null : value.Split(',');
         }
+
+        /// <summary>Default value of <see cref="AggregationCacheSeconds"/>.</summary>
+        private const int DefaultAggregationCacheSeconds = 30;
+
+        /// <summary>Upper bound of <see cref="AggregationCacheSeconds"/> (one hour), so a typo cannot freeze the Overview screen for a day.</summary>
+        private const int MaxAggregationCacheSeconds = 3600;
+
+        /// <summary>Default value of <see cref="StatsScanCap"/>. Matches the cap the storage routines fall back to.</summary>
+        private const int DefaultStatsScanCap = 50000;
 
         private static bool AreAppRoleListsIntersecting(params string[][] appRoleLists)
         {

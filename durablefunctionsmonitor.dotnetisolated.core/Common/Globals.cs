@@ -44,6 +44,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string DFM_INGRESS_ROUTE_PREFIX = "DFM_INGRESS_ROUTE_PREFIX";
         public const string DFM_DANGEROUS_OPERATIONS_ENABLED = "DFM_DANGEROUS_OPERATIONS_ENABLED";
         public const string DFM_AUDIT_ENABLED = "DFM_AUDIT_ENABLED";
+        public const string DFM_AGGREGATION_CACHE_SECONDS = "DFM_AGGREGATION_CACHE_SECONDS";
+        public const string DFM_STATS_CAP = "DFM_STATS_CAP";
     }
 
     static class Globals
