@@ -4,7 +4,7 @@
 // What every spec needs and nothing more (E3-S2-T3). Authentication is off through DFM_NONCE, so
 // there is no login helper here: a spec opens a URL and the app is simply there.
 
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { DEFAULT_HUB } from './seed/fixtures.mjs';
 
 /** The hub the suite seeded; `DFM_E2E_HUB` overrides it for a second hub or a second host. */
@@ -67,6 +67,33 @@ export async function theme(page: Page, name: string, dark = false): Promise<voi
 
   await page.keyboard.press('Escape');
   await expect(page.locator('html')).toHaveAttribute('data-theme', name.toLowerCase());
+}
+
+/**
+ * Replaces what a JSON editor holds.
+ *
+ * `fill()` writes into the contenteditable without CodeMirror noticing, so what the component binds
+ * to never changes; typing it key by key runs into the editor's bracket and quote auto-closing and
+ * produces something else again. Selecting everything and pasting is what a person does with a
+ * payload, and it is the one path that puts exactly this text in the editor.
+ */
+export async function typeInto(editor: Locator, page: Page, text: string): Promise<void> {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.evaluate((value) => navigator.clipboard.writeText(value), text || ' ');
+
+  await editor.click();
+  await page.keyboard.press('ControlOrMeta+a');
+
+  if (text) {
+    await page.keyboard.press('ControlOrMeta+v');
+    await expect(editor).toContainText(text.slice(0, 12));
+  } else {
+    await page.keyboard.press('Delete');
+    await expect(editor).toHaveText('');
+  }
+
+  // svelte-jsoneditor debounces what it reports back, so the component has not been told yet
+  await page.waitForTimeout(500);
 }
 
 /** The command palette, which every screen can be reached from (contracts §13). */

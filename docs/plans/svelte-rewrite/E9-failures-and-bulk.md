@@ -100,11 +100,16 @@ six. A rewind changes an instance, every spec reads the same hub, and `instances
 pushed forward, because it dates its instance exactly fifteen minutes back - which is the narrowest
 range this screen offers, and therefore the one boundary a spec must not sit on.
 
-(2) The rewind is accepted and nothing happens to the instances. `RewindInstanceAsync` queues the
-work; the monitor has no orchestrator worker of its own, so the rows stay Failed until the
-application that owns them picks it up. The toast is `Rewind all 6 · 6 ok, 0 failed` and the group
-is still on screen afterwards - so the spec asserts the reload happened (a second `GET /failures`),
-not that the group went away.
+(2) The rewind takes the six off the screen at once, and re-runs none of them. `RewindInstanceAsync`
+rewrites each instance as Pending before it enqueues anything, so the group is gone from the next
+`GET /failures`; nothing then runs them, because the monitor has no orchestrator worker of its own,
+and they stay Pending. The toast is `Rewind all 6 · 6 ok, 0 failed`, and the spec asserts both the
+reload (a second `GET /failures`) and that the group went with it.
+
+*(Corrected during E10-S3-T1. This block first recorded the opposite - that the rows stayed Failed -
+which was the aggregation cache: `/failures` answers from a 30-second cache (decision D10), and the
+reload was being served the answer from before the rewind. The e2e hosts now run with
+`DFM_AGGREGATION_CACHE_SECONDS=0`, and the probe that settled it is in the E10 notes.)*
 
 (3) Fifteen minutes does not empty the screen: the newest seeded failure is twelve minutes old, and
 `buildRetryInstance`'s is fifteen. What the range demonstrably drops is the timeout group, whose two

@@ -938,6 +938,44 @@ export function buildRetryInstance(instanceId, now = new Date()) {
   };
 }
 
+/**
+ * One durable entity, as the framework stores it: the instance id is `@name@key`, the state sits in the
+ * Input column inside the framework's `{ exists, state }` envelope, and the row is `Pending` between
+ * signals. Built on its own, so a spec that signals or purges an entity can own the one it touches.
+ *
+ * @param {string} instanceId `@name@key`
+ * @param {unknown} state whatever the entity holds
+ * @param {Date} [now]
+ * @returns {SeedInstance}
+ */
+export function buildEntityInstance(instanceId, state, now = new Date()) {
+  const createdTime = ago(now, 280978);
+
+  return {
+    instanceId,
+    name: instanceId,
+    executionId: `${instanceId}-exec`,
+    runtimeStatus: ENTITY_RUNTIME_STATUS,
+    createdTime,
+    lastUpdatedTime: plus(createdTime, 280907000),
+    completedTime: null,
+    input: JSON.stringify({ exists: true, state: JSON.stringify(state) }),
+    output: null,
+    customStatus: null,
+    parentInstanceId: null,
+    isEntity: true,
+    history: [
+      row(0, 'OrchestratorStarted', createdTime, -13),
+      row(1, 'ExecutionStarted', createdTime, 0, {
+        name: instanceId,
+        input: JSON.stringify({ exists: false, state: null }),
+      }),
+      row(2, 'EventRaised', createdTime, 91, { name: 'add', input: '{"amount":1}' }),
+      row(3, 'OrchestratorCompleted', createdTime, 100),
+    ],
+  };
+}
+
 /** The sequence number of the `EventRaised` row `buildRetryInstance` writes: the last input event. */
 export const RETRY_EVENT_SEQUENCE_NUMBER = 8;
 

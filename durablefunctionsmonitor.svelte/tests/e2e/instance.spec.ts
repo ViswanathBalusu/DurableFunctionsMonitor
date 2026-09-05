@@ -8,8 +8,8 @@
 // The mutating specs seed an instance of their own, with an id that is new on every run: a spec that
 // terminates or purges something cannot share it with the specs that read it.
 
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { expectToast, gotoInstance, hub, hubPath } from './fixtures';
+import { expect, test, type Page } from '@playwright/test';
+import { expectToast, gotoInstance, hub, hubPath, typeInto } from './fixtures';
 import { RUNNING_INSTANCE_ID, buildRetryInstance } from './seed/fixtures.mjs';
 import { deleteInstances, seedInstances } from './seed/seed-hub.mjs';
 
@@ -32,33 +32,6 @@ test.afterAll(async () => {
 
 function tabs(page: Page) {
   return page.locator('.tabs .tab');
-}
-
-/**
- * Replaces what a JSON editor holds.
- *
- * `fill()` writes into the contenteditable without CodeMirror noticing, so what the component binds
- * to never changes; typing it key by key runs into the editor's bracket and quote auto-closing and
- * produces something else again. Selecting everything and pasting is what a person does with a
- * payload, and it is the one path that puts exactly this text in the editor.
- */
-async function typeInto(editor: Locator, page: Page, text: string): Promise<void> {
-  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
-  await page.evaluate((value) => navigator.clipboard.writeText(value), text || ' ');
-
-  await editor.click();
-  await page.keyboard.press('ControlOrMeta+a');
-
-  if (text) {
-    await page.keyboard.press('ControlOrMeta+v');
-    await expect(editor).toContainText(text.slice(0, 12));
-  } else {
-    await page.keyboard.press('Delete');
-    await expect(editor).toHaveText('');
-  }
-
-  // svelte-jsoneditor debounces what it reports back, so the component has not been told yet
-  await page.waitForTimeout(500);
 }
 
 test('opens the workspace of the running order', async ({ page }) => {
@@ -207,6 +180,9 @@ test('sets the customStatus and clears it again', async ({ page }) => {
 
   // The workspace reloads after an action, so the summary shows what the hub now holds
   await expect(page.locator('.summary')).toContainText('Rechecked');
+
+  // ...and the dialog is gone before the header's button is the only one of that name again
+  await expect(dialog).toBeHidden();
 
   await page.getByRole('button', { name: 'Set customStatus' }).click();
 

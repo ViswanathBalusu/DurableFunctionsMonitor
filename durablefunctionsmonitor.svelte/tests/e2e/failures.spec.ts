@@ -200,13 +200,13 @@ test('rewinds a whole group through the batch endpoint', async ({ page }) => {
   });
 
   /*
-   * ...and the screen asked the backend again, because a recovery changes what it was showing. What
-   * comes back still holds this group: the host accepted the rewinds and queued them, and nothing
-   * ever runs them - the monitor has no orchestrator worker of its own, so the rows stay Failed
-   * until the application that owns them picks the work up.
+   * ...and the screen asked the backend again, because a recovery changes what it was showing - and
+   * this one changed it at once. A rewind rewrites the instance as Pending before it enqueues
+   * anything, so the six leave the Failures screen immediately; what does not happen without a
+   * worker is the re-execution itself, and they stay Pending for ever.
    */
   await expect.poll(() => loads.length).toBeGreaterThan(asked);
-  await expect(group(page, REFUSED)).toHaveCount(1);
+  await expect(group(page, REFUSED)).toHaveCount(0);
 });
 
 test('shows only what really failed in the range it is given', async ({ page }) => {

@@ -72,10 +72,10 @@ export function resolveHubName(env = process.env) {
 
 /**
  * @param {string} hub
- * @returns {{ instances: string; history: string }}
+ * @returns {{ instances: string; history: string; partitions: string }}
  */
 export function tableNames(hub) {
-  return { instances: `${hub}Instances`, history: `${hub}History` };
+  return { instances: `${hub}Instances`, history: `${hub}History`, partitions: `${hub}Partitions` };
 }
 
 /**
@@ -99,6 +99,33 @@ export function queueNames(hub) {
   }
 
   return [`${prefix}-workitems`, ...controlQueues];
+}
+
+/**
+ * The leases of `{hub}Partitions`, as DurableTask.AzureStorage's table partition manager writes them
+ * (E10-S3-T1): RowKey is the control queue, and the columns are TableLease's own. Two workers hold two
+ * partitions each and one of them is being handed over, so the Storage screen has an owner, an owned-since
+ * and a draining hand-over to show - the host's own partition manager writes these rows with no owner at
+ * all, having no orchestrator to run.
+ *
+ * @param {string} hub
+ * @param {Date} now
+ * @returns {TableRow[]}
+ */
+export function partitionLeases(hub, now = new Date()) {
+  const owners = ['dfm-orders-prod_ffe2', 'dfm-orders-prod_ffe2', 'dfm-orders-prod_a10c', 'dfm-orders-prod_a10c'];
+  const ownedSince = new Date(now.getTime() - 8 * 3600 * 1000);
+
+  return queueNames(hub)
+    .filter((queue) => queue.includes('-control-'))
+    .map((queue, partition) => ({
+      partitionKey: '',
+      rowKey: queue,
+      CurrentOwner: owners[partition],
+      OwnedSince: ownedSince,
+      IsDraining: partition === 2,
+      NextOwner: partition === 2 ? owners[0] : '',
+    }));
 }
 
 /**
@@ -370,7 +397,8 @@ export async function seedHub(options = {}) {
   const tables = tableNames(hub);
   const containers = containerNames(hub);
   const queues = queueNames(hub);
-  const seed = buildSeedData(hub, options.now ?? new Date(), { filler: options.filler ?? 0 });
+  const now = options.now ?? new Date();
+  const seed = buildSeedData(hub, now, { filler: options.filler ?? 0 });
 
   const tableService = TableServiceClient.fromConnectionString(connectionString, { allowInsecureConnection: true });
   const blobService = BlobServiceClient.fromConnectionString(connectionString);
@@ -395,11 +423,22 @@ export async function seedHub(options = {}) {
 
   await createTable(tableService, tables.instances);
   await createTable(tableService, tables.history);
+  await createTable(tableService, tables.partitions);
   await largeMessages.createIfNotExists();
   await leases.createIfNotExists();
 
   for (const queue of queues) {
     await queueService.getQueueClient(queue).createIfNotExists();
+  }
+
+  // The partition leases the Storage screen reads. Upserted rather than replaced: the host's partition
+  // manager writes a row per control queue itself, and this fills in the ownership it leaves empty.
+  const partitionsTable = TableClient.fromConnectionString(connectionString, tables.partitions, {
+    allowInsecureConnection: true,
+  });
+
+  for (const lease of partitionLeases(hub, now)) {
+    await partitionsTable.upsertEntity(lease, 'Merge');
   }
 
   // The blob the framework writes when it creates a task hub, and reads to find out how many partitions it has

@@ -33,6 +33,15 @@ export const dangerousOffBaseURL = `http://localhost:${dangerousOffPort}/durable
 /** How many rows that host scans before it gives up and reports what it has (B1's DFM_STATS_CAP). */
 export const STATS_CAP = '5';
 
+/**
+ * The aggregation endpoints cache their answers for thirty seconds (decision D10), and a spec that
+ * seeds rows straight into storage - which is how every spec that owns its own instances works - is
+ * writing behind the backend's back. With the cache on, whether such a spec sees its own rows depends
+ * on whether another spec loaded the same endpoint in the same minute, which makes the order the spec
+ * files happen to run in part of the result. Off here; the cache itself is unit-tested.
+ */
+export const AGGREGATION_CACHE_SECONDS = '0';
+
 /** What the webServer waits for: /about answers only once the host is really up. */
 const readyUrl = `${baseURL}a/p/i/--${hub}/about`;
 const dangerousOffReadyUrl = `${dangerousOffBaseURL}a/p/i/--${hub}/about`;
@@ -96,6 +105,7 @@ export default defineConfig({
         DFM_NONCE: process.env.DFM_NONCE ?? 'i_sure_know_what_i_am_doing',
         DFM_DANGEROUS_OPERATIONS_ENABLED: process.env.DFM_DANGEROUS_OPERATIONS_ENABLED ?? 'true',
         DFM_AUDIT_ENABLED: process.env.DFM_AUDIT_ENABLED ?? 'true',
+        DFM_AGGREGATION_CACHE_SECONDS: AGGREGATION_CACHE_SECONDS,
         DFM_E2E_HUB: hub,
       },
     },
@@ -112,6 +122,7 @@ export default defineConfig({
         DFM_NONCE: process.env.DFM_NONCE ?? 'i_sure_know_what_i_am_doing',
         DFM_DANGEROUS_OPERATIONS_ENABLED: 'false',
         DFM_AUDIT_ENABLED: process.env.DFM_AUDIT_ENABLED ?? 'true',
+        DFM_AGGREGATION_CACHE_SECONDS: AGGREGATION_CACHE_SECONDS,
         // Low enough that the seeded hub does not fit in it, which is what `partial` means
         DFM_STATS_CAP: STATS_CAP,
         DFM_E2E_HUB: hub,

@@ -21,6 +21,27 @@ Accept:
 - [ ] Rows map the envelope `{"exists":true,"state":"{\"value\":1284}"}` to `state.value === 1284`.
 Test: unit.
 
+**Deviation, E10-S1-T1 (2026-09-05).** Three things the host settled that the plan could not.
+
+(1) **Without the capability there is no state to show at all.** `/orchestrations` lists entities
+through `ListDurableEntities`, which queries with `IncludeState = false`, so every entity row comes
+back with `input: null` (checked against the host). The mapping the plan asks for is still here - a
+backend that does fill `input` in is served, and the envelope test covers it - but the screen has to
+say the state is missing rather than draw a column of dashes and a note about "the first line of the
+entity row".
+
+(2) **`/entities` hands the state over already unwrapped.** The Azure Storage provider's
+`EntityMetadata.State.Value` is the entity's own state, not the `{ exists, state }` envelope, and B4
+unwraps whatever it is given anyway. The unwrap here is the defensive half of the same rule, so a
+provider that does send the envelope cannot make one screen show `exists` where another shows the
+value.
+
+(3) **`/stats` refuses a range longer than 92 days** ("The requested range is longer than the maximum
+of 92 days"), so the facet counts over the window the table lists and, for `Any time`, over those 92
+days. It also counts entities by their *created* time while this screen lists them by their last
+update: the two agree on the seeded hub, and the number is the hub's rather than the page's, which is
+what `Showing 5 of 212` counts against.
+
 #### E10-S1-T2 Entities page
 Files: `src/routes/Entities.svelte`, `src/lib/entities/EntityChips.svelte`, `src/lib/entities/EntitiesTable.svelte`, tests
 Depends: E10-S1-T1, E1-S5-T1, E6-S2-T3
@@ -33,6 +54,15 @@ Do:
 Accept:
 - [ ] Two seeded entities render; the state cell shows the one-line preview; the peek shows the expanded state.
 Test: component tests.
+
+**Deviation, E10-S1-T2 (2026-09-05).** The key chip filters by the key half of `@name@key` - that is
+what `/entities` matches on (`keyPrefix`), and what the fallback puts into `@{name}@{key}` - so its
+placeholder is a key (`warehouse-`) rather than the mockup's `@counter@`, which is an id prefix and
+would match nothing. The peek carries no created time or duration either: an entity listing has
+neither, and the panel shows an em dash rather than a guess. The empty state waits for an answer
+(`loaded`), so an unasked screen is not called empty.
+
+`ColumnDef` gained `align: 'right'` for the actions column of L39; no other table passes it.
 
 ### E10-S2 Storage
 
@@ -58,6 +88,15 @@ Accept:
 - [ ] Deep workitems queue renders the running chip and the threshold sentence.
 Test: component tests.
 
+**Deviation, E10-S2-T2 (2026-09-05).** The two tables on the right are written as the mockup writes
+them - a `.tbl-wrap.keep` around a plain `.tbl` - rather than through `DataTable`, which always draws
+the status spine these two do not have.
+
+`blobs` is an em dash on this screen and always will be: B4 counts the large-message blobs of one
+instance (`GetLargeMessagesAsync` takes an instanceId), never of the whole container, so the hub-wide
+call has nothing to count. Azurite reports no account name at all, so the title falls back to
+`/about`'s and then to the hub on its own.
+
 ### E10-S3 End-to-end
 
 #### E10-S3-T1 Entities and Storage e2e specs
@@ -69,3 +108,27 @@ Do:
 Accept:
 - [ ] Green.
 Test: themselves.
+
+**Deviation, E10-S3-T1 (2026-09-05).** Two things about the suite, one about a claim it had made.
+
+(1) **The e2e hosts run with `DFM_AGGREGATION_CACHE_SECONDS=0`.** The aggregation endpoints cache
+their answers for thirty seconds (decision D10), and every spec that owns its own instances seeds
+them straight into storage - behind the backend's back. With the cache on, whether such a spec sees
+its own rows depends on whether another spec loaded the same endpoint in the same minute: adding
+`entities.spec.ts` (which sorts before `failures.spec.ts`, and whose every page load warms the
+failures badge) was enough to hide the failures spec's own group. The cache itself is unit-tested.
+
+(2) **That cache had also produced a false conclusion.** E9-S4-T1 recorded that a rewind leaves the
+rows Failed; with the cache off they leave the screen at once. Probed directly: seed a failed
+instance, `POST /orchestrations/batch` with `rewind`, and the instance reads `Pending` on the very
+next `GET` and stays Pending - `RewindInstanceAsync` rewrites the row before it enqueues anything,
+and nothing then runs it. The E9 note is corrected.
+
+(3) **The seed writes the partition leases** into `{hub}Partitions` as the framework's table
+partition manager writes them (RowKey the control queue, `CurrentOwner`/`OwnedSince`/`IsDraining`/
+`NextOwner`): two workers holding two partitions each, one hand-over in progress. The host writes
+those rows itself but leaves the ownership empty, having no orchestrator to run - so without this the
+Storage screen would have four rows of dashes to assert.
+
+The key prefix the entities spec filters by is a key (`warehouse-0`), not the `@counter@warehouse-0`
+of this task's own text: see the E10-S1-T2 deviation.
