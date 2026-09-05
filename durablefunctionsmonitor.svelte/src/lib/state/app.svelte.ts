@@ -67,6 +67,13 @@ export class AppState {
   /** How many requests are in flight; the top-bar progress bar shows while this is above zero. */
   progress = $state(0);
 
+  /**
+   * The clock, in ms. Anything that counts up on screen - the workspace's running duration - reads
+   * this instead of `Date.now()`, and the screen that needs it ticks it every second while it is
+   * mounted. Nothing ticks it otherwise: a clock nobody is watching is a re-render for nothing.
+   */
+  now = $state(Date.now());
+
   constructor(options: AppStateOptions = {}) {
     this.host = options.host ?? defaultHost;
     this.prefs = options.prefs ?? new Prefs(this.host);

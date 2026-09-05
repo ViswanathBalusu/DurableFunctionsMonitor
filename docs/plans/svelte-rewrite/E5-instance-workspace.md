@@ -21,6 +21,18 @@ Accept:
 - [ ] `purge` navigates to `/instances` after success.
 Test: unit with fake endpoints.
 
+**Deviation, E5-S1-T1 (2026-09-05).** Three things the plan leaves open. (1) `app.now` did not exist:
+the live clock is one field on the app, ticked by whichever screen is watching it, so nothing
+re-renders for a clock nobody is looking at. (2) The Timeline tab is gated on `!isEntity` as well as
+`capabilities.spans` - an entity has no orchestrator span tree, and E5-S3-T1 accepts "entity shows
+only History, Raw and custom tabs" unconditionally. (3) `summary` is not in `tabs`: it is the column
+next to every tab and only becomes a tab of its own below 1100 px (by CSS), so it is always a legal
+`?tab` value and never a body - which is what the accept criterion's `history, raw` means.
+Follow-up, not this task: the suspend/resume/rewind/terminate reason goes through
+`client.post` -> `JSON.stringify`, so the backend (which takes the raw body as the reason) sees it
+quoted. React sent it raw through axios. The fix belongs in the client, next to E4's `fanOut`, which
+has the same behaviour.
+
 #### E5-S1-T2 Shared action confirms (app.actions)
 Files: `src/lib/instance/actions.svelte.ts`, `src/lib/instance/ActionDialogs.svelte`, tests
 Depends: E5-S1-T1, E1-S4-T2
