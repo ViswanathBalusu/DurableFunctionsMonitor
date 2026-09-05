@@ -75,6 +75,13 @@ Accept:
 - [ ] `parseDuration('2 d')` → 2880; `'abc'` → null.
 Test: as above.
 
+**Deviation, E6-S3-T1 (2026-09-05).** The plan's `parseInt('1,000')` is `parseCount`/`formatCount` -
+`parseInt` is a global, and the pair belongs together. All three thresholds must be a positive whole
+number: zero would mark every instance as needing attention, which is not a threshold. Save rewrites
+each field in the unit its value means (`120` becomes `2 h`), so what is on screen is what was
+stored. `dfm-ui.css` draws no invalid state at all, so `.input[aria-invalid='true']` is one small
+addition in `dfm-ext.css`.
+
 ### E6-S4 Feature flags and Templates
 
 #### E6-S4-T1 FeatureFlagsPanel

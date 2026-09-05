@@ -59,3 +59,11 @@
 .svelte-flow__attribution {
   display: none;
 }
+
+/* A field the app cannot read (E6-S3-T1). dfm-ui.css draws no invalid state, and a threshold that
+   is not a number has to look wrong before Save is pressed - Save is disabled, and this says why. */
+.input[aria-invalid='true'] {
+  border-color: var(--destructive);
+  outline: 2px solid var(--destructive);
+  outline-offset: 2px;
+}

@@ -31,5 +31,7 @@ describe('Settings screen', () => {
       'Connection',
       'Hub administration',
     ]);
+
+    expect(grids[1].querySelector('.panel > .panel-h > h2')?.textContent).toBe('Appearance');
   });
 });
