@@ -70,7 +70,7 @@ describe('InstanceSpansState: loading', () => {
 
     expect(calls.spans).toEqual([INSTANCE_ID]);
     expect(calls.children).toEqual([INSTANCE_ID]);
-    expect(state.spans).toHaveLength(8);
+    expect(state.spans).toHaveLength(12);
     expect(state.totals?.totalMs).toBe(47_000);
     expect(state.historyRows).toBe(31);
     expect(state.childrenCount).toBe(2);

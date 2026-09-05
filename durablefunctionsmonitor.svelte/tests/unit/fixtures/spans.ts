@@ -1,8 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// ScreenInstance.dc.html L89-L98: the swimlane of order-2026-09-04-000913 - two payment attempts
-// with a timer between them, and the sub-orchestration at the end.
+// ScreenInstance.dc.html L89-L98 as `/spans` reports it: four orchestrator episodes, three payment
+// attempts with a retry backoff between two of them, the wait the raised event ended, and the
+// sub-orchestration that is still running.
+//
+// Faithful to B2 rather than to the picture: the episodes come from the markers, the wait for
+// `PaymentApproved` is the stretch before the row that named it, and the mockup's ninth lane - a
+// wait for `ShipmentConfirmed` that has not arrived - has no span, because a history whose last row
+// creates a sub-orchestration leaves nothing waiting and nothing to name.
 
 import type { Span, SpansResponse, SpansTotals } from '$lib/api/types';
 
@@ -21,17 +27,23 @@ export function span(overrides: Partial<Span> = {}): Span {
   };
 }
 
-export const spans: Span[] = [
-  span({
-    id: 'orch',
+/** One replay of the orchestrator, from the episode markers: no history row of its own. */
+function episode(index: number, start: string, end: string, durationMs: number): Span {
+  return span({
+    id: `orch${index}`,
     kind: 'orchestrator',
     name: 'ProcessOrderOrchestrator',
-    start: '2026-09-04T14:02:11.913Z',
-    end: null,
-    status: 'running',
-    sequenceNumbers: [1],
-    durationMs: null,
-  }),
+    attempt: index,
+    start,
+    end,
+    status: 'completed',
+    sequenceNumbers: [],
+    durationMs,
+  });
+}
+
+export const spans: Span[] = [
+  episode(1, '2026-09-04T14:02:11.913Z', '2026-09-04T14:02:12.004Z', 91),
   span(),
   span({
     id: 'charge1',
@@ -52,15 +64,27 @@ export const spans: Span[] = [
     sequenceNumbers: [10, 14],
     durationMs: 4_090,
   }),
+  episode(2, '2026-09-04T14:02:21.300Z', '2026-09-04T14:02:21.402Z', 102),
   span({
     id: 'timer',
     kind: 'timer',
-    name: 'Timer',
+    name: '',
     start: '2026-09-04T14:02:21.402Z',
     end: '2026-09-04T14:02:24.410Z',
     status: 'fired',
     sequenceNumbers: [15, 18],
     durationMs: 3_008,
+  }),
+  episode(3, '2026-09-04T14:02:24.410Z', '2026-09-04T14:02:24.500Z', 90),
+  span({
+    id: 'wait-payment',
+    kind: 'eventWait',
+    name: 'PaymentApproved',
+    start: '2026-09-04T14:02:24.410Z',
+    end: '2026-09-04T14:02:24.913Z',
+    status: 'waiting',
+    sequenceNumbers: [27],
+    durationMs: 503,
   }),
   span({
     id: 'event',
@@ -82,6 +106,7 @@ export const spans: Span[] = [
     sequenceNumbers: [28, 30],
     durationMs: 3_113,
   }),
+  episode(4, '2026-09-04T14:02:28.114Z', '2026-09-04T14:02:28.400Z', 286),
   span({
     id: 'sub',
     kind: 'subOrchestration',
@@ -101,7 +126,7 @@ export function totals(overrides: Partial<SpansTotals> = {}): SpansTotals {
     subOrchestrationsMs: 0,
     timersMs: 3_008,
     externalEventWaitMs: 503,
-    orchestratorMs: null,
+    orchestratorMs: 569,
     totalMs: 47_000,
     ...overrides,
   };
