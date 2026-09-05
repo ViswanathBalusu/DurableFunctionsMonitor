@@ -18,6 +18,12 @@ Accept:
 - [ ] `docker build -f durablefunctionsmonitor.dotnetisolated/Dockerfile .` produces an image whose `/home/site/wwwroot/DfmStatics/index.html` contains the Svelte bundle reference.
 Test: the docker build (CI `push-to-docker-hub` dry run through `docker/build-push-action` with `push: false` on PRs is optional; at minimum build once locally and note it in the PR).
 
+**Done, E12-S1-T1 (2026-09-05).** All three images built locally on Docker 29.7.2, and all three serve
+the same bundle pair out of `/home/site/wwwroot/DfmStatics` (`main.58690934.js`, `main.3c26323f.css`).
+`node:22-alpine` builds the UI without trouble - the native packages of Vite and Tailwind all have
+musl builds in the lockfile. `.dockerignore` also drops `test-results` and `playwright-report`, which
+are the other two things a working tree accumulates and no image needs.
+
 #### E12-S1-T2 Workflows final pass
 Files: `.github/workflows/build.yml`, `push-to-docker-hub.yml`, `push-to-vscode-marketplace.yml`, `.github/workflows/playwright.yml` (delete the React one under `durablefunctionsmonitor.react/.github`)
 Depends: E12-S2-T1

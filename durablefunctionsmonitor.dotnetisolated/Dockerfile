@@ -3,9 +3,28 @@
 #
 #   docker build -f durablefunctionsmonitor.dotnetisolated/Dockerfile .
 
+# The UI is built here rather than copied in. DfmStatics is build output: it is kept out of the build
+# context (.dockerignore), so what an image serves is the UI of this commit, never whatever a
+# developer happened to leave in their working tree.
+FROM node:22-alpine AS ui
+
+WORKDIR /src/durablefunctionsmonitor.svelte
+
+# The manifests first, so `npm ci` is only re-run when the dependencies themselves change
+COPY durablefunctionsmonitor.svelte/package.json durablefunctionsmonitor.svelte/package-lock.json ./
+RUN npm ci
+
+COPY durablefunctionsmonitor.svelte/ ./
+RUN npm run build
+
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS installer-env
 
 COPY . /src
+
+# What the backend serves (contracts section 2): the one JS and one CSS bundle of the stage above.
+# All three images read their statics from this one folder - the two custom backends link it in.
+COPY --from=ui /src/durablefunctionsmonitor.svelte/build /src/durablefunctionsmonitor.dotnetisolated/DfmStatics
+
 RUN cd /src && \
     mkdir -p /home/site/wwwroot && \
     dotnet publish durablefunctionsmonitor.dotnetisolated/durablefunctionsmonitor.dotnetisolated.csproj --output /home/site/wwwroot
