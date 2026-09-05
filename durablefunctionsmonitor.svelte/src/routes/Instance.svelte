@@ -3,11 +3,13 @@
   import Page from '$lib/components/Page.svelte';
   import HistoryTab from '$lib/instance/HistoryTab.svelte';
   import InstanceActions from '$lib/instance/InstanceActions.svelte';
+  import InputsTab from '$lib/instance/InputsTab.svelte';
   import InstanceHeader from '$lib/instance/InstanceHeader.svelte';
   import RawTab from '$lib/instance/RawTab.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { InstanceState } from '$lib/state/instance.svelte';
+  import { Inputs } from '$lib/state/inputs.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -17,6 +19,9 @@
     app,
     instanceId: 'instanceId' in route ? route.instanceId : '',
   });
+
+  /** The Inputs tab's own state; the tab loads it when it is opened and registers its reload. */
+  const inputs = new Inputs({ app, instanceId: instance.instanceId });
 
   onMount(() => {
     void instance.refreshAll();
@@ -51,7 +56,7 @@
     {/snippet}
   </InstanceHeader>
 
-  <WorkspaceTabs {instance} />
+  <WorkspaceTabs {instance} inputsCount={inputs.loaded ? inputs.cards.length : null} />
 
   <div class="ws" data-tab={tab}>
     <aside class="summary" aria-label="Summary">
@@ -63,6 +68,8 @@
         <p class="meta">The summary is the column beside this one on a wider screen.</p>
       {:else if tab === 'history'}
         <HistoryTab {instance} />
+      {:else if tab === 'inputs'}
+        <InputsTab {instance} {inputs} />
       {:else if tab === 'raw'}
         <RawTab {instance} />
       {:else}

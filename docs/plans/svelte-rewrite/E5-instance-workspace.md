@@ -148,6 +148,17 @@ Accept:
 - [ ] `dangerous=false` renders the "off" chip and the replay button disabled with the DFM_DANGEROUS_OPERATIONS_ENABLED reason.
 Test: as above.
 
+**Deviation, E5-S4-T2 (2026-09-05).** The E1 fixture `tests/unit/fixtures/input-events.ts` described
+an answer the backend cannot give: an instance with a raised event whose `ExecutionStarted` could
+still be restarted in place and rewound (`InputEventEligibility.cs` refuses both once
+`hasRaisedEvents`), with invented reason strings. It is now a *failed* instance with one raised
+event - the case the tab exists for, and the one this task's accept criterion describes - with every
+verdict and every reason taken from the backend; `runningInputEvents()` is the running variant,
+which is where `requiresTerminate` comes from. The reason strings live in
+`tests/unit/fixtures/input-eligibility.ts` so the two fixtures cannot drift apart.
+The mockup's L188 line ("Buttons never disappear because of eligibility…") is a note to the reader
+about the mockup, not product copy, and is not rendered.
+
 #### E5-S4-T3 Operation confirm dialogs
 Files: `src/lib/instance/InputOpDialog.svelte`, `src/lib/instance/input-op-copy.ts`, tests
 Depends: E1-S4-T2, E5-S4-T1

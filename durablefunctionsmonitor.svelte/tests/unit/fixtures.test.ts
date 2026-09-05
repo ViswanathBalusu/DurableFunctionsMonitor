@@ -13,7 +13,7 @@ import { entities } from './fixtures/entities';
 import { entityInstances, instance, instances, page } from './fixtures/instances';
 import { failures } from './fixtures/failures';
 import { history, historyResponse } from './fixtures/history';
-import { inputEvents } from './fixtures/input-events';
+import { inputEvents, runningInputEvents } from './fixtures/input-events';
 import { spansResponse } from './fixtures/spans';
 import { stats } from './fixtures/stats';
 import { storage } from './fixtures/storage';
@@ -70,7 +70,10 @@ describe('fixtures', () => {
 
     expect(events.map((event) => event.eventType)).toEqual(['ExecutionStarted', 'EventRaised']);
     expect(events[1].isLast).toBe(true);
-    expect(events[1].operations.replay.requiresTerminate).toBe(true);
+
+    // The default instance is failed, and a failed instance is terminal: nothing to terminate
+    expect(events[1].operations.replay).toEqual({ allowed: true, requiresTerminate: false });
+    expect(runningInputEvents().events[1].operations.replay.requiresTerminate).toBe(true);
   });
 
   it('describe the same instance across the details, spans and children fixtures', () => {

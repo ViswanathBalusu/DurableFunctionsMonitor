@@ -16,8 +16,17 @@ import { Router } from '$lib/router.svelte';
 import { AppState } from './app.svelte';
 import { InputCard, Inputs, OPERATION_DESCRIPTIONS, OVER_SIZE_REASON, READ_ONLY_REASON } from './inputs.svelte';
 import { Prefs } from './prefs.svelte';
-import { ELIGIBILITY_ROWS, SUB_ORCHESTRATION_WARNING } from '../../../tests/unit/fixtures/input-eligibility';
-import { eventRaised, executionStarted, inputEvents } from '../../../tests/unit/fixtures/input-events';
+import {
+  ELIGIBILITY_ROWS,
+  RESTART_INITIAL_ONLY_REASON,
+  SUB_ORCHESTRATION_WARNING,
+} from '../../../tests/unit/fixtures/input-eligibility';
+import {
+  eventRaised,
+  executionStarted,
+  inputEvents,
+  runningInputEvents,
+} from '../../../tests/unit/fixtures/input-events';
 import { storedInput } from '../../../tests/unit/fixtures/details';
 
 const INSTANCE_ID = 'order-2026-09-04-000913';
@@ -113,10 +122,12 @@ describe('the eligibility matrix', () => {
   });
 
   it('carries the terminate flag the replay of a running instance needs', () => {
-    const replay = card(1).buttons.find((button) => button.op === 'replay');
+    const running = new InputCard(runningInputEvents().events[1], { readOnly: false });
 
-    expect(replay?.requiresTerminate).toBe(true);
-    expect(card(0).buttons.find((button) => button.op === 'replay')?.requiresTerminate).toBe(false);
+    expect(running.buttons.find((button) => button.op === 'replay')?.requiresTerminate).toBe(true);
+
+    // A failed instance is terminal, so there is nothing to terminate first
+    expect(card(1).buttons.find((button) => button.op === 'replay')?.requiresTerminate).toBe(false);
   });
 });
 
@@ -126,15 +137,21 @@ describe('InputCard', () => {
 
     expect(first.text).toBe(JSON.stringify(storedInput, null, 2));
     expect(first.edited).toBe(false);
-    expect(first.editable).toBe(true);
 
-    first.text = '{ "orderId": "A-1044" }';
+    // The initial input of an instance that has received an event can no longer be acted on
+    expect(first.editable).toBe(false);
 
-    expect(first.edited).toBe(true);
+    const last = card(1);
 
-    first.reset();
+    expect(last.editable).toBe(true);
 
-    expect(first.edited).toBe(false);
+    last.text = '{ "approved": false }';
+
+    expect(last.edited).toBe(true);
+
+    last.reset();
+
+    expect(last.edited).toBe(false);
   });
 
   it('disables everything once the editor holds more than the backend stores inline', () => {
@@ -151,7 +168,7 @@ describe('InputCard', () => {
 
     // The size is the reason for the ones that were allowed; the rest keep the backend's own
     expect(big.buttons.find((button) => button.op === 'update-input-and-rewind')?.why).toBe(OVER_SIZE_REASON);
-    expect(big.buttons.find((button) => button.op === 'restart-in-place')?.why).toContain('restart-in-place applies');
+    expect(big.buttons.find((button) => button.op === 'restart-in-place')?.why).toBe(RESTART_INITIAL_ONLY_REASON);
   });
 
   it('says Read-only mode before anything else, and takes the editor with it', () => {
