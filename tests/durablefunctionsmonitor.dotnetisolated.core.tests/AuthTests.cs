@@ -127,6 +127,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 nameof(Children.DfmGetOrchestrationChildrenFunction),
                 nameof(Spans.DfmGetOrchestrationSpansFunction),
                 nameof(Stats.DfmGetStatsFunction),
+                nameof(Storage.DfmGetStorageFunction),
                 nameof(TaskHubNames.DfmGetTaskHubNamesFunction)
             };
 
