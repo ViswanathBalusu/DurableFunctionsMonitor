@@ -69,7 +69,19 @@
       {:else if tab === 'history'}
         <HistoryTab {instance} />
       {:else if tab === 'inputs'}
-        <InputsTab {instance} {inputs} />
+        <InputsTab
+          {instance}
+          {inputs}
+          onOutcome={(outcome) => {
+            // E5-S4-T4 maps every outcome to its toast or its recovery dialog; until it lands, a
+            // failure is at least reported rather than swallowed
+            if (!outcome.ok) {
+              app.toast.fromError('The operation failed', outcome.error);
+            } else {
+              void instance.refreshAll();
+            }
+          }}
+        />
       {:else if tab === 'raw'}
         <RawTab {instance} />
       {:else}

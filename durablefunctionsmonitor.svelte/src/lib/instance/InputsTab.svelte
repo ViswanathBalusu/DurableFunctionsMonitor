@@ -5,17 +5,22 @@
   import StatusChip from '$lib/components/StatusChip.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import type { InstanceState } from '$lib/state/instance.svelte';
-  import type { InputCard, Inputs, OperationButton } from '$lib/state/inputs.svelte';
+  import type { InputEventOperation } from '$lib/api/types';
+  import type { InputCard, InputOpOutcome, Inputs, RunOptions } from '$lib/state/inputs.svelte';
   import InputEventCard from './InputEventCard.svelte';
+  import InputOpDialog from './InputOpDialog.svelte';
 
   interface Props {
     instance: InstanceState;
     inputs: Inputs;
-    /** Opens the confirm for one operation on one card (E5-S4-T3). */
-    onRun?: (button: OperationButton, card: InputCard) => void;
+    /** What came back from a run; E5-S4-T4 turns it into a toast or a recovery dialog. */
+    onOutcome?: (outcome: InputOpOutcome) => void;
   }
 
-  let { instance, inputs, onRun }: Props = $props();
+  let { instance, inputs, onOutcome }: Props = $props();
+
+  /** The operation waiting to be confirmed, and the card it is about. */
+  let pending = $state<{ op: InputEventOperation; card: InputCard } | null>(null);
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -23,6 +28,25 @@
 
   /** `?seq=` (from the History tab's `input` tag): which card to scroll to and focus. */
   const seq = $derived(app.router.current.query.get('seq'));
+
+  /**
+   * Runs what was confirmed and reloads the list either way: a run that worked changed the history,
+   * and a run that was refused was refused because the history is not what this tab was showing.
+   */
+  async function run(options: RunOptions): Promise<void> {
+    const target = pending;
+
+    if (!target) {
+      return;
+    }
+
+    const outcome = await inputs.run(target.op, target.card, options);
+
+    pending = null;
+    onOutcome?.(outcome);
+
+    await inputs.load();
+  }
 
   onMount(() => {
     // The tab loads on activation, and every run reloads it: the sequence numbers move under it
@@ -86,7 +110,24 @@
       busy={inputs.busy}
       focused={seq !== null && String(card.event.sequenceNumber) === seq}
       buttonsHidden={inputs.noSequenceNumbers}
-      onRun={(button) => onRun?.(button, card)}
+      onRun={(button) => (pending = { op: button.op, card })}
     />
   {/each}
+{/if}
+
+{#if pending}
+  <InputOpDialog
+    bind:open={
+      () => pending !== null,
+      (next) => {
+        if (!next) {
+          pending = null;
+        }
+      }
+    }
+    op={pending.op}
+    card={pending.card}
+    busy={inputs.busy}
+    onConfirm={(options) => void run(options)}
+  />
 {/if}
