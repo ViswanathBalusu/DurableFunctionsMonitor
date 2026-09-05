@@ -811,3 +811,77 @@ export function buildSeedData(hub = DEFAULT_HUB, now = new Date(), options = {})
 
   return { hub, now, instances, orchestrations, entities, blobs, historyRowCount };
 }
+
+/**
+ * A failed instance that received an external event before it failed - the one state the Inputs tab
+ * exists for, and the one the mockup's own rows do not cover: the initial input can no longer be
+ * acted on (external events since), while the last `EventRaised` can be edited and rewound, or
+ * replayed from.
+ *
+ * Built on its own rather than seeded into the hub by default, so a spec can create one per run and
+ * rewrite it as much as it likes without moving the ground under any other spec.
+ *
+ * @param {string} instanceId
+ * @param {Date} [now]
+ * @returns {SeedInstance}
+ */
+export function buildRetryInstance(instanceId, now = new Date()) {
+  const createdTime = ago(now, 900);
+  const input =
+    '{"orderId":"A-1099","customerId":88214,"items":[{"sku":"SKU-4471","qty":1}],"total":64.75,"currency":"USD"}';
+  const eventInput = '{"approved":true,"approver":"ops@contoso.com","amount":64.75}';
+  const message = 'ChargePayment: the payment gateway refused the approved amount';
+  const output = failureOutput('PaymentRefusedException', message);
+
+  return {
+    instanceId,
+    name: PROCESS_ORDER,
+    executionId: `${instanceId}-exec`,
+    runtimeStatus: 'Failed',
+    createdTime,
+    lastUpdatedTime: plus(createdTime, 21000),
+    completedTime: plus(createdTime, 21000),
+    input,
+    output,
+    customStatus: '{"step":"ChargePayment","attempt":2}',
+    parentInstanceId: null,
+    isEntity: false,
+    history: [
+      row(0, 'OrchestratorStarted', createdTime, -12),
+      row(1, 'ExecutionStarted', createdTime, 0, { name: PROCESS_ORDER, input }),
+      row(2, 'TaskScheduled', createdTime, 90, {
+        name: 'ReserveInventory',
+        eventId: 0,
+        input: '{"sku":"SKU-4471","qty":1}',
+      }),
+      row(3, 'OrchestratorCompleted', createdTime, 100),
+      row(4, 'OrchestratorStarted', createdTime, 1990),
+      row(5, 'TaskCompleted', createdTime, 2000, { taskScheduledId: 0, result: '{"sku":"SKU-4471","reserved":1}' }),
+      row(6, 'OrchestratorCompleted', createdTime, 2010),
+      row(7, 'OrchestratorStarted', createdTime, 8990),
+      // The external event this instance waited for, and the last input it ever received
+      row(8, 'EventRaised', createdTime, 9000, { name: 'PaymentApproved', input: eventInput }),
+      row(9, 'TaskScheduled', createdTime, 9100, {
+        name: 'ChargePayment',
+        eventId: 1,
+        input: '{"amount":64.75,"currency":"USD"}',
+      }),
+      row(10, 'OrchestratorCompleted', createdTime, 9110),
+      row(11, 'OrchestratorStarted', createdTime, 20890),
+      row(12, 'TaskFailed', createdTime, 20900, {
+        name: 'ChargePayment',
+        taskScheduledId: 1,
+        reason: 'PaymentRefusedException',
+        details: message,
+      }),
+      row(13, 'ExecutionCompleted', createdTime, 21000, { orchestrationStatus: 'Failed', result: output }),
+      row(14, 'OrchestratorCompleted', createdTime, 21010),
+    ],
+  };
+}
+
+/** The sequence number of the `EventRaised` row `buildRetryInstance` writes: the last input event. */
+export const RETRY_EVENT_SEQUENCE_NUMBER = 8;
+
+/** What that event is called, which is what a replay raises again. */
+export const RETRY_EVENT_NAME = 'PaymentApproved';

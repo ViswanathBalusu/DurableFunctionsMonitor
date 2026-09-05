@@ -67,9 +67,13 @@ export class InputCard {
   /** What the backend sent, pretty-printed - which is what "reset" goes back to. */
   readonly stored: string;
 
-  readonly #readOnly: boolean;
+  /**
+   * Asked every time rather than captured: `/about` may not have answered when this tab loaded, and
+   * until it has, `app.readOnly` is true - a card built from that would stay dead for ever.
+   */
+  readonly #readOnly: () => boolean;
 
-  constructor(event: InputEvent, options: { readOnly: boolean }) {
+  constructor(event: InputEvent, options: { readOnly: () => boolean }) {
     this.event = event;
     this.stored = formatJson(event.input);
     this.text = this.stored;
@@ -95,7 +99,7 @@ export class InputCard {
 
   /** Whether the editor takes typing at all: something has to be possible with this event. */
   get editable(): boolean {
-    return !this.#readOnly && OPERATION_ORDER.some((op) => this.event.operations?.[op]?.allowed);
+    return !this.#readOnly() && OPERATION_ORDER.some((op) => this.event.operations?.[op]?.allowed);
   }
 
   reset(): void {
@@ -110,13 +114,14 @@ export class InputCard {
   #button(op: InputEventOperation): OperationButton {
     const eligibility = this.event.operations[op];
     const allowed = !!eligibility?.allowed;
+    const readOnly = this.#readOnly();
 
     return {
       op,
       label: op === 'replay' ? `Replay from #${this.sequenceNumber ?? '?'}` : LABELS[op],
       variant: DANGEROUS_OPERATIONS.includes(op) ? 'danger' : 'default',
-      disabled: this.#readOnly || this.over || !allowed,
-      why: this.#readOnly
+      disabled: readOnly || this.over || !allowed,
+      why: readOnly
         ? READ_ONLY_REASON
         : !allowed
           ? // The backend's own words: it knows why, and paraphrasing it would be guessing
@@ -221,7 +226,7 @@ export class Inputs {
       }
 
       this.response = response;
-      this.cards = (response.events ?? []).map((event) => new InputCard(event, { readOnly: this.#app.readOnly }));
+      this.cards = (response.events ?? []).map((event) => new InputCard(event, { readOnly: () => this.#app.readOnly }));
       this.loaded = true;
     } catch (error) {
       if (requestId !== this.#requestId) {

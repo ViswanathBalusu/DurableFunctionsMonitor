@@ -18,8 +18,19 @@ const hub = process.env.DFM_E2E_HUB ?? 'DurableFunctionsHub';
  */
 export const baseURL = process.env.DFM_E2E_BASE_URL ?? `http://localhost:${port}/durable-functions-monitor/`;
 
+/**
+ * A second host of the same build, with `DFM_DANGEROUS_OPERATIONS_ENABLED=false`. The Inputs tab
+ * behaves differently for a deployment that has the switch off, and that is not something a spec can
+ * fake: /about says so, and the backend refuses the two dangerous operations with a reason naming
+ * the environment variable. So the suite runs a second host and a project that points at it.
+ */
+const dangerousOffPort = Number(process.env.DFM_E2E_PORT_DANGEROUS_OFF ?? port + 1);
+
+export const dangerousOffBaseURL = `http://localhost:${dangerousOffPort}/durable-functions-monitor/`;
+
 /** What the webServer waits for: /about answers only once the host is really up. */
 const readyUrl = `${baseURL}a/p/i/--${hub}/about`;
+const dangerousOffReadyUrl = `${dangerousOffBaseURL}a/p/i/--${hub}/about`;
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -40,7 +51,17 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: '**/*.mobile.spec.ts' },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: ['**/*.mobile.spec.ts', '**/*.dangerous-off.spec.ts'],
+    },
+    // The same UI against the host that has dangerous operations switched off
+    {
+      name: 'dangerous-off',
+      use: { ...devices['Desktop Chrome'], baseURL: dangerousOffBaseURL },
+      testMatch: '**/*.dangerous-off.spec.ts',
+    },
     // 390px wide, and only the specs written for it: the bottom nav, the More sheet and the stacked
     // table cards are what lives below 768px (contracts §14)
     {
@@ -52,18 +73,36 @@ export default defineConfig({
 
   globalSetup: './tests/e2e/global-setup.ts',
 
-  webServer: {
-    command: 'node ../scripts/harness/start-host.mjs',
-    url: readyUrl,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-    env: {
-      DFM_NONCE: process.env.DFM_NONCE ?? 'i_sure_know_what_i_am_doing',
-      DFM_DANGEROUS_OPERATIONS_ENABLED: process.env.DFM_DANGEROUS_OPERATIONS_ENABLED ?? 'true',
-      DFM_AUDIT_ENABLED: process.env.DFM_AUDIT_ENABLED ?? 'true',
-      DFM_E2E_HUB: hub,
+  webServer: [
+    {
+      command: 'node ../scripts/harness/start-host.mjs',
+      url: readyUrl,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      env: {
+        DFM_NONCE: process.env.DFM_NONCE ?? 'i_sure_know_what_i_am_doing',
+        DFM_DANGEROUS_OPERATIONS_ENABLED: process.env.DFM_DANGEROUS_OPERATIONS_ENABLED ?? 'true',
+        DFM_AUDIT_ENABLED: process.env.DFM_AUDIT_ENABLED ?? 'true',
+        DFM_E2E_HUB: hub,
+      },
     },
-  },
+    {
+      // `--no-build`: two builds of the same project at once fight over the output dll, and this
+      // host is the same build serving the same statics with one environment variable turned off
+      command: `node ../scripts/harness/start-host.mjs --port=${dangerousOffPort} --no-build`,
+      url: dangerousOffReadyUrl,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+      env: {
+        DFM_NONCE: process.env.DFM_NONCE ?? 'i_sure_know_what_i_am_doing',
+        DFM_DANGEROUS_OPERATIONS_ENABLED: 'false',
+        DFM_AUDIT_ENABLED: process.env.DFM_AUDIT_ENABLED ?? 'true',
+        DFM_E2E_HUB: hub,
+      },
+    },
+  ],
 });

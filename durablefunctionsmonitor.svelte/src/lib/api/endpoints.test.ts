@@ -197,9 +197,9 @@ describe('input events', () => {
     await endpoints.restartInPlace('order-1', { input: { a: 1 } });
 
     expect(calls.map((c) => c.url)).toEqual([
-      "/orchestrations('order-1')/update-input-and-rewind",
-      "/orchestrations('order-1')/replay",
-      "/orchestrations('order-1')/restart-in-place",
+      "/orchestrations('order-1')/input-events/update-input-and-rewind",
+      "/orchestrations('order-1')/input-events/replay",
+      "/orchestrations('order-1')/input-events/restart-in-place",
     ]);
     expect(calls[0].body).toEqual({ sequenceNumber: 27, input: { a: 1 } });
     expect(calls[1].body).toEqual({ sequenceNumber: 27, terminateIfRunning: true });

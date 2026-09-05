@@ -87,6 +87,15 @@ export async function buildSequence(options: BuildSequenceOptions): Promise<Sequ
   async function walk(orchestrator: string, history: HistoryEvent[], isFailed: boolean): Promise<void> {
     add(orchestrator);
 
+    // The backend collapses a TaskScheduled row into the TaskCompleted/TaskFailed that answered it
+    // and reports when it was scheduled instead (Common/OrchestrationHistory.cs). A diagram of the
+    // answers alone would show every arrow pointing back at an orchestrator that never called
+    // anything, so the call is drawn from `ScheduledTime` - unless the provider did send the
+    // TaskScheduled row too, in which case that row is the call.
+    const scheduled = new Set(
+      history.filter((event) => event.EventType === 'TaskScheduled').map((event) => event.Name ?? ''),
+    );
+
     for (let index = 0; index < history.length; index++) {
       const event = history[index];
 
@@ -112,6 +121,17 @@ export async function buildSequence(options: BuildSequenceOptions): Promise<Sequ
           const completed = event.EventType === 'TaskCompleted';
           const count = last - index + 1;
 
+          if (completed && event.ScheduledTime && !scheduled.has(event.Name ?? '')) {
+            messages.push({
+              t: event.ScheduledTime,
+              from: orchestrator,
+              to: name,
+              label: event.Name ?? '',
+              kind: 'call',
+              ...(count > 1 ? { parallel: count } : {}),
+            });
+          }
+
           messages.push({
             t: event.Timestamp,
             from: completed ? name : orchestrator,
@@ -128,6 +148,16 @@ export async function buildSequence(options: BuildSequenceOptions): Promise<Sequ
 
         case 'TaskFailed': {
           const name = add(event.Name ?? '');
+
+          if (event.ScheduledTime && !scheduled.has(event.Name ?? '')) {
+            messages.push({
+              t: event.ScheduledTime,
+              from: orchestrator,
+              to: name,
+              label: event.Name ?? '',
+              kind: 'call',
+            });
+          }
 
           messages.push({
             t: event.Timestamp,

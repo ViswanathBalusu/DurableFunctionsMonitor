@@ -168,6 +168,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 orcEntity["CustomStatus"] = JObject.Parse(customStatus.ToJsonString()).ToString();
             }
 
+            // The row really did change, so LastUpdatedTime says so. Without this the conditional GET
+            // of the details endpoint answers 304 - its ETag is LastUpdatedTime plus the runtime status
+            // - and the caller that just set the custom status is served the value it replaced.
+            orcEntity["LastUpdatedTime"] = DateTime.UtcNow;
+
             await tableClient.ReplaceEntityAsync(tableName, orcEntity);
         }
 

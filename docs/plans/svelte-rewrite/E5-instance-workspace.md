@@ -307,3 +307,29 @@ Do:
 Accept:
 - [ ] Both specs green locally and in CI (two Playwright projects for the dangerous on/off hosts; the off project runs a second host on port 7073 via the runner's `--port` and `--dangerous=false` flags).
 Test: themselves.
+
+**Deviation, E5-S9-T1 (2026-09-05).** What the specs found, and what they had to be written around.
+
+Three defects, all fixed here. (1) The three input-event operations posted to
+`orchestrations('id')/update-input-and-rewind`; the backend's routes are under
+`.../input-events/`, so every one of them answered 404. (2) `Inputs` captured `app.readOnly` when
+the tab loaded - before `/about` had answered it is true, and the cards stayed dead for ever; it is
+read live now. (3) `set-custom-status` writes the Instances row directly without touching
+`LastUpdatedTime`, and the details endpoint's ETag is `LastUpdatedTime` plus the runtime status - so
+the conditional GET that follows the write answered 304 and served the caller the value it had just
+replaced. The backend now bumps the row's `LastUpdatedTime`, which is true of what it did.
+
+Two things the plan assumed that the backend does not do. The history endpoint collapses a
+`TaskScheduled` row into the answer that came back and reports `ScheduledTime` on it (33 seeded rows
+become 9), so `sequence-model.ts` draws the call from `ScheduledTime` when no `TaskScheduled` row of
+its own arrived - without that the diagram is all returns and no calls. And nothing consumes the
+control queue of a seeded hub, so terminate and suspend are enqueued and never applied: the specs
+assert what actually happens (the request reaches the hub, the status does not change) rather than a
+tile that would only change under a running worker.
+
+The specs seed the instances they rewrite - a per-run id each - and delete them again in
+`afterAll`, so a run leaves the hub as it found it and the specs that count rows keep counting the
+same ones. `seed-hub.mjs` gained `seedInstances` and `deleteInstances` for that; `fixtures.mjs`
+gained `buildRetryInstance`, the failed-after-an-external-event case the mockup's own rows do not
+cover. The dangerous-off host runs on 7072+1 as a second `webServer` entry with `--no-build`
+(`--dangerous=false` is not a flag the runner has; the environment variable is what it reads).

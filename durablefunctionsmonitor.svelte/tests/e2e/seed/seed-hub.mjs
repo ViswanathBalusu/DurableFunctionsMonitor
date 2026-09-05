@@ -514,3 +514,84 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     });
   }
 }
+
+/**
+ * Writes a handful of instances into an existing hub, with their history. What `seedHub` does for
+ * the whole fixture set, for one spec that needs an instance of its own - a spec that rewrites
+ * history cannot share one with the specs that read it.
+ *
+ * @param {object} options
+ * @param {import('./fixtures.mjs').SeedInstance[]} options.instances
+ * @param {string} [options.hub]
+ * @param {string} [options.connectionString]
+ * @returns {Promise<{ hub: string, instances: number, historyRows: number }>}
+ */
+export async function seedInstances(options) {
+  const connectionString = options.connectionString ?? resolveConnectionString();
+  const hub = options.hub ?? resolveHubName();
+  const tables = tableNames(hub);
+  const containers = containerNames(hub);
+
+  const largeMessageBaseUrl = `${blobEndpointOf(connectionString)}/${containers.largeMessages}`;
+  const instancesTable = TableClient.fromConnectionString(connectionString, tables.instances, {
+    allowInsecureConnection: true,
+  });
+  const historyTable = TableClient.fromConnectionString(connectionString, tables.history, {
+    allowInsecureConnection: true,
+  });
+
+  let historyRows = 0;
+
+  for (const instance of options.instances) {
+    await instancesTable.upsertEntity(instanceEntity(instance, hub, largeMessageBaseUrl), 'Replace');
+
+    if (instance.history.length === 0) {
+      continue;
+    }
+
+    const rows = instance.history.map((row) => historyEntity(instance, row));
+    rows.push(sentinelEntity(instance));
+    await upsertBatch(historyTable, rows);
+
+    historyRows += instance.history.length;
+  }
+
+  return { hub, instances: options.instances.length, historyRows };
+}
+
+/**
+ * Removes instances and their history from a hub. The inverse of `seedInstances`, for a spec that
+ * seeded something of its own: what it leaves behind would otherwise be counted by the specs that
+ * assert how many instances the hub holds.
+ *
+ * @param {object} options
+ * @param {string[]} options.instanceIds
+ * @param {string} [options.hub]
+ * @param {string} [options.connectionString]
+ * @returns {Promise<void>}
+ */
+export async function deleteInstances(options) {
+  const connectionString = options.connectionString ?? resolveConnectionString();
+  const hub = options.hub ?? resolveHubName();
+  const tables = tableNames(hub);
+
+  const instancesTable = TableClient.fromConnectionString(connectionString, tables.instances, {
+    allowInsecureConnection: true,
+  });
+  const historyTable = TableClient.fromConnectionString(connectionString, tables.history, {
+    allowInsecureConnection: true,
+  });
+
+  for (const instanceId of options.instanceIds) {
+    // Already gone (a spec that purged it) is the outcome this asks for, not an error
+    await instancesTable.deleteEntity(instanceId, '').catch(() => {});
+
+    const rows = historyTable.listEntities({
+      queryOptions: { filter: `PartitionKey eq '${instanceId.replace(/'/g, "''")}'` },
+    });
+
+    for await (const row of rows) {
+      await historyTable.deleteEntity(row.partitionKey ?? instanceId, row.rowKey ?? '').catch(() => {});
+    }
+  }
+}

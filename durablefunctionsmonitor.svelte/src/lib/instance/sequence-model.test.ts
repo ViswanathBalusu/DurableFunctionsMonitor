@@ -90,6 +90,49 @@ describe('buildSequence', () => {
     expect(model.messages[1]).toMatchObject({ kind: 'return', parallel: 2, note: '4 s' });
   });
 
+  it('draws the call a collapsed history only implies', async () => {
+    // What the backend actually returns: no TaskScheduled row, the scheduled moment on the answer
+    const model = await build([
+      historyEvent({
+        SequenceNumber: 2,
+        EventType: 'TaskCompleted',
+        Name: 'ReserveInventory',
+        Timestamp: '2026-09-04T14:02:13.917Z',
+        ScheduledTime: '2026-09-04T14:02:12.004Z',
+        DurationInMs: 1_900,
+      }),
+      historyEvent({
+        SequenceNumber: 10,
+        EventType: 'TaskFailed',
+        Name: 'ChargePayment',
+        Timestamp: '2026-09-04T14:02:21.300Z',
+        ScheduledTime: '2026-09-04T14:02:17.210Z',
+        Details: 'TimeoutException',
+      }),
+    ]);
+
+    expect(model.messages.map((message) => [message.t, message.from, message.to, message.kind])).toEqual([
+      ['2026-09-04T14:02:12.004Z', ORCHESTRATOR, 'ReserveInventory', 'call'],
+      ['2026-09-04T14:02:13.917Z', 'ReserveInventory', ORCHESTRATOR, 'return'],
+      ['2026-09-04T14:02:17.210Z', ORCHESTRATOR, 'ChargePayment', 'call'],
+      ['2026-09-04T14:02:21.300Z', 'ChargePayment', ORCHESTRATOR, 'failed'],
+    ]);
+  });
+
+  it('does not draw the call twice when the provider sent the TaskScheduled row too', async () => {
+    const model = await build([
+      historyEvent({ EventType: 'TaskScheduled', Name: 'ReserveInventory', Timestamp: '2026-09-04T14:02:12.004Z' }),
+      historyEvent({
+        EventType: 'TaskCompleted',
+        Name: 'ReserveInventory',
+        Timestamp: '2026-09-04T14:02:13.917Z',
+        ScheduledTime: '2026-09-04T14:02:12.004Z',
+      }),
+    ]);
+
+    expect(model.messages.map((message) => message.kind)).toEqual(['call', 'return']);
+  });
+
   it('does not aggregate calls that were not sent at the same moment', async () => {
     const model = await build([
       historyEvent({ EventType: 'TaskScheduled', Name: 'ChargePayment', Timestamp: '2026-09-04T14:02:14.002Z' }),

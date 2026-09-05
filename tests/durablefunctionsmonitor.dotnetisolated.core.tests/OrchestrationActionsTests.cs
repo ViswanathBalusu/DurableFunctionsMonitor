@@ -174,6 +174,28 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        public async Task SetCustomStatusBumpsLastUpdatedTime()
+        {
+            var tableClient = new Mock<ITableClient>(MockBehavior.Strict);
+            var tableName = $"{this._durableClient.Name}Instances";
+            var before = DateTime.UtcNow.AddMinutes(-5);
+            var entity = new TableEntity(InstanceId, string.Empty) { ["LastUpdatedTime"] = before };
+
+            tableClient.Setup(c => c.GetEntityAsync(tableName, InstanceId, string.Empty)).ReturnsAsync(entity);
+            tableClient.Setup(c => c.ReplaceEntityAsync(tableName, entity)).Returns(Task.CompletedTask);
+            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = tableClient.Object;
+
+            var payload = new JsonObject { ["customStatus"] = JsonNode.Parse("{\"step\":2}") };
+
+            await OrchestrationActions.ExecuteAsync(this._durableClient, "-", InstanceId, OrchestrationActionNames.SetCustomStatus, payload);
+
+            // The details endpoint's ETag is LastUpdatedTime plus the runtime status: without this bump
+            // a conditional GET answers 304 and serves the caller the custom status it just replaced.
+            Assert.IsTrue(entity.GetDateTime("LastUpdatedTime") > before);
+            tableClient.VerifyAll();
+        }
+
+        [TestMethod]
         public async Task UnknownActionIsABadRequest()
         {
             await Assert.ThrowsExactlyAsync<DfmBadRequestException>(

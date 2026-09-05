@@ -93,12 +93,12 @@ function makeInputs(
 function card(index = 0, readOnly = false) {
   const events = [executionStarted(), eventRaised()];
 
-  return new InputCard(events[index], { readOnly });
+  return new InputCard(events[index], { readOnly: () => readOnly });
 }
 
 describe('the eligibility matrix', () => {
   it.each(ELIGIBILITY_ROWS)('$name', (row) => {
-    const buttons = new InputCard(row.event, { readOnly: false }).buttons;
+    const buttons = new InputCard(row.event, { readOnly: () => false }).buttons;
 
     // Every operation the backend answered for gets a button; none is ever hidden (design §9)
     expect(buttons.map((button) => button.op)).toEqual(['restart-in-place', 'update-input-and-rewind', 'replay']);
@@ -122,7 +122,7 @@ describe('the eligibility matrix', () => {
   });
 
   it('carries the terminate flag the replay of a running instance needs', () => {
-    const running = new InputCard(runningInputEvents().events[1], { readOnly: false });
+    const running = new InputCard(runningInputEvents().events[1], { readOnly: () => false });
 
     expect(running.buttons.find((button) => button.op === 'replay')?.requiresTerminate).toBe(true);
 

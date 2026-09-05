@@ -198,14 +198,15 @@ export function createEndpoints(client: BackendClient) {
     inputEvents: (instanceId: string): Promise<InputEventsResponse> =>
       client.get<InputEventsResponse>(instancePath(instanceId, '/input-events')),
 
+    // The three operations are sub-routes of the list they act on (Functions/InputEvents.cs)
     updateInputAndRewind: (instanceId: string, req: UpdateInputAndRewindRequest): Promise<UpdateInputAndRewindResult> =>
-      client.post<UpdateInputAndRewindResult>(instancePath(instanceId, '/update-input-and-rewind'), req),
+      client.post<UpdateInputAndRewindResult>(instancePath(instanceId, '/input-events/update-input-and-rewind'), req),
 
     replay: (instanceId: string, req: ReplayRequest): Promise<ReplayResult> =>
-      client.post<ReplayResult>(instancePath(instanceId, '/replay'), req),
+      client.post<ReplayResult>(instancePath(instanceId, '/input-events/replay'), req),
 
     restartInPlace: (instanceId: string, req: RestartInPlaceRequest): Promise<RestartInPlaceResult> =>
-      client.post<RestartInPlaceResult>(instancePath(instanceId, '/restart-in-place'), req),
+      client.post<RestartInPlaceResult>(instancePath(instanceId, '/input-events/restart-in-place'), req),
 
     // ---------------------------------------------------------------- hub administration
 

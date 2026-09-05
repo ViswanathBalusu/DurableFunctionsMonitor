@@ -20,7 +20,7 @@ import {
 const INSTANCE_ID = 'order-2026-09-04-000913';
 
 function card(event = eventRaised()) {
-  return new InputCard(event, { readOnly: false });
+  return new InputCard(event, { readOnly: () => false });
 }
 
 interface Calls {
