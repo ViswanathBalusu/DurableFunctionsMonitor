@@ -80,7 +80,12 @@ describe('StartNewInstanceDialog', () => {
   });
 
   it('posts what was filled in, says what was started and refreshes', async () => {
-    const startNewInstance = vi.fn(async () => ({ instanceId: 'order-2026-09-04-000914' }));
+    const requests: StartNewInstanceRequest[] = [];
+    const startNewInstance = vi.fn(async (request: StartNewInstanceRequest) => {
+      requests.push(request);
+      return { instanceId: 'order-2026-09-04-000914' };
+    });
+
     const { app, start } = mount({ startNewInstance });
 
     await openStart();
@@ -93,18 +98,19 @@ describe('StartNewInstanceDialog', () => {
     await waitFor(() => expect(startNewInstance).toHaveBeenCalledOnce());
 
     // No id typed: the backend generates one, so the field is left out rather than sent empty
-    expect(startNewInstance.mock.calls[0][0] as unknown as StartNewInstanceRequest).toEqual({
-      id: undefined,
-      name: 'ProcessOrderOrchestrator',
-      data: { orderId: 'A-1044' },
-    });
+    expect(requests[0]).toEqual({ id: undefined, name: 'ProcessOrderOrchestrator', data: { orderId: 'A-1044' } });
 
     await waitFor(() => expect(dialog()).toBeNull());
     expect(app.toast.current?.message).toBe('Started order-2026-09-04-000914 · ProcessOrderOrchestrator');
   });
 
   it('sends the id that was typed, and an empty input as null', async () => {
-    const startNewInstance = vi.fn(async () => ({ instanceId: 'my-own-id' }));
+    const requests: StartNewInstanceRequest[] = [];
+    const startNewInstance = vi.fn(async (request: StartNewInstanceRequest) => {
+      requests.push(request);
+      return { instanceId: 'my-own-id' };
+    });
+
     const { start } = mount({ startNewInstance });
 
     await openStart();
@@ -118,11 +124,7 @@ describe('StartNewInstanceDialog', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Start' }));
 
     await waitFor(() => expect(startNewInstance).toHaveBeenCalledOnce());
-    expect(startNewInstance.mock.calls[0][0] as unknown as StartNewInstanceRequest).toEqual({
-      id: 'my-own-id',
-      name: 'ProcessOrderOrchestrator',
-      data: null,
-    });
+    expect(requests[0]).toEqual({ id: 'my-own-id', name: 'ProcessOrderOrchestrator', data: null });
   });
 
   it('keeps the dialog open when the backend refuses, and says why', async () => {

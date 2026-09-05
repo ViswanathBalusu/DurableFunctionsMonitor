@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { createEvent, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { createEvent, fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { OrchestrationStatus, OrchestrationsQuery } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
@@ -15,6 +15,7 @@ function mount(
     rows?: OrchestrationStatus[];
     pages?: OrchestrationStatus[][];
     onQuery?: (q: OrchestrationsQuery) => void;
+    downloadField?: (instanceId: string, field: string) => Promise<void>;
   } = {},
 ) {
   const pages = options.pages ?? [options.rows ?? fixtures];
@@ -28,6 +29,7 @@ function mount(
           options.onQuery?.(query);
           return pages[Math.min(call++, pages.length - 1)];
         },
+        downloadField: options.downloadField ?? (async () => {}),
       },
     },
   });
@@ -217,5 +219,65 @@ describe('InstancesTable', () => {
 
     await waitFor(() => expect(headers()).toContain('input'));
     expect(document.querySelector('.tfoot .meta')?.textContent).not.toContain('columns hidden');
+  });
+});
+
+describe('the cell viewers', () => {
+  it('opens customStatus pretty-printed and expanded, without opening the peek', async () => {
+    const { component } = mount();
+    const app = (component as unknown as { appState: () => AppState }).appState();
+
+    await waitFor(() => expect(rows()).toHaveLength(fixtures.length));
+
+    await fireEvent.click(rows()[0].querySelector('[data-label="customStatus"] .link') as HTMLElement);
+
+    const dialog = await screen.findByRole('dialog', { name: 'customStatus' });
+
+    expect(within(dialog).getByText('order-2026-09-04-000913')).toHaveClass('meta', 'mono');
+    expect(dialog.querySelector('.jse-theme-dfm')).not.toBeNull();
+
+    // Contracts §9: what the viewer holds is the pretty-printed value, which is what it copies
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => {}) } });
+
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Copy to clipboard' }));
+
+    await waitFor(() =>
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        ['{', '  "step": "ChargePayment",', '  "attempt": 2', '}'].join('\n'),
+      ),
+    );
+
+    // The cell is a link inside a clickable row, and the row keeps out of it
+    expect(app.peek.isOpen).toBe(false);
+  });
+
+  it('saves a big field through the backend and says what it copied', async () => {
+    const downloads: string[][] = [];
+    const { component } = mount({
+      rows: [fixtures[2]],
+      downloadField: async (instanceId, field) => void downloads.push([instanceId, field]),
+    });
+
+    const app = (component as unknown as { appState: () => AppState }).appState();
+
+    await waitFor(() => expect(rows()).toHaveLength(1));
+
+    // output is one of the hidden columns, so it is shown first
+    await fireEvent.click(screen.getByRole('button', { name: 'show all' }));
+    await waitFor(() => expect(headers()).toContain('output'));
+
+    await fireEvent.click(rows()[0].querySelector('[data-label="output"] .link') as HTMLElement);
+
+    const dialog = await screen.findByRole('dialog', { name: 'output' });
+
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Download' }));
+
+    await waitFor(() => expect(downloads).toEqual([['order-2026-09-04-000911', 'output']]));
+
+    Object.assign(navigator, { clipboard: { writeText: vi.fn(async () => {}) } });
+
+    await fireEvent.click(within(dialog).getByRole('button', { name: 'Copy to clipboard' }));
+
+    await waitFor(() => expect(app.toast.current?.message).toBe('Copied output to the clipboard'));
   });
 });

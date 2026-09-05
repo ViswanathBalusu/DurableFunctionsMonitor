@@ -6,6 +6,7 @@
   import LinkButton from '$lib/components/LinkButton.svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import DataTable from '$lib/components/table/DataTable.svelte';
+  import JsonDialog from '$lib/components/json/JsonDialog.svelte';
   import JsonCell from '$lib/components/table/cells/JsonCell.svelte';
   import StatusCell from '$lib/components/table/cells/StatusCell.svelte';
   import { nextSort, type ColumnDef, type SortState } from '$lib/components/table/columns';
@@ -20,13 +21,21 @@
 
   interface Props {
     instances: Instances;
-    /** Opens the full JSON viewer for a cell (E4-S8); without it the preview is not a link. */
-    onOpenJson?: (value: unknown, title: string) => void;
   }
 
-  let { instances, onOpenJson }: Props = $props();
+  let { instances }: Props = $props();
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
+
+  /** The cell whose value is being read in full, or nothing. */
+  let json = $state<{ title: string; instanceId: string; value: unknown } | null>(null);
+
+  /** The endpoint's name for a column, for the fields that can be saved as a file. */
+  const DOWNLOAD_FIELDS: Record<string, string> = {
+    input: 'input',
+    output: 'output',
+    customStatus: 'custom-status',
+  };
 
   const showTimeAs = $derived(app.prefs.showTimeAs);
 
@@ -109,6 +118,29 @@
     app.router.navigate({ name: 'instance', hub: app.hub, instanceId });
   }
 
+  /** A cell opens the viewer for its own row, which is why the snippets close over it. */
+  function openJson(row: OrchestrationStatus, value: unknown, title: string): void {
+    json = { title, instanceId: row.instanceId, value };
+  }
+
+  /**
+   * The big fields are saved through the backend rather than out of the page: what is on screen may
+   * be a blob URL, and only the backend can read what is behind it (React `downloadFieldValue`).
+   */
+  async function download(): Promise<void> {
+    const open = json;
+
+    if (!open) {
+      return;
+    }
+
+    try {
+      await app.track(() => app.endpoints.downloadField(open.instanceId, DOWNLOAD_FIELDS[open.title]));
+    } catch (error) {
+      app.toast.fromError(`Could not download ${open.title}`, error);
+    }
+  }
+
   function sortBy(id: string): void {
     const next = nextSort(sort, id);
 
@@ -147,15 +179,15 @@
 {/snippet}
 
 {#snippet customStatusCell(row: OrchestrationStatus)}
-  <JsonCell value={row.customStatus} title="customStatus" {onOpenJson} />
+  <JsonCell value={row.customStatus} title="customStatus" onOpenJson={(value, title) => openJson(row, value, title)} />
 {/snippet}
 
 {#snippet inputCell(row: OrchestrationStatus)}
-  <JsonCell value={row.input} title="input" {onOpenJson} />
+  <JsonCell value={row.input} title="input" onOpenJson={(value, title) => openJson(row, value, title)} />
 {/snippet}
 
 {#snippet outputCell(row: OrchestrationStatus)}
-  <JsonCell value={row.output} title="output" {onOpenJson} />
+  <JsonCell value={row.output} title="output" onOpenJson={(value, title) => openJson(row, value, title)} />
 {/snippet}
 
 {#snippet lastEventCell(row: OrchestrationStatus)}
@@ -176,6 +208,25 @@
     —
   {/if}
 {/snippet}
+
+<!-- ScreenInstances.dc.html L173-L182: the whole value, pretty-printed and expanded (contracts §9). -->
+{#if json}
+  <JsonDialog
+    bind:open={
+      () => json !== null,
+      (next) => {
+        if (!next) {
+          json = null;
+        }
+      }
+    }
+    title={json.title}
+    subtitle={json.instanceId}
+    value={json.value}
+    onDownload={DOWNLOAD_FIELDS[json.title] ? () => void download() : undefined}
+    onCopied={() => app.toast.ok(`Copied ${json?.title} to the clipboard`)}
+  />
+{/if}
 
 <!-- ScreenInstances.dc.html L77-L96: the table under the view strip, so it carries no top border. -->
 <DataTable
