@@ -111,9 +111,16 @@ describe('fixtures', () => {
   it('summarise an entity state, and admit one it could not parse', () => {
     const rows = entities().entities;
 
-    expect(JSON.parse(rows[0].stateSummary ?? '')).toEqual(rows[0].state);
+    // What EntityState.Summarize writes: the state itself, with no whitespace in it
+    expect(rows[0].stateSummary).toBe(JSON.stringify(rows[0].state));
     expect(rows[2]).toMatchObject({ state: null, stateSummary: null });
     expect(rows[2].stateError).toBeTruthy();
+
+    for (const row of rows) {
+      // An entity id is `@name@key`, and the name of it is the lower-case one in the id
+      expect(row.instanceId).toBe(`@${row.entityName}@${row.key}`);
+      expect(row.runtimeStatus).toBe('Running');
+    }
   });
 
   it('audit both kinds of operation, and know when auditing is off', () => {
