@@ -52,6 +52,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 return await req.ReturnStatus(HttpStatusCode.NotFound, $"Instance {instanceId} doesn't exist");
             }
 
+            string etag = ConditionalGet.ComputeETag(metadata);
+            if (ConditionalGet.TryNotModified(req, etag, out var notModifiedResponse))
+            {
+                return notModifiedResponse;
+            }
+
             var detailedStatus = await DetailedOrchestrationStatus.CreateFrom(
                 new DurableOrchestrationStatus(metadata),
                 durableClient,
@@ -62,7 +68,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 this.ExtensionPoints
             );
 
-            return await req.ReturnJson(detailedStatus, Globals.FixUndefinedsInJson);
+            var response = await req.ReturnJson(detailedStatus, Globals.FixUndefinedsInJson);
+            response.Headers.Add("ETag", etag);
+            return response;
         }
 
         // Handles orchestration instance operations.
@@ -80,6 +88,29 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             var connEnvVariableName = Globals.GetFullConnectionStringEnvVariableName(connName);
 
+            // Paged or filtered requests are never conditional: only a request for $skip=0 (or no $skip
+            // at all) and no $filter can be answered with 304, since that's the only shape whose result
+            // is fully determined by the instance's LastUpdatedAt/RuntimeStatus.
+            string skipClause = req.Query["$skip"];
+            bool isConditionallyEligible =
+                string.IsNullOrEmpty(req.Query["$filter"]) &&
+                (string.IsNullOrEmpty(skipClause) || skipClause == "0");
+
+            string etag = null;
+            if (isConditionallyEligible)
+            {
+                // Cheap: no inputs/outputs needed, just enough to compute the etag.
+                var metadata = await durableClient.GetInstanceAsync(instanceId, false);
+                if (metadata != null)
+                {
+                    etag = ConditionalGet.ComputeETag(metadata);
+                    if (ConditionalGet.TryNotModified(req, etag, out var notModifiedResponse))
+                    {
+                        return notModifiedResponse;
+                    }
+                }
+            }
+
             var history = (await this.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connEnvVariableName, hubName, instanceId))
                 .ApplyTimeFrom(filterClause.TimeFrom)
                 .ApplyFilter(filterClause)
@@ -91,6 +122,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
+            if (etag != null)
+            {
+                response.Headers.Add("ETag", etag);
+            }
             await response.WriteStringAsync(json);
 
             return response;
