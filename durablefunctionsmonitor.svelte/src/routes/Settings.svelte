@@ -6,6 +6,7 @@
   import ConnectionPanel from '$lib/settings/ConnectionPanel.svelte';
   import FeatureFlagsPanel from '$lib/settings/FeatureFlagsPanel.svelte';
   import HubAdminPanel from '$lib/settings/HubAdminPanel.svelte';
+  import TemplatesPanel from '$lib/settings/TemplatesPanel.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
@@ -29,7 +30,7 @@
     <AppearancePanel />
     <div class="stack" style="gap:16px">
       <FeatureFlagsPanel />
-      <!-- Templates: E6-S4-T2 -->
+      <TemplatesPanel />
     </div>
   </div>
 </Page>

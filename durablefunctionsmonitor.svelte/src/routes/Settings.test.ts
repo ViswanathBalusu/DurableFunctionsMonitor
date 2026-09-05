@@ -26,7 +26,7 @@ describe('Settings screen', () => {
 
     expect(grids.map((grid) => grid.className)).toEqual(['two', 'two wide-left']);
 
-    // The panels of the top grid, left to right; the rest arrive with their own tasks
+    // Every panel of ScreenSettings.dc.html except the mockup-only one, in the mockup's own order
     expect(Array.from(grids[0].querySelectorAll('.panel > .panel-h > h2')).map((h) => h.textContent)).toEqual([
       'Connection',
       'Hub administration',
@@ -35,6 +35,7 @@ describe('Settings screen', () => {
     expect(Array.from(grids[1].querySelectorAll('.panel > .panel-h > h2')).map((h) => h.textContent)).toEqual([
       'Appearance',
       'Feature flags',
+      'Templates',
     ]);
   });
 });
