@@ -44,7 +44,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations/batch")] HttpRequestData req,
             [DurableClient(TaskHub = Globals.HubNameRouteParamName)] DurableTaskClient durableClient,
             string connName,
-            string hubName)
+            string hubName,
+            FunctionContext context)
         {
             try
             {
@@ -110,6 +111,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     FailedCount = results.Count(r => !r.Ok),
                     ElapsedMs = stopwatch.ElapsedMilliseconds
                 };
+
+                // What the audit record (B5) says about this call: one row per batch, naming the action
+                // it ran and how it went, rather than one indistinguishable 'Batch' row per bulk operation.
+                context.Items[Globals.DfmAuditOperationContextValue] = $"Batch {action}";
+                context.Items[Globals.DfmAuditMessageContextValue] = $"{response.OkCount} ok, {response.FailedCount} failed, of {instanceIds.Count} instances";
 
                 return await req.ReturnJson(response);
             }

@@ -33,11 +33,16 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
         private StubDurableTaskClient _durableClient;
 
+        // The function publishes its audit operation name and summary into the invocation's Items bag
+        // (B5-S2-T2), so the tests hand it one and can read those back.
+        private FakeFunctionContext _context;
+
         [TestInitialize]
         public void TestInit()
         {
             DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = null;
             this._durableClient = new StubDurableTaskClient();
+            this._context = new FakeFunctionContext();
         }
 
         // ------------------------------------------------------------------
@@ -49,7 +54,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = BatchBody("suspend", new[] { "a", "b", "c" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
@@ -72,13 +77,25 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        public async Task PublishesItsOperationNameAndSummaryForTheAuditLog()
+        {
+            var body = BatchBody("suspend", new[] { "a", "b", "c" });
+
+            await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
+
+            // B5-S2-T2: one recognizable audit row per bulk call, rather than an indistinguishable 'Batch'
+            Assert.AreEqual("Batch suspend", this._context.Items[Globals.DfmAuditOperationContextValue]);
+            Assert.AreEqual("3 ok, 0 failed, of 3 instances", this._context.Items[Globals.DfmAuditMessageContextValue]);
+        }
+
+        [TestMethod]
         public async Task OneInstanceThrowsInvalidOperationException_OkCount2AndThatIdIs409()
         {
             this._durableClient.ExceptionsByInstanceId["b"] = new InvalidOperationException("wrong runtime status");
 
             var body = BatchBody("suspend", new[] { "a", "b", "c" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
@@ -105,7 +122,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"raise-event\", \"instanceIds\": [\"a\"], \"payload\": { } }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
@@ -126,7 +143,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             var body = BatchBody("suspend", new[] { "a" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
@@ -141,7 +158,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"raise-event\", \"instanceIds\": [\"a\"], \"payload\": { \"name\": \"Approval\", \"data\": { \"ok\": true } } }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             CollectionAssert.Contains(this._durableClient.Calls, "Raise:a:Approval");
@@ -157,7 +174,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             var body = BatchBody("suspend", new[] { "a", "b", "c" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             var json = ReadJson(response);
             var ids = ((JArray)json["results"]).Select(r => (string)r["instanceId"]).ToArray();
@@ -173,7 +190,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             var body = BatchBody("suspend", instanceIds);
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             Assert.IsTrue(this._durableClient.MaxObservedConcurrency <= 8, $"Observed concurrency {this._durableClient.MaxObservedConcurrency} exceeds the cap of 8");
@@ -189,7 +206,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"instanceIds\": [\"a\"] }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -199,7 +216,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = BatchBody("frobnicate", new[] { "a" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.AreEqual(0, this._durableClient.Calls.Count);
@@ -213,7 +230,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = BatchBody(action, new[] { "a" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
             string text = ReadText(response);
@@ -226,7 +243,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = BatchBody("suspend", Array.Empty<string>());
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -236,7 +253,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"suspend\" }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -246,7 +263,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"suspend\", \"instanceIds\": \"a\" }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -256,7 +273,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"suspend\", \"instanceIds\": [\"a\", 42] }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -266,7 +283,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = BatchBody("suspend", new[] { "a", "a" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -277,7 +294,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var instanceIds = Enumerable.Range(0, 201).Select(i => $"id-{i}").ToArray();
             var body = BatchBody("suspend", instanceIds);
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -288,7 +305,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var instanceIds = Enumerable.Range(0, 200).Select(i => $"id-{i}").ToArray();
             var body = BatchBody("suspend", instanceIds);
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
 
@@ -299,7 +316,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         [TestMethod]
         public async Task MalformedJsonBodyIsABadRequest()
         {
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest("{ not json"), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest("{ not json"), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -307,7 +324,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         [TestMethod]
         public async Task NonObjectBodyIsABadRequest()
         {
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest("[1,2,3]"), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest("[1,2,3]"), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -317,7 +334,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"suspend\", \"instanceIds\": [\"a\"], \"payload\": \"not-an-object\" }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.AreEqual(0, this._durableClient.Calls.Count);
@@ -328,7 +345,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"purge\", \"instanceIds\": [\"a\"], \"payload\": null }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             CollectionAssert.Contains(this._durableClient.Calls, "Purge:a");
@@ -337,7 +354,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         [TestMethod]
         public async Task EmptyBodyIsABadRequest()
         {
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(string.Empty), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(string.Empty), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -351,7 +368,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = BatchBody(action, new[] { "@counter@my-key" });
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
             Assert.AreEqual(0, this._durableClient.Calls.Count);
@@ -362,7 +379,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"raise-event\", \"instanceIds\": [\"@counter@my-key\"], \"payload\": { \"name\": \"add\", \"data\": 1 } }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             CollectionAssert.Contains(this._durableClient.FakeEntities.Calls, "Signal:@counter@my-key:add");
@@ -373,7 +390,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var body = "{ \"action\": \"purge\", \"instanceIds\": [\"a\"] }";
 
-            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName);
+            var response = await this.Function.DfmBatchFunction(new FakeJsonRequest(body), this._durableClient, "-", HubName, this._context);
 
             Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
             CollectionAssert.Contains(this._durableClient.Calls, "Purge:a");

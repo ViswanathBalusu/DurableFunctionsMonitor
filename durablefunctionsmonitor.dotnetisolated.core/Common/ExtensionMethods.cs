@@ -98,7 +98,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                         if (operationKind.HasValue)
                         {
                             // If so, invoking DfMon's auth logic
-                            var dfmMode = await Auth.ValidateIdentityAsync(request, operationKind.Value, settings);
+                            var (dfmMode, userName) = await Auth.ValidateIdentityAndGetUserAsync(request, operationKind.Value, settings);
 
                             // Also validating task hub name (if it is a part of the request).
                             // But only after validating user identity (because validating task hub name involves querying the Storage).
@@ -106,19 +106,42 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
                             // Propagating DfmMode to Functions
                             context.Items.Add(Globals.DfmModeContextValue, dfmMode);
+
+                            // And who the caller is, so that Functions (and the audit record below) do not
+                            // have to look the identity up again
+                            context.Items[Globals.DfmUserNameContextValue] = userName;
                         }
 
                         await next();
+
+                        if (operationKind.HasValue)
+                        {
+                            // B5-S2-T2: recording the Write/Dangerous call that just finished. Never throws,
+                            // never touches the response - see AuditWriter.
+                            AuditWriter.Record(context, request, operationKind.Value, settings, extensionPoints, AuditWriter.GetStatus(context), log);
+                        }
                     }
                     catch (DfmUnauthorizedException ex)
                     {
                         log.LogError(ex, "DFM failed to authenticate request");
                         context.GetInvocationResult().Value = await request.ReturnStatus(HttpStatusCode.Unauthorized);
+
+                        if (operationKind.HasValue)
+                        {
+                            // A rejected attempt to change something belongs in the audit log as much as a
+                            // successful one does
+                            AuditWriter.Record(context, request, operationKind.Value, settings, extensionPoints, HttpStatusCode.Unauthorized, log);
+                        }
                     }
                     catch (DfmAccessViolationException ex)
                     {
                         log.LogError(ex, "DFM failed to authorize request");
                         context.GetInvocationResult().Value = await request.ReturnStatus(HttpStatusCode.Forbidden);
+
+                        if (operationKind.HasValue)
+                        {
+                            AuditWriter.Record(context, request, operationKind.Value, settings, extensionPoints, HttpStatusCode.Forbidden, log);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -127,6 +150,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                             // Only handling DfMon's exceptions
                             log.LogError(ex, "DFM failed");
                             context.GetInvocationResult().Value = await request.ReturnStatus(HttpStatusCode.BadRequest, ex.Message);
+
+                            // A failed operation is exactly what an audit log is for
+                            AuditWriter.Record(context, request, operationKind.Value, settings, extensionPoints, HttpStatusCode.BadRequest, log);
                         }
                         else
                         {

@@ -4,6 +4,7 @@
 using System.Collections.Specialized;
 using System.Net;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Runtime.CompilerServices;
 using Microsoft.Azure.Functions.Worker.Http;
 using Azure.Core;
@@ -76,6 +77,32 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string IdentityBasedConnectionSettingCredentialValue = "managedidentity";
 
         public const string DfmModeContextValue = "DfmModeContextValue";
+
+        /// <summary>
+        /// FunctionContext.Items key under which the middleware publishes the name of the authenticated
+        /// user, so that functions (and the audit writer) do not have to re-validate the identity.
+        /// </summary>
+        public const string DfmUserNameContextValue = "DfmUserNameContextValue";
+
+        /// <summary>
+        /// FunctionContext.Items key any function may set to a short string, to be recorded as the
+        /// 'message' of its audit record (the batch endpoint puts its counts here, replay the number of
+        /// deleted history rows).
+        /// </summary>
+        public const string DfmAuditMessageContextValue = "DfmAuditMessage";
+
+        /// <summary>
+        /// FunctionContext.Items key any function may set to refine the operation name of its audit
+        /// record. The batch endpoint appends the action it ran ('Batch terminate'), so that the /audit
+        /// operation filter can tell one kind of batch from another.
+        /// </summary>
+        public const string DfmAuditOperationContextValue = "DfmAuditOperation";
+
+        /// <summary>User name recorded when authentication is disabled and nobody was identified.</summary>
+        public const string AnonymousUserName = "anonymous";
+
+        /// <summary>User name recorded when the call was authenticated by the VS Code extension's nonce.</summary>
+        public const string VsCodeUserName = "vscode";
 
         // Permission names returned by the /about endpoint, which the UI uses to decide what to show
         public const string ReadWritePermission = "DurableFunctionsMonitor.ReadWrite";
@@ -215,6 +242,31 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             return result;
         }
         
+        /// <summary>
+        /// Pulls the connection name and the Task Hub name out of a DfMon API path
+        /// ('/a/p/i/{connName}-{hubName}/...'). False when the path does not address a Task Hub at all
+        /// (/about of a hub-less deployment, the statics).
+        /// </summary>
+        public static bool TryGetConnAndHubNames(string absolutePath, out string connName, out string hubName)
+        {
+            connName = null;
+            hubName = null;
+
+            var match = ConnAndHubNameRegex.Match(absolutePath ?? string.Empty);
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            connName = match.Groups[1].Value;
+            hubName = match.Groups[2].Value;
+
+            return true;
+        }
+
+        // The same shape Auth validates task hub names with: /a/p/i/{connName}-{hubName}/
+        private static readonly Regex ConnAndHubNameRegex = new Regex(@"/a/p/i/([^/]+)-([^/]+)/", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
         public static BlobServiceClient GetBlobServiceClient(string connStringName)
         {
             var options = new BlobClientOptions();

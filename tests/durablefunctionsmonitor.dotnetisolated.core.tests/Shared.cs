@@ -73,10 +73,11 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         private List<HttpCookie> _cookies = new List<HttpCookie>();
         private List<ClaimsIdentity> _identities = new List<ClaimsIdentity>();
 
-        public FakeHttpRequestData(Uri uri) : base(new FakeFunctionContext())
+        public FakeHttpRequestData(Uri uri, string method = "GET") : base(new FakeFunctionContext())
         {
             this.Headers = new HttpHeadersCollection();
             this.Url = uri;
+            this.Method = method;
         }
 
         public override Stream Body => throw new NotImplementedException();

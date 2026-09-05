@@ -99,6 +99,17 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// <exception cref="DfmUnauthorizedException"></exception>
         public static async Task<DfmMode> ValidateIdentityAsync(HttpRequestData request, OperationKind operationKind, DfmSettings settings)
         {
+            return (await ValidateIdentityAndGetUserAsync(request, operationKind, settings)).Mode;
+        }
+
+        /// <summary>
+        /// Same as <see cref="ValidateIdentityAsync"/>, and also reports who the caller is: the user-name
+        /// claim of the validated identity, 'vscode' when the VS Code extension's nonce authenticated the
+        /// call, or 'anonymous' when authentication is disabled. The audit log (B5) records that name, and
+        /// nothing else in DfMon needs to look the identity up a second time.
+        /// </summary>
+        public static async Task<(DfmMode Mode, string UserName)> ValidateIdentityAndGetUserAsync(HttpRequestData request, OperationKind operationKind, DfmSettings settings)
+        {
             // Dangerous operations are off unless this deployment explicitly opted in
             if (operationKind == OperationKind.Dangerous && !settings.DangerousOperationsEnabled)
             {
@@ -114,7 +125,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // Starting with nonce (used when running as a VsCode extension)
             if (IsNonceSetAndValid(settings, request.Headers))
             {
-                return settings.Mode;
+                // DisableAuthentication means nobody was identified at all; a matching DFM_NONCE means the
+                // call came through the VS Code extension (or the local harness that impersonates it).
+                return (settings.Mode, settings.DisableAuthentication ? Globals.AnonymousUserName : Globals.VsCodeUserName);
             }
 
             // Then validating anti-forgery token
@@ -154,7 +167,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
                 if (userIsInFullAccessRole)
                 {
-                    return settings.Mode;
+                    return (settings.Mode, userNameClaim.Value);
                 }
 
                 // If current operation modifies any data, then validating that user is _not_ in ReadOnly mode
@@ -163,10 +176,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     throw new DfmAccessViolationException($"User {userNameClaim.Value} is in read-only mode");
                 }
 
-                return userIsInReadonlyRole ? DfmMode.ReadOnly : settings.Mode;
+                return (userIsInReadonlyRole ? DfmMode.ReadOnly : settings.Mode, userNameClaim.Value);
             }
 
-            return settings.Mode;
+            return (settings.Mode, userNameClaim.Value);
         }
 
         public static async Task<IEnumerable<string>> GetTaskHubNamesFromStorage(string connStringName)
