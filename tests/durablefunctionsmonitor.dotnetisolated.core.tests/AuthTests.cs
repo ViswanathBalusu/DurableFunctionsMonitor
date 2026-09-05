@@ -116,6 +116,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 nameof(EasyAuthConfig.DfmGetEasyAuthConfigFunction),
                 nameof(About.DfmAboutFunction),
                 nameof(Entities.DfmGetEntitiesFunction),
+                nameof(Failures.DfmGetFailuresFunction),
                 nameof(FunctionMap.DfmGetFunctionMap),
                 nameof(IdSuggestions.DfmGetIdSuggestionsFunction),
                 nameof(ManageConnection.DfmGetConnectionInfoFunction),

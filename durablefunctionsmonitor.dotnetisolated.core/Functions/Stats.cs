@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 using System.Diagnostics;
-using System.Globalization;
 using System.Net;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -124,26 +123,17 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// </summary>
         internal static StatsQuery ParseQuery(HttpRequestData req, int cap)
         {
-            var from = ParseRequiredDate(req.Query["from"], "from");
-            var to = ParseRequiredDate(req.Query["to"], "to");
-
-            if (to <= from)
-            {
-                throw new DfmBadRequestException($"'to' ({to:o}) must be later than 'from' ({from:o})");
-            }
-
-            if (to - from > MaxRange)
-            {
-                throw new DfmBadRequestException($"The requested range is longer than the maximum of {MaxRange.TotalDays:0} days");
-            }
+            // 'from', 'to' and the bounded integers are shared with /failures and /audit (RangeQuery), so
+            // every aggregation endpoint accepts the same formats and answers the same 400s.
+            var (from, to) = RangeQuery.Parse(req);
 
             return new StatsQuery
             {
                 From = from,
                 To = to,
-                Bins = ParseBoundedInt(req.Query["bins"], "bins", DefaultBins, MinBins, MaxBins),
-                StuckAfterMinutes = ParseBoundedInt(req.Query["stuckAfterMinutes"], "stuckAfterMinutes", DefaultStuckAfterMinutes, MinMinutes, MaxMinutes),
-                PendingAfterMinutes = ParseBoundedInt(req.Query["pendingAfterMinutes"], "pendingAfterMinutes", DefaultPendingAfterMinutes, MinMinutes, MaxMinutes),
+                Bins = RangeQuery.ParseBoundedInt(req.Query["bins"], "bins", DefaultBins, MinBins, MaxBins),
+                StuckAfterMinutes = RangeQuery.ParseBoundedInt(req.Query["stuckAfterMinutes"], "stuckAfterMinutes", DefaultStuckAfterMinutes, MinMinutes, MaxMinutes),
+                PendingAfterMinutes = RangeQuery.ParseBoundedInt(req.Query["pendingAfterMinutes"], "pendingAfterMinutes", DefaultPendingAfterMinutes, MinMinutes, MaxMinutes),
 
                 // The bound on the scan comes from settings (DFM_STATS_CAP), never from the client: it is a
                 // protection of the storage account, not a user preference.
@@ -178,45 +168,6 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             };
         }
 
-        private static DateTimeOffset ParseRequiredDate(string raw, string paramName)
-        {
-            if (string.IsNullOrEmpty(raw))
-            {
-                throw new DfmBadRequestException($"Parameter '{paramName}' is required");
-            }
-
-            // AssumeUniversal | AdjustToUniversal: a value without an offset is read as UTC, a value with one
-            // is converted to UTC. Everything downstream (the table filter, the bins) works in UTC.
-            if (!DateTimeOffset.TryParse(raw, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out var value))
-            {
-                throw new DfmBadRequestException($"Invalid '{paramName}' value: '{raw}'");
-            }
-
-            return value;
-        }
-
-        private static int ParseBoundedInt(string raw, string paramName, int defaultValue, int min, int max)
-        {
-            if (string.IsNullOrEmpty(raw))
-            {
-                return defaultValue;
-            }
-
-            if (!int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
-            {
-                throw new DfmBadRequestException($"Invalid '{paramName}' value: '{raw}'");
-            }
-
-            // Out of range is rejected rather than clamped: a chart drawn with 1000 bins when 1000 were asked
-            // for and 366 were used would be silently wrong.
-            if (value < min || value > max)
-            {
-                throw new DfmBadRequestException($"Parameter '{paramName}' must be between {min} and {max}, was {value}");
-            }
-
-            return value;
-        }
-
         // Defaults and bounds of contracts section 6 / B1-S2-T1: bins 48 (max 366, i.e. one per day over the
         // longest supported range), stuck 60 minutes, long-pending 10 minutes.
         private const int DefaultBins = 48;
@@ -226,10 +177,6 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         private const int DefaultPendingAfterMinutes = 10;
         private const int MinMinutes = 1;
         private const int MaxMinutes = 100000;
-
-        // The longest range one request may aggregate. Longer ranges belong to several requests, so that a
-        // single scan stays bounded in time as well as in rows.
-        private static readonly TimeSpan MaxRange = TimeSpan.FromDays(92);
 
         private readonly ILogger _logger;
     }
