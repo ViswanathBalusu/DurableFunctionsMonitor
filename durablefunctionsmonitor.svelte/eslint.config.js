@@ -3,7 +3,7 @@ import ts from 'typescript-eslint';
 
 export default ts.config(
   {
-    ignores: ['build/', 'node_modules/', 'test-results/', 'playwright-report/', '.vite/'],
+    ignores: ['build/', 'node_modules/', 'test-results/', 'playwright-report/', '.vite/', 'coverage/'],
   },
   ...ts.configs.recommended,
   ...svelte.configs.recommended,

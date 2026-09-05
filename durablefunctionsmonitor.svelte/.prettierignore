@@ -1,3 +1,10 @@
 # Verbatim copies of the design-system stylesheets (docs/ui-plans-artifacts). Never reformat them.
 src/styles/dfm-tokens.css
 src/styles/dfm-ui.css
+
+# Build and test output (E3-S1-T1).
+build
+test-results
+playwright-report
+.vite
+coverage
