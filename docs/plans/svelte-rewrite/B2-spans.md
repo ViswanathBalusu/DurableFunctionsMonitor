@@ -51,6 +51,8 @@ Test: as above.
 
 ### B2-S3 Endpoint
 
+Note (B2-S2-T1, landed 2026-09-05): the mockup lane `ship` (ScreenInstance.dc.html L308, "wait ShipmentConfirmed" running concurrently with the `sub` sub-orchestration) is not derivable from history: an orchestration waiting for an external event leaves no history row until the event is raised, and the plan rule adds an open `eventWait` span only when the last row is not an open activity, sub-orchestration or timer. The builder therefore yields 8 history spans + 4 orchestrator spans for the mockup history; the table-driven test asserts that list and documents the missing lane. Spans serialise `start`/`end`/`executionStartedAt`/`executionEndedAt` with millisecond precision through a converter declared in `SpanBuilder.cs`; B2-S3-T1 applies the same converter to `now`.
+
 #### B2-S3-T1 GET orchestrations('{id}')/spans
 Files: `Functions/Spans.cs` (new), `tests/…core.tests/SpansFunctionTests.cs`
 Depends: B2-S2-T1, B2-S1-T2

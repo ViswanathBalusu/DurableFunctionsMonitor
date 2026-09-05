@@ -77,7 +77,7 @@ The backend `durablefunctionsmonitor.dotnetisolated.core/Functions/ServeStatics.
 `vite.config.ts` reference (E0-S1-T2 creates it):
 
 ```ts
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config'; // not 'vite': the `test` key only type-checks through vitest/config
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 
@@ -109,11 +109,21 @@ export default defineConfig({
     },
   },
   server: { port: 3000, proxy: { '/durable-functions-monitor': 'http://localhost:7072', '/a/p/i': 'http://localhost:7072' } },
-  test: { environment: 'jsdom', include: ['src/**/*.test.ts', 'tests/unit/**/*.test.ts'], setupFiles: ['tests/unit/setup.ts'] },
+  resolve: { alias: { $lib: fileURLToPath(new URL('./src/lib', import.meta.url)) } },
+  test: {
+    environment: 'jsdom',
+    include: ['src/**/*.test.ts', 'tests/unit/**/*.test.ts'],
+    passWithNoTests: true, // until the first test file exists
+    setupFiles: ['tests/unit/setup.ts'], // E3-S1-T1 creates the file and adds this line
+    // E3-S1-T1 also adds svelteTesting() from '@testing-library/svelte/vite' to `plugins` (or resolve.conditions ['browser'] under VITEST):
+    // without it Vite resolves the svelte package to its server build and @testing-library/svelte render() cannot mount any component.
+  },
 });
 ```
 
 `scripts/harness/verify-build-contract.mjs` (repo root) checks a `build/` folder against these rules. Run it after every build.
+
+Amendments recorded from E0-S1-T1/T2 (2026-09-05): `defineConfig` comes from `vitest/config`; `passWithNoTests` stays until the first test file exists; `setupFiles` and `svelteTesting()` are added by E3-S1-T1; the `$lib` alias is required (add `import { fileURLToPath } from 'node:url'`). Vite 8.2.2 prints "inlineDynamicImports option is deprecated, please use codeSplitting: false instead": keep `inlineDynamicImports: true` (it still works and is what the contract tests) until a task switches both together. Until E0-S1-T3 imports `./app.css` from `src/main.ts` no CSS bundle is emitted and the verify script reports "found 0 CSS"; that is expected only for E0-S1-T2.
 
 ## §3 Host globals and host detection
 
