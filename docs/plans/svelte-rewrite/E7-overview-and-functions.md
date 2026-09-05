@@ -79,6 +79,14 @@ Accept:
 - [ ] Rows sorted by started desc; `—` for nulls.
 Test: as above.
 
+**Deviation, E7-S2-T5 (2026-09-05).** The sub-orchestrator chip needs the function map, which
+E7-S1-T1 does not load, so `overview.svelte.ts` gained a fourth call: `/function-map`, once per
+session, only when the host publishes one, and silent when it fails - the map does not depend on the
+range and a map that cannot be fetched costs exactly one chip. `subOrchestrators` is E5-S6-T1's
+classification (`buildFunctionGraph`), not a second rule about who calls whom. Sorting is this
+panel's own, as the plan says, and rows the backend has no value for sort last whichever way the
+column points: an orchestrator that never failed does not have the oldest last failure.
+
 #### E7-S2-T6 Backlog and Recent activity panels
 Files: `src/lib/overview/BacklogPanel.svelte`, `src/lib/overview/RecentActivity.svelte`, tests
 Depends: E7-S1-T1

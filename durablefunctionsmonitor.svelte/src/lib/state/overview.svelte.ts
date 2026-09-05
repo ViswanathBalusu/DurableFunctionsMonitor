@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// The Overview screen's state (contracts §7). The screen is three aggregates, and they are loaded
-// independently of one another: /stats is the screen itself, /storage and /audit are two panels of
-// it, and a backend that cannot serve those - or that fails to - must not take the screen with it.
+// The Overview screen's state (contracts §7). The screen is a handful of independent loads: /stats is
+// the screen itself, /storage and /audit are two panels of it, and /function-map is one chip in a
+// table. A backend that cannot serve those - or that fails to - must not take the screen with it.
 
-import type { AuditRow, StatsResponse, StorageResponse } from '$lib/api/types';
+import type { AuditRow, FunctionMapResponse, StatsResponse, StorageResponse } from '$lib/api/types';
 import { resolve } from '$lib/filters/time-range';
+import { buildFunctionGraph } from '$lib/graph/function-graph-model';
 import { fmtInt } from '$lib/format/number';
 import { fmtAgo } from '$lib/format/time';
 import type { AppState } from './app.svelte';
@@ -28,7 +29,7 @@ export interface OverviewOptions {
   now?: () => number;
 }
 
-/** The three loads, named for the toast that reports one of them failing. */
+/** The loads that report a failure, named for the toast that does it. */
 type Part = 'stats' | 'storage' | 'audit';
 
 const PART_TITLES: Readonly<Record<Part, string>> = {
@@ -47,7 +48,14 @@ export class Overview {
   /** The Recent activity panel's rows, newest first as the backend orders them. */
   activity = $state<AuditRow[]>([]);
 
-  /** True while any of the three is in flight. */
+  /**
+   * The hub's function map, when the host publishes one. Nothing on this screen is drawn from the
+   * graph, but the map is the only thing that can say which orchestrators run inside another one,
+   * which is the chip the Top orchestrators table carries.
+   */
+  functionMap = $state<FunctionMapResponse | null>(null);
+
+  /** True while any of them is in flight. */
   loading = $state(false);
 
   /** The /stats error. The two panels report their own by simply not being on screen. */
@@ -98,6 +106,13 @@ export class Overview {
     return this.stats?.partial ?? false;
   }
 
+  /** The orchestrators another orchestrator calls (E5-S6-T1's classification, not a rule of its own). */
+  get subOrchestrators(): string[] {
+    return buildFunctionGraph(this.functionMap)
+      .nodes.filter((node) => node.kind === 'suborchestrator')
+      .map((node) => node.name);
+  }
+
   /** `12,408 (full)` / `50,000 (partial)` - the right half of the title meta. */
   get scannedLabel(): string {
     if (!this.stats) {
@@ -117,9 +132,9 @@ export class Overview {
   }
 
   /**
-   * The three calls, started together and finished apart. Nothing here rethrows: each part reports
-   * its own failure and leaves the other two alone, which is what makes a 500 from /storage a
-   * missing panel rather than a missing screen.
+   * The calls, started together and finished apart. Nothing here rethrows: each part reports its own
+   * failure and leaves the others alone, which is what makes a 500 from /storage a missing panel
+   * rather than a missing screen.
    */
   async load(): Promise<void> {
     if (!this.supported) {
@@ -140,6 +155,7 @@ export class Overview {
       this.#loadStats(requestId, from.toISOString(), to.toISOString()),
       this.#loadStorage(requestId),
       this.#loadAudit(requestId, from.toISOString(), to.toISOString()),
+      this.#loadFunctionMap(),
     ]);
 
     if (requestId !== this.#requestId) {
@@ -245,6 +261,22 @@ export class Overview {
       }
 
       this.#fail(requestId, 'audit', error);
+    }
+  }
+
+  /**
+   * The map, once. It does not depend on the range and does not change while the app is open, and a
+   * map that cannot be fetched costs one chip - which is not worth a toast, let alone one per reload.
+   */
+  async #loadFunctionMap(): Promise<void> {
+    if (!this.#app.host.functionGraphAvailable || this.functionMap) {
+      return;
+    }
+
+    try {
+      this.functionMap = await this.#app.track(() => this.#app.endpoints.functionMap());
+    } catch {
+      this.functionMap = null;
     }
   }
 

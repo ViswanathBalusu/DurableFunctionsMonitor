@@ -11,6 +11,7 @@ import { AppState } from './app.svelte';
 import { OVERVIEW_BINS, Overview, RECENT_ACTIVITY_ROWS } from './overview.svelte';
 import { Prefs } from './prefs.svelte';
 import { audit as auditFixture } from '../../../tests/unit/fixtures/audit';
+import { functionMap as functionMapFixture } from '../../../tests/unit/fixtures/function-map';
 import { partialStats, stats as statsFixture } from '../../../tests/unit/fixtures/stats';
 import { storage as storageFixture } from '../../../tests/unit/fixtures/storage';
 
@@ -18,11 +19,11 @@ const NOW = new Date('2026-09-04T14:00:00.000Z').getTime();
 
 const ALL: Partial<Capabilities> = { stats: true, storageHealth: true, audit: true };
 
-function makeApp(capabilities: Partial<Capabilities>, path = '/DurableFunctionsHub') {
+function makeApp(capabilities: Partial<Capabilities>, path = '/DurableFunctionsHub', functionGraph = false) {
   window.history.replaceState({}, '', path);
 
   const app = new AppState({
-    host,
+    host: { ...host, functionGraphAvailable: functionGraph },
     client: {} as BackendClient,
     endpoints: {} as Endpoints,
     router: new Router({ mode: 'history', routePrefix: '' }),
@@ -42,13 +43,15 @@ function makeOverview(
     stats?: () => Promise<unknown>;
     storage?: () => Promise<unknown>;
     audit?: () => Promise<unknown>;
+    functionGraph?: boolean;
   } = {},
 ) {
-  const app = makeApp(options.capabilities ?? ALL, options.path);
+  const app = makeApp(options.capabilities ?? ALL, options.path, options.functionGraph);
 
   const statsRequests: StatsRequest[] = [];
   const auditRequests: AuditQuery[] = [];
   let storageCalls = 0;
+  let mapCalls = 0;
 
   const endpoints = {
     stats: async (request: StatsRequest) => {
@@ -66,13 +69,25 @@ function makeOverview(
 
       return options.audit ? await options.audit() : auditFixture();
     },
+    functionMap: async () => {
+      mapCalls += 1;
+
+      return functionMapFixture();
+    },
   } as unknown as Endpoints;
 
   Object.defineProperty(app, 'endpoints', { value: endpoints, configurable: true });
 
   const overview = new Overview({ app, now: () => NOW });
 
-  return { app, overview, statsRequests, auditRequests, storageCalls: () => storageCalls };
+  return {
+    app,
+    overview,
+    statsRequests,
+    auditRequests,
+    storageCalls: () => storageCalls,
+    mapCalls: () => mapCalls,
+  };
 }
 
 afterEach(() => {
@@ -203,6 +218,47 @@ describe('Overview: what it loaded', () => {
     app.now = NOW + 4_000;
 
     expect(overview.refreshedAgo).toBe('4 s ago');
+  });
+});
+
+describe('Overview: the function map', () => {
+  it('is not asked for at all when the host publishes none', async () => {
+    const { overview, mapCalls } = makeOverview();
+
+    await overview.load();
+
+    expect(mapCalls()).toBe(0);
+    expect(overview.subOrchestrators).toEqual([]);
+  });
+
+  it('names the orchestrators another orchestrator calls, and is fetched once', async () => {
+    const { overview, mapCalls } = makeOverview({ functionGraph: true });
+
+    await overview.load();
+
+    expect(overview.subOrchestrators).toEqual(['NotifyCustomer']);
+
+    // It does not depend on the range, so a reload does not fetch it again
+    await overview.load();
+
+    expect(mapCalls()).toBe(1);
+  });
+
+  it('loses the chip rather than the screen when the map cannot be fetched', async () => {
+    const { app, overview } = makeOverview({ functionGraph: true });
+
+    Object.defineProperty(app.endpoints, 'functionMap', {
+      value: async () => {
+        throw new Error('no map');
+      },
+      configurable: true,
+    });
+
+    await overview.load();
+
+    expect(overview.stats).not.toBeNull();
+    expect(overview.subOrchestrators).toEqual([]);
+    expect(app.toast.current).toBeNull();
   });
 });
 

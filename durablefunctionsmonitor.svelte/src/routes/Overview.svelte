@@ -19,6 +19,7 @@
   import NeedsAttention from '$lib/overview/NeedsAttention.svelte';
   import StatTiles from '$lib/overview/StatTiles.svelte';
   import ThroughputPanel from '$lib/overview/ThroughputPanel.svelte';
+  import TopOrchestrators from '$lib/overview/TopOrchestrators.svelte';
   import { NO_STATS_TEXT, NO_STATS_TITLE, Overview } from '$lib/state/overview.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
@@ -162,6 +163,8 @@
         <ThroughputPanel stats={overview.stats} />
         <NeedsAttention stats={overview.stats} storage={overview.storage} />
       </div>
+
+      <TopOrchestrators rows={overview.stats.byName} subOrchestrators={overview.subOrchestrators} />
     {/if}
   {/if}
 </Page>
