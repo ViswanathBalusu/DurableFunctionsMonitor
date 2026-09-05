@@ -18,14 +18,16 @@
   } = $props();
 </script>
 
+<!-- Inside the overlay, as `.overlay > .dialog` in the mockups: see dialog-content.svelte. -->
 <AlertDialogPortal {...portalProps}>
-  <AlertDialogOverlay />
-  <AlertDialogPrimitive.Content
-    bind:ref
-    data-slot="alert-dialog-content"
-    class={cn('dialog', className)}
-    {...restProps}
-  >
-    {@render children?.()}
-  </AlertDialogPrimitive.Content>
+  <AlertDialogOverlay>
+    <AlertDialogPrimitive.Content
+      bind:ref
+      data-slot="alert-dialog-content"
+      class={cn('dialog', className)}
+      {...restProps}
+    >
+      {@render children?.()}
+    </AlertDialogPrimitive.Content>
+  </AlertDialogOverlay>
 </AlertDialogPortal>
