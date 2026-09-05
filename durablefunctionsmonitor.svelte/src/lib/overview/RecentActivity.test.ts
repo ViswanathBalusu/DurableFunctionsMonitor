@@ -4,10 +4,11 @@
 import { render, screen } from '@testing-library/svelte';
 import type { Component } from 'svelte';
 import { describe, expect, it } from 'vitest';
+import { auditRowKey, outcomeLabel } from '$lib/activity/audit';
 import type { AuditRow } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
 import ScreenHarness from '../../../tests/unit/harnesses/ScreenHarness.svelte';
-import RecentActivity, { activityMeta, outcomeLabel, rowKey } from './RecentActivity.svelte';
+import RecentActivity, { activityMeta } from './RecentActivity.svelte';
 import { audit as auditFixture, auditRow } from '../../../tests/unit/fixtures/audit';
 
 /** The harness takes a screen, and this one has a prop the harness passes through. */
@@ -46,9 +47,13 @@ describe('activity lines', () => {
     expect(outcomeLabel(auditRow({ outcome: 'failed', status: 409 }))).toBe('409');
   });
 
-  it('tells two rows of the same second apart', () => {
-    expect(rowKey(auditRow())).not.toBe(rowKey(auditRow({ operation: 'Purge' })));
-    expect(rowKey(auditRow({ instanceId: null }))).toContain('|');
+  it('tells two rows apart even when they say exactly the same thing', () => {
+    const twice = [auditRow(), auditRow()];
+
+    // Nothing in an audit row is unique - a hub really does hold two identical-looking rows - so a
+    // row is identified by the object the page was handed, and asking twice answers the same
+    expect(auditRowKey(twice[0])).not.toBe(auditRowKey(twice[1]));
+    expect(auditRowKey(twice[0])).toBe(auditRowKey(twice[0]));
   });
 });
 

@@ -5,16 +5,6 @@
   export function activityMeta(rows: AuditRow[]): string {
     return `audit · last ${rows.length} in range`;
   }
-
-  /** What the outcome chip says: `ok`, or the status code that was not ok. */
-  export function outcomeLabel(row: AuditRow): string {
-    return row.outcome === 'ok' ? 'ok' : String(row.status);
-  }
-
-  /** One row, identified by what makes it that row rather than another. */
-  export function rowKey(row: AuditRow): string {
-    return `${row.at}|${row.operation}|${row.instanceId ?? ''}`;
-  }
 </script>
 
 <script lang="ts">
@@ -24,6 +14,7 @@
   import Panel from '$lib/components/Panel.svelte';
   import DataTable from '$lib/components/table/DataTable.svelte';
   import type { ColumnDef } from '$lib/components/table/columns';
+  import { auditRowKey, outcomeLabel } from '$lib/activity/audit';
   import { fmtTime } from '$lib/format/time';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
 
@@ -67,7 +58,7 @@
     <span class="fine muted">{activityMeta(rows)}</span>
   {/snippet}
 
-  <DataTable {columns} {rows} {rowKey} flat hideHeader ariaLabel="Recent activity" />
+  <DataTable {columns} {rows} rowKey={auditRowKey} flat hideHeader ariaLabel="Recent activity" />
 
   <p class="meta" style="margin-top:10px">
     <LinkButton onclick={() => app.router.navigate({ name: 'activity', hub: app.hub })}>Activity</LinkButton>

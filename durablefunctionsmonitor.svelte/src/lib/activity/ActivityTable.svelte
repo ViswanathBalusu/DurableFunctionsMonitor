@@ -11,8 +11,8 @@
   import LinkButton from '$lib/components/LinkButton.svelte';
   import DataTable from '$lib/components/table/DataTable.svelte';
   import type { ColumnDef, SortState } from '$lib/components/table/columns';
+  import { auditRowKey, outcomeLabel } from '$lib/activity/audit';
   import { fmtDateTime } from '$lib/format/time';
-  import { outcomeLabel, rowKey } from '$lib/overview/RecentActivity.svelte';
   import type { Activity } from '$lib/state/activity.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
 
@@ -81,7 +81,7 @@
 <DataTable
   {columns}
   rows={activity.rows}
-  {rowKey}
+  rowKey={auditRowKey}
   rowStatus={(row) => (row.outcome === 'ok' ? 'Completed' : 'Failed')}
   {sort}
   ariaLabel="Activity"

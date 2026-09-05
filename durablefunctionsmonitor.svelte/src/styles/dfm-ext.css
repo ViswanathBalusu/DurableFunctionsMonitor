@@ -86,3 +86,13 @@
 .swq.orch {
   background: var(--ink);
 }
+
+/* A select whose list is longer than the screen has to scroll inside its popover: the Activity
+   screen offers every operation the backend can record, which is more than a viewport holds, and
+   `.pop` (dfm-ui.css) sets no height. bits-ui measures the room the trigger leaves and publishes it
+   as `--bits-select-content-available-height`; the scroll buttons above and below the viewport are
+   already in the markup and start working as soon as there is something to scroll. */
+[data-slot='select-content'] {
+  max-height: var(--bits-select-content-available-height, 60vh);
+  overflow-y: auto;
+}

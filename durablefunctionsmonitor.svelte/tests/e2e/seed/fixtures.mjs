@@ -95,6 +95,9 @@ export const RUNNING_INSTANCE_ID = 'order-2026-09-04-000913';
 /** The failed order of ScreenInstances.dc.html L192, the one the Failures screen groups on. */
 export const FAILED_INSTANCE_ID = 'order-2026-09-04-000911';
 
+/** The suspended order of ScreenInstances.dc.html L198 - the only one a Resume can be sent to. */
+export const SUSPENDED_INSTANCE_ID = 'order-2026-09-03-004411';
+
 /** The sub-orchestration `RUNNING_INSTANCE_ID` started. See the note on its execution id below. */
 export const SUB_ORCHESTRATION_INSTANCE_ID = `${RUNNING_INSTANCE_ID}:0`;
 
@@ -622,7 +625,7 @@ export function buildSeedData(hub = DEFAULT_HUB, now = new Date(), options = {})
   const input4411 =
     '{"orderId":"A-0994","customerId":88214,"items":[{"sku":"SKU-4471","qty":1}],"total":64.75,"currency":"USD"}';
   add({
-    instanceId: 'order-2026-09-03-004411',
+    instanceId: SUSPENDED_INSTANCE_ID,
     name: PROCESS_ORDER,
     executionId: 'c4d5e6f7-8a9b-40c1-92d3-e4f5a6b7c8d9',
     runtimeStatus: 'Suspended',

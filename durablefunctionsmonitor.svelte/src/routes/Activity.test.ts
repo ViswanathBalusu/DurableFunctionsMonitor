@@ -204,6 +204,18 @@ describe('Activity: the table', () => {
     expect('instanceId' in route && route.instanceId).toBe('order-2026-09-04-000911');
   });
 
+  it('renders two rows that say exactly the same thing', async () => {
+    // A user can run the same operation against the same instance twice inside one second, and the
+    // row carries nothing else: a key built from the contents would collide and lose the second row
+    const twice = auditRow({ message: 'reason: operator' });
+
+    mount({ response: auditFixture({ rows: [{ ...twice }, { ...twice }] }) });
+
+    await waitFor(() => expect(rows()).toHaveLength(2));
+
+    expect(cells(rows()[0])).toEqual(cells(rows()[1]));
+  });
+
   it('says where the order comes from, and offers the next page while there is one', async () => {
     const pages = [
       auditFixture({ rows: [auditRow()], hasMore: true }),

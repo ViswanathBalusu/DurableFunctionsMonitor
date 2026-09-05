@@ -51,6 +51,13 @@ Accept:
 - [ ] Unit test with a fake routine: a Write function call records one row with the operation name, status and user; a Read call records nothing; a throwing routine does not affect the response.
 Test: as above.
 
+**Gap, found by E11-S2-T1 (2026-09-05).** Point 1 asks the replay endpoint to store its deleted-row
+count in `DfmAuditMessage`, the way `Functions/Batch.cs` stores its counts. It does not
+(`Functions/InputEvents.cs` computes `deletedRows` and returns it, but never puts it in
+`context.Items`), so a successful replay is audited with no message at all and the Activity screen
+shows an em dash in its details cell. Two lines in the replay function would close it; nothing else
+in this epic depends on it.
+
 ### B5-S3 Endpoint
 
 #### B5-S3-T1 GET /audit

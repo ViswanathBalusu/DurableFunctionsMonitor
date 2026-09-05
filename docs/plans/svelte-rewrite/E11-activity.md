@@ -69,3 +69,33 @@ Do:
 Accept:
 - [ ] Green.
 Test: itself.
+
+**Deviation, E11-S2-T1 (2026-09-05).** Three things the run settled, and two defects it found.
+
+(1) **Suspend and resume cannot be the same instance.** Nothing consumes the control queue of a
+seeded hub, so a suspend never takes effect and the row stays `Running` - and a resume of a running
+instance is refused (`Resume 2 · 0 ok, 2 failed` in instances.spec). The spec suspends the hub's
+running order and resumes its suspended one, which the seed now exports as `SUSPENDED_INSTANCE_ID`.
+
+(2) **The trail outlives a run.** It is a table in the hub, so nothing here counts rows: what this
+spec wrote is at the top, because the order is newest first, and that is what it asserts. The
+"nothing recorded" state is asserted through an operation this backend cannot even perform
+(`Delete task hub`, which /about reports as unsupported).
+
+(3) **`Replay` records no message.** B5-S2-T2 asked the replay endpoint to store its deleted-row
+count in `DfmAuditMessage` the way the batch endpoint stores its counts; it does not, so the details
+cell of a replay row is an em dash. Noted under B5-S2-T2 rather than fixed here.
+
+**The two defects, both fixed:**
+
+(a) **`each_key_duplicate` killed the render.** An `AuditRow` carries nothing unique - the same user
+can run the same operation against the same instance twice inside the second the row is stamped with
+- and a hub that has been through a few runs really does hold such pairs. The content-based key
+collided, Svelte threw inside the table's `{#each}`, and the aborted render left the empty state
+standing under a title that read `100+ entries`. Identity now comes from `$lib/activity/audit.ts`,
+which the Overview's Recent activity panel (E7-S2-T6) shares - it had the same latent bug.
+
+(b) **A select taller than the screen could not be used.** With every operation this backend records
+the list is 23 entries; `.pop` sets no height, so the last of them sat outside the viewport and
+nothing could click it. `dfm-ext.css` now caps the select popover at the room bits-ui measures and
+lets it scroll, which is what the scroll buttons already in the markup are for.
