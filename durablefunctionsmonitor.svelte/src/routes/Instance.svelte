@@ -3,6 +3,7 @@
   import Page from '$lib/components/Page.svelte';
   import HistoryTab from '$lib/instance/HistoryTab.svelte';
   import InstanceActions from '$lib/instance/InstanceActions.svelte';
+  import GraphTab from '$lib/instance/GraphTab.svelte';
   import InputsTab from '$lib/instance/InputsTab.svelte';
   import InstanceHeader from '$lib/instance/InstanceHeader.svelte';
   import LiquidTab from '$lib/instance/LiquidTab.svelte';
@@ -117,6 +118,8 @@
         <HistoryTab {instance} />
       {:else if tab === 'inputs'}
         <InputsTab {instance} {inputs} onOutcome={(outcome) => void handleOutcome(outcome)} />
+      {:else if tab === 'graph'}
+        <GraphTab {instance} />
       {:else if tab === 'sequence'}
         <SequenceTab {instance} />
       {:else if tab === 'raw'}
