@@ -12,7 +12,7 @@
   import UserMenu from './UserMenu.svelte';
 
   interface Props {
-    /** E2-S5 wires the palette; until then the button is simply absent. */
+    /** Opens the command palette; without it the Ctrl K button is simply absent. */
     onOpenPalette?: () => void;
     /** E2-S7 wires MSAL sign-out; inside VS Code there is nothing to sign out of. */
     onSignOut?: () => void;
@@ -23,10 +23,16 @@
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
   let jump = $state<InstanceJump | null>(null);
+  let hubSwitcher = $state<HubSwitcher | null>(null);
 
   /** The `/` shortcut reaches the jump field through here (contracts §13). */
   export function focusJump(): void {
     jump?.focus();
+  }
+
+  /** The palette's "Switch task hub" opens the menu that lists them (DFM App.dc.html L334). */
+  export function openHubMenu(): void {
+    hubSwitcher?.openMenu();
   }
 
   /** The intervals of DFM App.dc.html L72; 0 is "Never". */
@@ -63,7 +69,7 @@
   <span class="display hide-m" style="font-size:16px;white-space:nowrap">Durable Functions Monitor</span>
   <span class="muted hide-m" aria-hidden="true">/</span>
 
-  <HubSwitcher />
+  <HubSwitcher bind:this={hubSwitcher} />
 
   <InstanceJump bind:this={jump} />
 

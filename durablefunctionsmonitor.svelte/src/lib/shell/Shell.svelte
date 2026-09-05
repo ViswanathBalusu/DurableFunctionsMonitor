@@ -2,8 +2,10 @@
   import { getContext } from 'svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
+  import { Palette } from '$lib/state/palette.svelte';
   import Outlet from './Outlet.svelte';
   import BottomNav from './BottomNav.svelte';
+  import CommandPalette from './CommandPalette.svelte';
   import MoreSheet from './MoreSheet.svelte';
   import PeekPanel from './PeekPanel.svelte';
   import SideNav from './SideNav.svelte';
@@ -14,8 +16,9 @@
   interface Props {
     /** The badge on the Failures nav item; E9 fills it from the failures screen state. */
     failuresCount?: number;
-    /** E2-S5 passes the palette toggle; E2-S7 the sign-out. */
+    /** Told when the palette is asked for; the shell opens its own either way. */
     onOpenPalette?: () => void;
+    /** E2-S7 passes the sign-out. */
     onSignOut?: () => void;
   }
 
@@ -31,12 +34,21 @@
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
-  // The keyboard map lives exactly as long as the shell does (contracts §13); E2-S5-T2 replaces the
-  // toggle with the palette's own, which also reports whether it is open.
+  // Switching the task hub opens the top bar's own menu, which is where the hubs are listed
+  const palette = new Palette(app, { onSwitchHub: () => topBar?.openHubMenu() });
+
+  function togglePalette(): void {
+    onOpenPalette?.();
+    palette.toggle();
+  }
+
+  // The keyboard map lives exactly as long as the shell does (contracts §13)
   $effect(() =>
     installShortcuts(app, {
       focusJump,
-      togglePalette: () => onOpenPalette?.(),
+      togglePalette,
+      paletteOpen: () => palette.open,
+      closePalette: () => palette.close(),
     }),
   );
 </script>
@@ -52,7 +64,7 @@
   <SideNav {failuresCount} />
 
   <div class="main">
-    <TopBar bind:this={topBar} {onOpenPalette} {onSignOut} />
+    <TopBar bind:this={topBar} onOpenPalette={togglePalette} {onSignOut} />
 
     {#if app.busy}
       <ProgressBar inline />
@@ -66,8 +78,9 @@
   <BottomNav {failuresCount} {moreOpen} onToggleMore={() => (moreOpen = !moreOpen)} />
 </div>
 
-<MoreSheet bind:open={moreOpen} {onOpenPalette} />
+<MoreSheet bind:open={moreOpen} onOpenPalette={togglePalette} />
 
 <!-- Outside `.shell`: these are overlays over the whole app, not part of the content column -->
 <PeekPanel />
+<CommandPalette {palette} />
 <ToastHost />

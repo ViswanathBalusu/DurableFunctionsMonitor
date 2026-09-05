@@ -26,7 +26,7 @@ from here, or from the DFM components in `src/lib/components/` that wrap them.
 | `select`                   | trigger                                      | `input`, inside a `<div class="sel">` the caller renders         |
 |                            | content                                      | `pop`                                                            |
 |                            | item                                         | `mi` (the chosen one wraps its label in `.active`)               |
-| `command`                  | root                                         | `palette`                                                        |
+| `command`                  | root                                         | `palette` (renders through `child`, so the caller's `role` wins) |
 |                            | input                                        | none - `.palette > input` is styled by the child selector        |
 |                            | list                                         | `plist`                                                          |
 |                            | group heading                                | `grp`                                                            |

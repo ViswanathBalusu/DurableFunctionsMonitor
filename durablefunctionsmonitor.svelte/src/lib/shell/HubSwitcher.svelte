@@ -11,6 +11,11 @@
 
   let open = $state(false);
 
+  /** The palette's "Switch task hub" (E2-S5-T2), which has no anchor of its own to click. */
+  export function openMenu(): void {
+    open = true;
+  }
+
   onMount(() => {
     void hubs.load(app.hub);
   });

@@ -38,6 +38,11 @@ describe('Shell', () => {
 
     await fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
     expect(onOpenPalette).toHaveBeenCalledOnce();
+    await waitFor(() => expect(document.querySelector('.palette')).not.toBeNull());
+
+    // While the palette is up the rest of the map is inert, so it is closed again first
+    await fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(document.querySelector('.palette')).toBeNull());
 
     await fireEvent.keyDown(window, { key: '/' });
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('combobox', { name: 'Find instance' })));
