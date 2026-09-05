@@ -22,6 +22,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         // Asynchronously retrieves all entities matching an OData filter (null == no filter)
         Task<IEnumerable<TableEntity>> GetAllAsync(string tableName, string filter, CancellationToken ct);
 
+        // Asynchronously retrieves at most maxRows entities matching an OData filter (null == no filter),
+        // returning only the listed properties plus PartitionKey and RowKey (null == all of them).
+        // This is the bounded scan every aggregation endpoint is built on: it never reads more than
+        // maxRows + 1 rows, and reports truncated == true when the table held more matching rows.
+        Task<(IReadOnlyList<TableEntity> rows, bool truncated)> QueryAsync(string tableName, string filter, IEnumerable<string> select, int maxRows, CancellationToken ct);
+
         // Retrieves a single entity, or null if it does not exist
         Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey);
 
@@ -125,6 +131,46 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         }
 
         /// <inheritdoc/>
+        public async Task<(IReadOnlyList<TableEntity> rows, bool truncated)> QueryAsync(string tableName, string filter, IEnumerable<string> select, int maxRows, CancellationToken ct)
+        {
+            if (maxRows < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxRows), maxRows, "maxRows should be a positive number");
+            }
+
+            // Reading one row more than asked for is what tells 'exactly maxRows rows matched' from
+            // 'the scan was cut short'. Nothing beyond that extra row is ever fetched.
+            int limit = maxRows + 1;
+
+            // Table Storage caps a page at 1000 entities anyway; asking for less than that when the
+            // cap is small keeps a tiny query from dragging a full page over the wire.
+            int maxPerPage = Math.Min(MaxPageSize, limit);
+
+            // A projected query returns nothing but the listed properties - the keys included. Every
+            // aggregation identifies its rows by the PartitionKey (the instance id), so add them.
+            var selectedProperties = select == null ? null : new List<string>(select).Union(KeyProperties).ToList();
+
+            var result = new List<TableEntity>(Math.Min(limit, MaxPageSize));
+            bool truncated = false;
+
+            // Pageable only fetches the next page once the current one is exhausted, so breaking out
+            // early also stops querying.
+            await foreach (var entity in this._client.GetTableClient(tableName)
+                .QueryAsync<TableEntity>(filter, maxPerPage, selectedProperties, ct))
+            {
+                if (result.Count == maxRows)
+                {
+                    truncated = true;
+                    break;
+                }
+
+                result.Add(entity);
+            }
+
+            return (result, truncated);
+        }
+
+        /// <inheritdoc/>
         public async Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey)
         {
             // GetEntityIfExistsAsync (rather than GetEntityAsync) so that a missing entity comes
@@ -185,6 +231,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         }
 
         private const int MaxTransactionSize = 100;
+
+        // Table Storage never returns more than this many entities in one page
+        private const int MaxPageSize = 1000;
+
+        private static readonly string[] KeyProperties = new[] { "PartitionKey", "RowKey" };
 
         private readonly TableServiceClient _client;
     }

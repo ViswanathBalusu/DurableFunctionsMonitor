@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Data.Tables;
@@ -335,6 +336,135 @@ namespace durablefunctionsmonitor.dotnetisolated.core.integrationtests
             Assert.IsTrue(
                 Math.Abs((historyEntity._Timestamp - eventTime).TotalSeconds) < 1,
                 $"_Timestamp came back as {historyEntity._Timestamp:O}, expected around {eventTime:O}");
+        }
+
+        [TestMethod]
+        public async Task CapsTheScanAndReportsTruncation()
+        {
+            // Arrange
+
+            // The bounded scan the aggregation endpoints are built on: read at most maxRows rows and
+            // say so when the hub held more. Table Storage has no server-side count, so this cap is
+            // the only thing standing between a big hub and an unbounded scan.
+            const int rowCount = 25;
+            await this.SeedInstancesAsync(rowCount);
+
+            // Act
+
+            var result = await this._tableClient.QueryAsync(
+                this.InstancesTable, null, new[] { "RuntimeStatus" }, 10, CancellationToken.None);
+
+            // Assert
+
+            Assert.AreEqual(10, result.rows.Count);
+            Assert.IsTrue(result.truncated, "25 rows through a cap of 10 should report truncated");
+
+            // The projection: RuntimeStatus was asked for, Name was not
+            Assert.IsTrue(result.rows.All(r => r.GetString("RuntimeStatus") == "Running"));
+            Assert.IsFalse(
+                result.rows.Any(r => r.ContainsKey("Name")),
+                "Name was not in the select list, so it should not come back");
+
+            // ... and the keys always come back, because every aggregation identifies its rows by them
+            Assert.IsTrue(result.rows.All(r => !string.IsNullOrEmpty(r.PartitionKey)));
+        }
+
+        [TestMethod]
+        public async Task DoesNotReportTruncationWhenTheRowCountEqualsTheCap()
+        {
+            // Arrange
+
+            // Exactly at the cap is a complete result, not a partial one. This is the off-by-one the
+            // extra row that QueryAsync reads is there to get right.
+            await this.SeedInstancesAsync(10);
+
+            // Act
+
+            var result = await this._tableClient.QueryAsync(
+                this.InstancesTable, null, null, 10, CancellationToken.None);
+
+            // Assert
+
+            Assert.AreEqual(10, result.rows.Count);
+            Assert.IsFalse(result.truncated);
+        }
+
+        [TestMethod]
+        public async Task AppliesTheFilterToTheCappedScan()
+        {
+            // Arrange
+
+            await this.SeedInstancesAsync(5);
+            await this._instances.UpsertEntityAsync(new TableEntity("failed-instance", string.Empty)
+            {
+                ["Name"] = "MyOrchestration",
+                ["RuntimeStatus"] = "Failed"
+            });
+
+            string filter = Azure.Data.Tables.TableClient.CreateQueryFilter($"RuntimeStatus eq {"Failed"}");
+
+            // Act
+
+            var result = await this._tableClient.QueryAsync(
+                this.InstancesTable, filter, new[] { "RuntimeStatus" }, 100, CancellationToken.None);
+
+            // Assert
+
+            Assert.AreEqual(1, result.rows.Count);
+            Assert.IsFalse(result.truncated);
+            Assert.AreEqual("failed-instance", result.rows.Single().PartitionKey);
+        }
+
+        [TestMethod]
+        public async Task PagesThroughMoreRowsThanOnePageHoldsWhenTheCapIsHigher()
+        {
+            // Arrange
+
+            // A cap above the 1000-entity page limit has to keep following continuation tokens
+            const int rowCount = 1100;
+
+            var batch = new List<TableTransactionAction>();
+            for (int i = 0; i < rowCount; i++)
+            {
+                batch.Add(new TableTransactionAction(
+                    TableTransactionActionType.UpsertReplace,
+                    new TableEntity("big-instance", i.ToString("D10")) { ["EventType"] = "TimerFired" }));
+
+                // Table transactions are capped at 100 entities
+                if (batch.Count == 100)
+                {
+                    await this._history.SubmitTransactionAsync(batch);
+                    batch.Clear();
+                }
+            }
+            if (batch.Count > 0)
+            {
+                await this._history.SubmitTransactionAsync(batch);
+            }
+
+            // Act
+
+            var result = await this._tableClient.QueryAsync(
+                this.HistoryTable, null, new[] { "EventType" }, 50000, CancellationToken.None);
+
+            // Assert
+
+            Assert.AreEqual(rowCount, result.rows.Count);
+            Assert.IsFalse(result.truncated);
+        }
+
+        private async Task SeedInstancesAsync(int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                await this._instances.UpsertEntityAsync(new TableEntity($"instance-{i:D3}", string.Empty)
+                {
+                    ["Name"] = "MyOrchestration",
+                    ["RuntimeStatus"] = "Running",
+                    ["CreatedTime"] = DateTimeOffset.UtcNow,
+                    ["LastUpdatedTime"] = DateTimeOffset.UtcNow
+                });
+            }
         }
 
         private Task AddHistoryAsync(string instanceId, string executionId, string rowKey, string eventType, int? taskScheduledId)
