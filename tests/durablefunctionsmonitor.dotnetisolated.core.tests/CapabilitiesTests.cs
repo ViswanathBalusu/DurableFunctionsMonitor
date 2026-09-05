@@ -131,12 +131,32 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsTrue(capabilities.StorageHealth);
             Assert.IsTrue(capabilities.EpisodeMarkers);
 
-            // Audit stays false regardless of ReadAuditRecordsRoutine: DfmSettings has no AuditEnabled yet
-            // (B5-S1-T1 adds it). See the TODO in Common/Capabilities.cs.
+            // Audit stays false here even though ReadAuditRecordsRoutine is set: settings.AuditEnabled
+            // defaults to false (an operator must opt in). See AuditCapabilityRequiresBothTheSettingAndTheRoutine.
             Assert.IsFalse(capabilities.Audit);
 
             // Entities stays false until B4-S3-T1 wires the endpoint through the client API.
             Assert.IsFalse(capabilities.Entities);
+        }
+
+        [TestMethod]
+        public void AuditCapabilityRequiresBothTheSettingAndTheRoutine()
+        {
+            // Arrange
+            var routineSet = new DfmExtensionPoints
+            {
+                ReadAuditRecordsRoutine = (connName, hubName, query) => Task.FromResult(new AuditPage())
+            };
+            var routineNull = new DfmExtensionPoints { ReadAuditRecordsRoutine = null };
+
+            // Setting enabled but no routine (e.g. MSSQL/Netherite before they implement audit reads): false
+            Assert.IsFalse(Capabilities.Compute(new DfmSettings { AuditEnabled = true }, routineNull, DfmMode.Normal).Audit);
+
+            // Routine set but the operator did not opt in: false
+            Assert.IsFalse(Capabilities.Compute(new DfmSettings { AuditEnabled = false }, routineSet, DfmMode.Normal).Audit);
+
+            // Both flipped on: true
+            Assert.IsTrue(Capabilities.Compute(new DfmSettings { AuditEnabled = true }, routineSet, DfmMode.Normal).Audit);
         }
 
         [TestMethod]

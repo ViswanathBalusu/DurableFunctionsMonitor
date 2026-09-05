@@ -46,13 +46,23 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 }
             }
 
-            return await req.ReturnJson(new 
+            var capabilities = Capabilities.Compute(this.Settings, this.ExtensionPoints, mode);
+            var templates = await CustomTemplates.GetTemplateSummaryAsync(this.Settings, hubName);
+
+            return await req.ReturnJson(new
             {
                 accountName,
                 hubName = hubName,
                 version = Assembly.GetExecutingAssembly().GetName().Version.ToString() + " (isolated)",
-                permissions
-            });            
+                permissions,
+
+                // B0-S2-T2: capability-driven fields the Svelte UI gates every screen on (decision D9).
+                provider = this.ExtensionPoints.ProviderName,
+                readOnly = mode == DfmMode.ReadOnly,
+                dangerousOperations = mode == DfmMode.Normal && this.Settings.DangerousOperationsEnabled,
+                capabilities,
+                templates
+            });
         }
 
         private static readonly Regex AccountNameRegex = new Regex(@"AccountName=(\w+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);

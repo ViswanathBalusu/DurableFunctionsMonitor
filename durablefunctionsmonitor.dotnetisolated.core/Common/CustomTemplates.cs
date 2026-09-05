@@ -4,6 +4,7 @@
 using System.Text;
 using System.Collections.Concurrent;
 using System.Reflection;
+using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
 {
@@ -42,6 +43,46 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
 
             return FunctionMapsTask;
+        }
+
+        // Summarizes the state of custom tab templates / function map / meta tag for /about, for the given
+        // hub. Never throws: every one of the three underlying cached Tasks already swallows its own errors.
+        internal static async Task<TemplateSummary> GetTemplateSummaryAsync(DfmSettings settings, string hubName)
+        {
+            var functionMapsMap = await GetFunctionMapsAsync(settings);
+            string functionMapJson = functionMapsMap.GetFunctionMap(hubName);
+            bool functionMapAvailable = !string.IsNullOrEmpty(functionMapJson);
+
+            int? functionCount = null;
+            if (functionMapAvailable)
+            {
+                try
+                {
+                    // The function map JSON's shape is { "functions": { ... }, "proxies": { ... } }.
+                    // functionCount is the number of top-level keys in "functions", null when that key
+                    // is missing or the JSON itself is malformed.
+                    functionCount = (JObject.Parse(functionMapJson)["functions"] as JObject)?.Count;
+                }
+                catch (Exception)
+                {
+                    // Malformed function map JSON: report no count, but keep functionMapAvailable as-is
+                    // (the map itself is still there, just not something we can summarize).
+                    functionCount = null;
+                }
+            }
+
+            var templatesMap = await GetTabTemplatesAsync(settings);
+            var liquidTabs = templatesMap.GetAllTemplateNames();
+
+            string customMetaTagCode = await GetCustomMetaTagCodeAsync(settings);
+
+            return new TemplateSummary
+            {
+                FunctionMapAvailable = functionMapAvailable,
+                FunctionCount = functionCount,
+                LiquidTabs = liquidTabs,
+                CustomMetaTag = !string.IsNullOrEmpty(customMetaTagCode),
+            };
         }
 
         // Yes, it is OK to use Task in this way.
@@ -286,6 +327,24 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             return result;
         }
 
+        // Template names for entity type "" (generic) plus every entity-type-specific name, across the
+        // whole map, sorted and distinct. Unlike GetTemplateNames(), this is not scoped to a single
+        // entity type: /about has no notion of "the current instance's entity type".
+        public List<string> GetAllTemplateNames()
+        {
+            var result = new SortedSet<string>(StringComparer.Ordinal);
+
+            foreach (var templates in this.Values)
+            {
+                foreach (string name in templates.Keys)
+                {
+                    result.Add(name);
+                }
+            }
+
+            return result.ToList();
+        }
+
         public string GetTemplate(string entityTypeName, string templateName)
         {
             string result = null;
@@ -328,5 +387,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             return result;
         }
+    }
+
+    // The 'templates' field of /about (docs/plans/svelte-rewrite/00-shared-contracts.md section 6).
+    // Property names are PascalCase here and camelCased on the way out by Globals.SerializerSettings.
+    class TemplateSummary
+    {
+        public bool FunctionMapAvailable { get; set; }
+        public int? FunctionCount { get; set; }
+        public List<string> LiquidTabs { get; set; }
+        public bool CustomMetaTag { get; set; }
     }
 }

@@ -83,9 +83,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 Batch = true,
                 StorageHealth = ext.GetStorageHealthRoutine != null,
 
-                // TODO(B5-S1-T1): DfmSettings does not carry AuditEnabled yet. Once it does, this becomes
-                // 'settings.AuditEnabled && ext.ReadAuditRecordsRoutine != null'.
-                Audit = false,
+                // Auditing needs both an operator opt-in (DfmSettings.AuditEnabled, off by default) and a
+                // storage provider that implements the read side (ReadAuditRecordsRoutine).
+                Audit = settings.AuditEnabled && ext.ReadAuditRecordsRoutine != null,
 
                 // TODO(B4-S3-T1): flip to 'true' once /entities is implemented through the client API.
                 Entities = false,
