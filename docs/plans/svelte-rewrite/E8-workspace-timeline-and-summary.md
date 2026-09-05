@@ -32,6 +32,30 @@ Accept:
 - [ ] The spans fixture (built from the mockup history) yields nine lanes matching L301–L309 labels in order.
 Test: table-driven unit test.
 
+**Deviation, E8-S2-T1 (2026-09-05).** Three things, all of them the fixture answering back.
+
+(1) The two retry rules in step 1 disagree for the mockup's own history: "same lane as numbered
+segments" gives seven lanes, and the parenthetical "separate lanes per attempt when the attempt
+spans overlap" gives seven too, because `ChargePayment`'s three attempts do not overlap - they are
+one after another. The mockup shows them on three lanes, so what is implemented is the sentence in
+the middle: a name whose attempts hold exactly one span each gets a lane per attempt, labelled
+`{name} (retry n)`; any other name stays one lane with `retry n` on its segments. Spans that overlap
+in time are split apart on top of that, whatever they are called - one track cannot hold two bars at
+once, and a fan-out of ten calls drawn as one call would be a lie about the picture.
+
+(2) The mockup's ninth lane, `wait ShipmentConfirmed`, has no span behind it and is not drawn. B2
+only learns an event's name from the row that raised it, so a wait that is still open is unnamed
+(`wait for external event`), and this history's last row - `SubOrchestrationInstanceCreated` - leaves
+the sub-orchestration open, which means no trailing wait span at all. The fixture yields eight lanes,
+L301–L309 minus that one, in order. Naming it would be inventing an event the backend never saw.
+
+(3) A span carries no reason for failing - the history row it was built from does - so the failed
+bar reads `Result ?? Details` off the rows the tab has loaded, and says nothing more than the
+duration when they are not loaded. `reason-short` is the first word without its trailing colon and
+its `Exception` suffix, cut at 12 characters: `TimeoutException: payment gateway…` → `Timeout 4 s`.
+Durations everywhere in the picture are `fmtDuration` (contracts §10: no decimals below a minute), so
+the mockup's `3.1 s` reads `3 s`.
+
 #### E8-S2-T2 TimelineTab
 Files: `src/lib/instance/TimelineTab.svelte`, tests
 Depends: E8-S2-T1, E5-S3-T2
