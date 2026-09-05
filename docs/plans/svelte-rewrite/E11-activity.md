@@ -47,6 +47,18 @@ Accept:
 - [ ] Renders the audit fixture with the dangerous tag on Replay and Restart in place rows.
 Test: component tests.
 
+**Deviation, E11-S1-T2 (2026-09-05).** The dangerous tag is the mockup's own markup - a
+`<span class="tag">`, not the `Tag` component, which is a button (it opens the JSON viewer in the
+history table). A label that says what an operation was must not be focusable or clickable, which is
+what L40's `cursor:default` says too.
+
+The details cell carries its `title` on the span inside the `td`: `DataTable` gives a cell its
+`.trunc` class and its `data-label`, not arbitrary attributes, and the tooltip is on the text either
+way. A row whose message is null - most `ok` rows - shows an em dash rather than an empty cell.
+
+The empty state names the table it would write to with the hub's real name
+(`DurableFunctionsHubDfmAudit`), not the literal `{hub}` of the mockup.
+
 ### E11-S2 End-to-end
 
 #### E11-S2-T1 Activity e2e spec
