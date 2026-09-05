@@ -1,11 +1,40 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Durable Functions Monitor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
+    <link rel="shortcut icon" href="/favicon.png" />
   </head>
   <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+
+    <!-- The seven tags below are replaced by exact string match by the backend (ServeStatics.cs) and
+         by the VS Code extension (MonitorView.ts). Never reformat them - see contracts §2. -->
+    <!-- prettier-ignore -->
+    <meta name="durable-functions-monitor-meta">
+    <!-- prettier-ignore -->
+    <script>var OrchestrationIdFromVsCode="",StateFromVsCode={}</script>
+    <!-- prettier-ignore -->
+    <script>var DfmRoutePrefix=""</script>
+    <!-- prettier-ignore -->
+    <script>var DfmApiRoutePrefix=""</script>
+    <!-- prettier-ignore -->
+    <script>var DfmClientConfig={}</script>
+    <!-- prettier-ignore -->
+    <script>var DfmViewMode=0</script>
+    <!-- prettier-ignore -->
+    <script>var IsFunctionGraphAvailable=0</script>
+
     <div id="root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
