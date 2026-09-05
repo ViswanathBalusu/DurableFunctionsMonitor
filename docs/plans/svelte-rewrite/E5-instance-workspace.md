@@ -180,6 +180,16 @@ Accept:
 - [ ] Each of the five outcome paths is unit tested with a fake endpoint returning the mapped status/body.
 Test: as above.
 
+**Deviation, E5-S4-T4 (2026-09-05).** Two corrections to the plan's shape rules, both from
+`Functions/InputEvents.cs`. (1) `purged` is the *200* body of restart-in-place, not its 500: the
+recovery is `{ error, orchestratorName, instanceId, input }`, so it is detected by
+`orchestratorName`. (2) A recovery payload is looked for before the status is read, because the
+failed rewind comes back as **409** when the runtime refuses it and 500 when it throws - the same
+half-finished operation either way, and answering the 409 one with "The list was refreshed" would
+lose the recovery. The workspace also registers a Start new instance dialog of its own
+(`app.dialogs.startNewInstance`, as the Instances screen does), because the restart recovery opens
+exactly that dialog and the Instances screen is not on screen here.
+
 ### E5-S5 Sequence tab
 
 #### E5-S5-T1 sequence-model.ts

@@ -6,10 +6,14 @@
   import InputsTab from '$lib/instance/InputsTab.svelte';
   import InstanceHeader from '$lib/instance/InstanceHeader.svelte';
   import RawTab from '$lib/instance/RawTab.svelte';
+  import RecoveryDialog from '$lib/instance/RecoveryDialog.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
+  import { outcomeAction, type Recovery } from '$lib/instance/input-outcomes';
+  import StartNewInstanceDialog from '$lib/instances/StartNewInstanceDialog.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { InstanceState } from '$lib/state/instance.svelte';
-  import { Inputs } from '$lib/state/inputs.svelte';
+  import { Inputs, type InputOpOutcome } from '$lib/state/inputs.svelte';
+  import { StartInstance } from '$lib/state/start-instance.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -23,6 +27,43 @@
   /** The Inputs tab's own state; the tab loads it when it is opened and registers its reload. */
   const inputs = new Inputs({ app, instanceId: instance.instanceId });
 
+  /**
+   * The workspace owns a Start new instance dialog of its own: the recovery of a restart-in-place
+   * that purged the instance but could not start it again opens exactly that dialog, prefilled, and
+   * the Instances screen that usually holds it is not on screen here (contracts §7).
+   */
+  const start = new StartInstance({ app });
+
+  /** The half-finished operation a 500 handed back, while its dialog is up. */
+  let recovery = $state<Recovery | null>(null);
+
+  /**
+   * Design §9's outcomes. A 409 reloads the list before it says anything - the sequence numbers
+   * moved - and a 500 with a recovery payload opens a dialog rather than a toast, because a toast
+   * goes away and takes the recovery with it.
+   */
+  async function handleOutcome(outcome: InputOpOutcome): Promise<void> {
+    const action = outcomeAction(outcome);
+
+    if (action.kind === 'recovery') {
+      recovery = action.recovery;
+      await instance.refreshAll();
+      return;
+    }
+
+    if (action.kind === 'ok') {
+      app.toast.ok(action.message);
+      await instance.refreshAll();
+      return;
+    }
+
+    if (action.reloadInputs) {
+      await inputs.load();
+    }
+
+    app.toast.error(action.message);
+  }
+
   onMount(() => {
     void instance.refreshAll();
 
@@ -31,6 +72,9 @@
     // The confirm dialogs act through the workspace while it is the instance on screen (E5-S1-T2)
     const unbind = app.actions.bind(instance);
 
+    // While this screen is on, it is the one that renders the dialog (contracts §7)
+    app.dialogs.startNewInstance = start;
+
     // The screen's Refresh, the palette's Refresh and VS Code all come through here (E2-S6-T2)
     const stopRefresh = app.onRefresh(() => void instance.refreshAll());
 
@@ -38,6 +82,7 @@
       instance.stopAutoRefresh();
       stopRefresh();
       unbind();
+      app.dialogs.startNewInstance = null;
     };
   });
 
@@ -69,19 +114,7 @@
       {:else if tab === 'history'}
         <HistoryTab {instance} />
       {:else if tab === 'inputs'}
-        <InputsTab
-          {instance}
-          {inputs}
-          onOutcome={(outcome) => {
-            // E5-S4-T4 maps every outcome to its toast or its recovery dialog; until it lands, a
-            // failure is at least reported rather than swallowed
-            if (!outcome.ok) {
-              app.toast.fromError('The operation failed', outcome.error);
-            } else {
-              void instance.refreshAll();
-            }
-          }}
-        />
+        <InputsTab {instance} {inputs} onOutcome={(outcome) => void handleOutcome(outcome)} />
       {:else if tab === 'raw'}
         <RawTab {instance} />
       {:else}
@@ -89,4 +122,23 @@
       {/if}
     </div>
   </div>
+
+  {#if recovery}
+    <RecoveryDialog
+      bind:open={
+        () => recovery !== null,
+        (next) => {
+          if (!next) {
+            recovery = null;
+          }
+        }
+      }
+      {recovery}
+      {instance}
+    />
+  {/if}
+
+  {#if start.open}
+    <StartNewInstanceDialog {start} />
+  {/if}
 </Page>
