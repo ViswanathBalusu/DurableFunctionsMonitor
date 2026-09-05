@@ -20,6 +20,7 @@
     sort = null,
     keep = false,
     flat = false,
+    hideHeader = false,
     highlightKey = null,
     onRowClick,
     onRowEnter,
@@ -33,6 +34,7 @@
     sort?: SortState | null;
     keep?: boolean;
     flat?: boolean;
+    hideHeader?: boolean;
     highlightKey?: string | null;
     onRowClick?: (row: Row) => void;
     onRowEnter?: (row: Row) => void;
@@ -74,6 +76,7 @@
   {sort}
   {keep}
   {flat}
+  {hideHeader}
   {highlightKey}
   ariaLabel="Instances"
   {onRowClick}

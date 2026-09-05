@@ -16,7 +16,9 @@
   } from '$lib/filters/time-range';
   import { fmtInt } from '$lib/format/number';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
+  import BacklogPanel from '$lib/overview/BacklogPanel.svelte';
   import NeedsAttention from '$lib/overview/NeedsAttention.svelte';
+  import RecentActivity from '$lib/overview/RecentActivity.svelte';
   import StatTiles from '$lib/overview/StatTiles.svelte';
   import ThroughputPanel from '$lib/overview/ThroughputPanel.svelte';
   import TopOrchestrators from '$lib/overview/TopOrchestrators.svelte';
@@ -38,6 +40,11 @@
   const rangeLower = $derived(rangeLabel(app.timeRange).toLowerCase());
 
   const isDay = $derived(isPreset(app.timeRange) && app.timeRange.preset === '24h');
+
+  /** The bottom pair. Each panel needs its capability; Backlog needs the answer to have arrived too. */
+  const hasBacklog = $derived(app.capabilities.storageHealth && !!overview.storage);
+
+  const hasActivity = $derived(app.capabilities.audit);
 
   /** The banner's own sentence, with the cap the backend actually stopped at. */
   const partialText = $derived(
@@ -165,6 +172,17 @@
       </div>
 
       <TopOrchestrators rows={overview.stats.byName} subOrchestrators={overview.subOrchestrators} />
+
+      {#if hasBacklog || hasActivity}
+        <div class="panels wide-right{hasBacklog && hasActivity ? '' : ' single'}">
+          {#if hasBacklog && overview.storage}
+            <BacklogPanel storage={overview.storage} />
+          {/if}
+          {#if hasActivity}
+            <RecentActivity rows={overview.activity} />
+          {/if}
+        </div>
+      {/if}
     {/if}
   {/if}
 </Page>

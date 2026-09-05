@@ -138,6 +138,16 @@ describe('DataTable', () => {
     expect(wrap).toHaveClass('flat');
   });
 
+  it('drops the header row when the columns need no naming, and keeps the labels', () => {
+    render(DataTableHarness, { props: { rows, hideHeader: true } });
+
+    expect(document.querySelector('table.tbl thead')).toBeNull();
+    expect(bodyRows()).toHaveLength(3);
+
+    // The mobile card layout reads the label off the cell, not off a header that is not there
+    expect(bodyRows()[0].querySelector('td[data-label="name"]')).not.toBeNull();
+  });
+
   it('renders the footer the owner passes', () => {
     render(DataTableHarness, { props: { rows } });
 

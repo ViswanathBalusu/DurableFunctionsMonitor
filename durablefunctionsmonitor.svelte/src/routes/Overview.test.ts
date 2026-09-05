@@ -8,7 +8,9 @@ import type { AppState } from '$lib/state/app.svelte';
 import { NO_STATS_TEXT, NO_STATS_TITLE } from '$lib/state/overview.svelte';
 import ScreenHarness from '../../tests/unit/harnesses/ScreenHarness.svelte';
 import Overview from './Overview.svelte';
+import { audit as auditFixture } from '../../tests/unit/fixtures/audit';
 import { partialStats, stats as statsFixture } from '../../tests/unit/fixtures/stats';
+import { storage as storageFixture } from '../../tests/unit/fixtures/storage';
 
 function mount(
   options: {
@@ -29,6 +31,8 @@ function mount(
 
           return options.stats ?? statsFixture();
         },
+        storage: async () => storageFixture(),
+        audit: async () => auditFixture(),
       },
     },
   });
@@ -172,6 +176,34 @@ describe('Overview: the empty state', () => {
     await waitFor(() => expect(document.querySelector('.ptitle .fine.muted')).not.toBeNull());
 
     expect(screen.queryByRole('heading', { name: 'No orchestrations' })).toBeNull();
+  });
+});
+
+describe('Overview: the panels that need a capability', () => {
+  it('puts Backlog beside Recent activity when the backend serves both', async () => {
+    mount({ capabilities: { stats: true, storageHealth: true, audit: true } });
+
+    await screen.findByRole('heading', { name: 'Backlog', level: 2 });
+
+    expect(screen.getByRole('heading', { name: 'Recent activity', level: 2 })).toBeInTheDocument();
+    expect(document.querySelector('.panels.wide-right')?.className).toBe('panels wide-right');
+  });
+
+  it('gives Backlog the whole width when there is no audit trail to put beside it', async () => {
+    mount({ capabilities: { stats: true, storageHealth: true } });
+
+    await screen.findByRole('heading', { name: 'Backlog', level: 2 });
+
+    expect(screen.queryByRole('heading', { name: 'Recent activity', level: 2 })).toBeNull();
+    expect(document.querySelector('.panels.wide-right')).toHaveClass('single');
+  });
+
+  it('has no second row of panels at all when the backend serves neither', async () => {
+    mount();
+
+    await waitFor(() => expect(document.querySelector('.tiles')).not.toBeNull());
+
+    expect(document.querySelectorAll('.panels')).toHaveLength(1);
   });
 });
 

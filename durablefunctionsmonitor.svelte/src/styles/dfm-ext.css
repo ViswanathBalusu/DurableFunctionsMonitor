@@ -67,3 +67,10 @@
   outline: 2px solid var(--destructive);
   outline-offset: 2px;
 }
+
+/* One panel of a `.panels` pair, when the other one's capability is missing (E7-S2-T6). dfm-ui.css
+   has `.two.single` but no `.panels.single`, and a lone Backlog stretched over 1fr 1.4fr would sit
+   in a column the missing panel left behind. */
+.panels.single {
+  grid-template-columns: minmax(0, 1fr);
+}

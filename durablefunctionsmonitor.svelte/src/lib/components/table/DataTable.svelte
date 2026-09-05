@@ -22,6 +22,12 @@
     keep?: boolean;
     /** Adds `.flat`: no border or shadow, for a table inside another frame. */
     flat?: boolean;
+    /**
+     * Drops the header row. For the short tables whose columns need no naming - the Overview's
+     * Recent activity (ScreenOverview.dc.html L104-L113) is four rows of five obvious values - the
+     * cells still carry their `data-label`, so the mobile card layout still names them.
+     */
+    hideHeader?: boolean;
     /** The row to mark with `.hl` (the timeline hover linkage). */
     highlightKey?: string | null;
     ariaLabel: string;
@@ -48,6 +54,7 @@
     sort = null,
     keep = false,
     flat = false,
+    hideHeader = false,
     highlightKey = null,
     ariaLabel,
     footer,
@@ -161,35 +168,37 @@
   style={virtualized ? `max-height:70vh;overflow:auto;${style ?? ''}` : style}
 >
   <table class="tbl" aria-label={ariaLabel}>
-    <thead>
-      <tr>
-        {#if selectable}
-          <th class="sel-cell">
-            <button
-              class={cn('box', allSelected ? 'on' : '')}
-              type="button"
-              aria-label="Select all"
-              aria-pressed={allSelected}
-              onclick={toggleAll}
-            ></button>
-          </th>
-        {/if}
-        <th class="spine"></th>
-        {#each shown as column (column.id)}
-          <th
-            class={sortClass(sort, column.id)}
-            style={column.width ? `width:${column.width}` : undefined}
-            aria-sort={sort?.id === column.id ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
-          >
-            {#if column.sortable && onSort}
-              <button class="link" type="button" onclick={() => onSort?.(column.id)}>{column.header}</button>
-            {:else}
-              {column.header}
-            {/if}
-          </th>
-        {/each}
-      </tr>
-    </thead>
+    {#if !hideHeader}
+      <thead>
+        <tr>
+          {#if selectable}
+            <th class="sel-cell">
+              <button
+                class={cn('box', allSelected ? 'on' : '')}
+                type="button"
+                aria-label="Select all"
+                aria-pressed={allSelected}
+                onclick={toggleAll}
+              ></button>
+            </th>
+          {/if}
+          <th class="spine"></th>
+          {#each shown as column (column.id)}
+            <th
+              class={sortClass(sort, column.id)}
+              style={column.width ? `width:${column.width}` : undefined}
+              aria-sort={sort?.id === column.id ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
+            >
+              {#if column.sortable && onSort}
+                <button class="link" type="button" onclick={() => onSort?.(column.id)}>{column.header}</button>
+              {:else}
+                {column.header}
+              {/if}
+            </th>
+          {/each}
+        </tr>
+      </thead>
+    {/if}
     <tbody>
       {#if window.before > 0}
         <tr aria-hidden="true" style={`height:${window.before}px`}></tr>
