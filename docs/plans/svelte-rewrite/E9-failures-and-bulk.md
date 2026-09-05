@@ -91,3 +91,26 @@ Do:
 Accept:
 - [ ] Green.
 Test: itself.
+
+**Deviation, E9-S4-T1 (2026-09-05).** Three things the specs found against the real host.
+
+(1) The rewind runs on six instances the spec seeds and deletes again, not on the seeded group of
+six. A rewind changes an instance, every spec reads the same hub, and `instances.spec.ts` counts on
+`order-2026-09-04-000911` being Failed. They are built from `buildRetryInstance` against a clock
+pushed forward, because it dates its instance exactly fifteen minutes back - which is the narrowest
+range this screen offers, and therefore the one boundary a spec must not sit on.
+
+(2) The rewind is accepted and nothing happens to the instances. `RewindInstanceAsync` queues the
+work; the monitor has no orchestrator worker of its own, so the rows stay Failed until the
+application that owns them picks it up. The toast is `Rewind all 6 · 6 ok, 0 failed` and the group
+is still on screen afterwards - so the spec asserts the reload happened (a second `GET /failures`),
+not that the group went away.
+
+(3) Fifteen minutes does not empty the screen: the newest seeded failure is twelve minutes old, and
+`buildRetryInstance`'s is fifteen. What the range demonstrably drops is the timeout group, whose two
+instances are hours old; the empty state is reached with an explicit `from`/`to` window in the past,
+which is also the only way to see it without waiting for the seed to age.
+
+Which group opens itself is the biggest one, and this spec's own group is exactly as big as the
+biggest seeded one - so the specs assert that the first group is open and the rest are not, and
+expand by name through a helper that clicks only a closed one.
