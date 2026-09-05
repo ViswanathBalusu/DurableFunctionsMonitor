@@ -8,6 +8,7 @@
   import LiquidTab from '$lib/instance/LiquidTab.svelte';
   import RawTab from '$lib/instance/RawTab.svelte';
   import RecoveryDialog from '$lib/instance/RecoveryDialog.svelte';
+  import SequenceTab from '$lib/instance/SequenceTab.svelte';
   import SummaryColumn from '$lib/instance/SummaryColumn.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
   import { outcomeAction, type Recovery } from '$lib/instance/input-outcomes';
@@ -116,6 +117,8 @@
         <HistoryTab {instance} />
       {:else if tab === 'inputs'}
         <InputsTab {instance} {inputs} onOutcome={(outcome) => void handleOutcome(outcome)} />
+      {:else if tab === 'sequence'}
+        <SequenceTab {instance} />
       {:else if tab === 'raw'}
         <RawTab {instance} />
       {:else if customTabName(tab)}
