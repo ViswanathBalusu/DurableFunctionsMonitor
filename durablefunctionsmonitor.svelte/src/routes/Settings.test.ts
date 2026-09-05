@@ -26,8 +26,10 @@ describe('Settings screen', () => {
 
     expect(grids.map((grid) => grid.className)).toEqual(['two', 'two wide-left']);
 
-    // The Connection panel is the first cell of the first grid (E6-S1-T1); the rest arrive with
-    // their own tasks, which is why the frame is asserted and not the panels that are not here yet
-    expect(grids[0].querySelector('.panel .panel-h h2')?.textContent).toBe('Connection');
+    // The panels of the top grid, left to right; the rest arrive with their own tasks
+    expect(Array.from(grids[0].querySelectorAll('.panel > .panel-h > h2')).map((h) => h.textContent)).toEqual([
+      'Connection',
+      'Hub administration',
+    ]);
   });
 });

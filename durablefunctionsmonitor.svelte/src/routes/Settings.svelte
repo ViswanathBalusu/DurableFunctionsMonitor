@@ -3,6 +3,7 @@
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import ConnectionPanel from '$lib/settings/ConnectionPanel.svelte';
+  import HubAdminPanel from '$lib/settings/HubAdminPanel.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
@@ -19,7 +20,7 @@
 
   <div class="two">
     <ConnectionPanel />
-    <!-- Hub administration: E6-S2-T1 -->
+    <HubAdminPanel />
   </div>
 
   <div class="two wide-left">
