@@ -20,6 +20,14 @@ jobs:
   build:
     runs-on: ubuntu-22.04
 
+    # One build per ref per caller. The end-to-end half of this job installs the Core Tools, starts
+    # two Functions hosts and seeds a task hub; a second run of the same branch adds nothing but
+    # queue time, and on a pull request the older run is answering a question nobody is asking any
+    # more. On main nothing is cancelled: every commit there gets its own answer.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
     env:
       # nuget.config authenticates the 'github' fallback source through these. Without them restore
       # still works - it just warns and falls back to nuget.org - but prerelease
@@ -139,6 +147,16 @@ jobs:
         name: playwright-report
         path: durablefunctionsmonitor.svelte/playwright-report
         if-no-files-found: warn
+
+    # The traces of the retried specs (playwright.config.ts: `trace: 'on-first-retry'`), which is the
+    # only way to see what a failure on a runner actually did - screenshots and the DOM at each step
+    - name: upload the Playwright traces
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-traces
+        path: durablefunctionsmonitor.svelte/test-results
+        if-no-files-found: ignore
 
     - name: copy durablefunctionsmonitor.dotnetisolated to ArtifactStagingDirectory
       run: cp -r durablefunctionsmonitor.dotnetisolated drop/durablefunctionsmonitor.dotnetisolated

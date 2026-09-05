@@ -45,7 +45,7 @@ Backend: `dotnet build DurableFunctionsMonitor.slnx`; `dotnet test tests/durable
 
 ## CI
 
-`.github/workflows/build.yml` starts Azurite as a service container, builds the UI, runs lint/check/unit, verifies the build contract, copies statics, runs dotnet tests, installs core tools and Chromium, seeds, runs Playwright (its `webServer` starts the host), and uploads `playwright-report`. `push-to-docker-hub.yml` mirrors the build part.
+`.github/workflows/build.yml` starts Azurite as a service container, builds the UI, runs lint/check/unit, verifies the build contract, copies statics, runs dotnet tests, installs core tools and Chromium, seeds, runs Playwright (its `webServer` starts the host), and uploads `playwright-report`. `push-to-ghcr.yml` publishes the three images (each builds its own UI) and runs the .NET tests.
 
 ## Troubleshooting
 

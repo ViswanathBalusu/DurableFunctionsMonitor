@@ -4,7 +4,7 @@ Goal: the Svelte app is the only UI: Docker images and the VS Code extension shi
 
 Prerequisites: E0–E11 and B0–B5 merged. Read contracts §2, §15.
 
-Exit criteria: `main-build`, `push-to-docker-hub` and `push-to-vscode-marketplace` workflows succeed on the Svelte build; `durablefunctionsmonitor.react/` no longer exists; the release checklist in E12-S4 is green.
+Exit criteria: `main-build`, `push-to-ghcr` (was `push-to-docker-hub`, see E12-S1-T2) and `push-to-vscode-marketplace` workflows succeed on the Svelte build; `durablefunctionsmonitor.react/` no longer exists; the release checklist in E12-S4 is green.
 
 ### E12-S1 Docker and CI
 
@@ -33,6 +33,27 @@ Do:
 Accept:
 - [ ] `grep -r "durablefunctionsmonitor.react" .github` returns nothing.
 Test: workflow run.
+
+**Deviation, E12-S1-T2 (2026-09-05).** **The images publish to GHCR, not to Docker Hub** - asked for
+by the user during this task, because `ghcr.io` authenticates with the `GITHUB_TOKEN` a workflow
+already has, while Docker Hub needed `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` to be created and
+stored first. `push-to-docker-hub.yml` is replaced by `push-to-ghcr.yml`: `packages: write`, a
+`docker/login-action` against `ghcr.io`, and image names under
+`ghcr.io/<owner in lower case>/durablefunctionsmonitor[.mssql|.netherite]`. That workflow no longer
+builds the UI either - since E12-S1-T1 each image builds its own - so what it does around the three
+image builds is run the .NET and Azurite tests. The README's Docker Hub pulls badge is left alone: it
+counts pulls of the images already published there, which this change does not remove.
+
+The rest of point 1 was already true: no `.github` file mentioned the React project, `setup-node`
+already cached on the Svelte lockfile, and the VSIX still takes `backend/DfmStatics` from the
+published output. The React project's own `playwright.yml` went with the folder in E12-S2-T1.
+
+Point 2 landed on `build.yml`'s one job (it is where the e2e run lives): a `concurrency` group per
+caller workflow and ref, cancelling in progress only for pull requests, and a `playwright-traces`
+artifact uploaded on failure - `trace: 'on-first-retry'` writes them under `test-results/`.
+
+**Not verified here:** no workflow was actually run. The YAML parses and every path it names exists,
+but "Test: workflow run" needs a push to GitHub.
 
 ### E12-S2 Remove the React project
 

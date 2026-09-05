@@ -1,5 +1,11 @@
+name: push-to-ghcr
 
-name: push-to-docker-hub
+# Publishes the three container images to this repository's GitHub Container Registry namespace.
+# GHCR needs no secrets of its own: GITHUB_TOKEN authenticates it, which is why this replaced the
+# Docker Hub workflow (it needed DOCKERHUB_USERNAME and DOCKERHUB_TOKEN to be set up first).
+#
+# Each image builds the UI itself (the `ui` stage of every Dockerfile, E12-S1-T1), so nothing here
+# builds or copies statics; the .NET tests below are what this workflow adds on top of the images.
 
 on:
   workflow_dispatch:
@@ -7,6 +13,11 @@ on:
       imageTag:
         description: Docker image tag to be applied
         required: true
+
+permissions:
+  contents: read
+  # ...which is what pushing to ghcr.io needs, and all it needs
+  packages: write
 
 jobs:
   build:
@@ -35,32 +46,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Building the Svelte UI
-
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22
-        cache: npm
-        cache-dependency-path: durablefunctionsmonitor.svelte/package-lock.json
-
-    - name: npm ci durablefunctionsmonitor.svelte
-      run: npm ci
-      working-directory: durablefunctionsmonitor.svelte
-
-    - name: npm run build
-      run: npm run build
-      working-directory: durablefunctionsmonitor.svelte
-
-    - name: verify the build output contract
-      run: node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build
-
-    - name: copy statics to durablefunctionsmonitor.dotnetisolated/DfmStatics
-      run: |
-        rm -rf durablefunctionsmonitor.dotnetisolated/DfmStatics
-        cp -r durablefunctionsmonitor.svelte/build durablefunctionsmonitor.dotnetisolated/DfmStatics
-
-    # Building and testing .NET
+    # Testing .NET
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -87,11 +73,19 @@ jobs:
     - name: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests
       run: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests/*.csproj
 
-    - name: login to Docker hub
+    # Publishing the images
+
+    - name: login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    # An image name has to be lower case; a GitHub account name does not have to be
+    - name: image name prefix
+      id: prefix
+      run: echo "value=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
     # NOTE: build context is the repo root for all images, because the projects
     # reference durablefunctionsmonitor.dotnetisolated.core by project reference
@@ -102,7 +96,7 @@ jobs:
         context: .
         file: ./durablefunctionsmonitor.dotnetisolated/Dockerfile
         push: true
-        tags: scaletone/durablefunctionsmonitor:${{ github.event.inputs.imageTag }}
+        tags: ${{ steps.prefix.outputs.value }}/durablefunctionsmonitor:${{ github.event.inputs.imageTag }}
 
     - name: build and push custom-backends/dotnetIsolated-mssql
       uses: docker/build-push-action@v6
@@ -110,7 +104,7 @@ jobs:
         context: .
         file: ./custom-backends/dotnetIsolated-mssql/Dockerfile
         push: true
-        tags: scaletone/durablefunctionsmonitor.mssql:${{ github.event.inputs.imageTag }}
+        tags: ${{ steps.prefix.outputs.value }}/durablefunctionsmonitor.mssql:${{ github.event.inputs.imageTag }}
 
     - name: build and push custom-backends/dotnetIsolated-netherite
       uses: docker/build-push-action@v6
@@ -118,4 +112,4 @@ jobs:
         context: .
         file: ./custom-backends/dotnetIsolated-netherite/Dockerfile
         push: true
-        tags: scaletone/durablefunctionsmonitor.netherite:${{ github.event.inputs.imageTag }}
+        tags: ${{ steps.prefix.outputs.value }}/durablefunctionsmonitor.netherite:${{ github.event.inputs.imageTag }}
