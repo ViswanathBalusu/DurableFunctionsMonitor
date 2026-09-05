@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { Capabilities, OrchestrationsQuery } from '$lib/api/types';
 import ScreenHarness from '../../../tests/unit/harnesses/ScreenHarness.svelte';
@@ -75,7 +75,9 @@ describe('FilterChips', () => {
     // Two boxes ticked, and nothing reloaded yet
     expect(onQuery).toHaveBeenCalledOnce();
 
-    await fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+    // The rail has an Apply of its own, so this one is taken from inside the popover
+    const popover = document.querySelector('.pop') as HTMLElement;
+    await fireEvent.click(within(popover).getByRole('button', { name: 'Apply' }));
 
     await waitFor(() => expect(onQuery).toHaveBeenCalledTimes(2));
     expect(onQuery.mock.calls[1][0].filter).toContain("runtimeStatus in ('Failed','Terminated')");
