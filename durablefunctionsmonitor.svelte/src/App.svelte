@@ -32,8 +32,21 @@
       return;
     }
 
-    await app.loadAbout();
+    await loadAbout();
   });
+
+  /**
+   * Every screen keeps working without `/about` (degraded, with every capability off), but the user
+   * has to be told why it is empty - an unknown or disallowed task hub answers 401, and a shell with
+   * no explanation looks like a bug in the app rather than a hub that is not there.
+   */
+  async function loadAbout(): Promise<void> {
+    await app.loadAbout();
+
+    if (app.aboutError) {
+      app.toast.error(`Could not load task hub ${app.hub}. ${app.aboutError}`, { retry: () => void loadAbout() });
+    }
+  }
 
   const route = $derived(app.router.current);
 
@@ -45,7 +58,7 @@
 
   function pickHub(hub: string): void {
     app.router.navigate({ name: 'overview', hub });
-    void app.loadAbout();
+    void loadAbout();
   }
 </script>
 
