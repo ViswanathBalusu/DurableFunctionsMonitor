@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getContext } from 'svelte';
+  import { getContext, onMount } from 'svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Palette } from '$lib/state/palette.svelte';
@@ -12,6 +12,7 @@
   import ToastHost from './ToastHost.svelte';
   import TopBar from './TopBar.svelte';
   import { installShortcuts } from './shortcuts';
+  import { installVsCodeCommands } from './vscode-commands';
 
   interface Props {
     /** The badge on the Failures nav item; E9 fills it from the failures screen state. */
@@ -41,6 +42,9 @@
     onOpenPalette?.();
     palette.toggle();
   }
+
+  // The extension's menu commands need a screen to navigate to, so they wait for the shell
+  onMount(() => installVsCodeCommands(app));
 
   // The keyboard map lives exactly as long as the shell does (contracts §13)
   $effect(() =>
