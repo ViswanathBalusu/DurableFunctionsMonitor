@@ -24,7 +24,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             // Assert
             Assert.IsTrue(capabilities.Stats); // B1-S2-T2 sets the Azure Storage default
-            Assert.IsFalse(capabilities.Failures);
+            Assert.IsTrue(capabilities.Failures); // B3-S2-T1 sets the Azure Storage default
             Assert.IsTrue(capabilities.Spans);
             Assert.IsTrue(capabilities.Children); // B1-S3-T1 sets the Azure Storage default
             Assert.IsTrue(capabilities.Batch);
@@ -57,6 +57,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 UpdateHistoryEventInputRoutine = null,
                 TruncateHistoryRoutine = null,
                 GetStorageHealthRoutine = null,
+                GetFailuresRoutine = null,
             };
 
             // Act
@@ -100,6 +101,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 GetStatsRoutine = null,
                 GetChildrenRoutine = null,
                 GetStorageHealthRoutine = null,
+                GetFailuresRoutine = null,
             };
 
             // Act

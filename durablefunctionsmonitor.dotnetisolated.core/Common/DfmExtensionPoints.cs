@@ -165,10 +165,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             this.GetStatsRoutine = AzureStorageAggregations.GetStatsAsync;
             this.GetChildrenRoutine = AzureStorageAggregations.GetChildrenAsync;
             this.GetStorageHealthRoutine = StorageHealth.GetAsync;
+            this.GetFailuresRoutine = AzureStorageAggregations.GetFailuresAsync;
 
-            // The remaining aggregation routines above (failures, audit) intentionally stay null here.
-            // Each of the B3 and B5 epics assigns its own Azure Storage default; until then the
-            // corresponding endpoints answer 400 and /about reports the capability as false for every provider.
+            // The audit routines above intentionally stay null here: B5 assigns their Azure Storage
+            // defaults, and until then /audit answers 400 and /about reports the capability as false
+            // for every provider.
         }
     }
 }

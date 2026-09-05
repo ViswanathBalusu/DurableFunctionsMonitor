@@ -59,6 +59,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
                 // control queues, lease blobs and Partitions table /storage reports on, so
                 // /storage answers 400 and /about reports capabilities.storageHealth == false.
                 extPoints.GetStorageHealthRoutine = null;
+
+                // Nor is there an Instances table to scan for failed rows, so /failures answers 400
+                // and /about reports capabilities.failures == false.
+                extPoints.GetFailuresRoutine = null;
             });
         }
 

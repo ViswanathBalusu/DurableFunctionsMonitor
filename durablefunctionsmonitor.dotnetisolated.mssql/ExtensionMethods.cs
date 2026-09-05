@@ -85,6 +85,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 // container, no Partitions table. So /storage answers 400 and /about reports
                 // capabilities.storageHealth == false.
                 extPoints.GetStorageHealthRoutine = null;
+
+                // The SQL provider keeps its failures in dt.Instances, which the Azure Storage scan
+                // cannot read. B3-S2-T1 leaves the SQL implementation for later (same rule as the
+                // grouped-SQL stats), so /failures answers 400 and the Failures screen shows its
+                // empty state on MSSQL.
+                extPoints.GetFailuresRoutine = null;
             });
         }
 

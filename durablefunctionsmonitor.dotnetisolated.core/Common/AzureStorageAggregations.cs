@@ -143,6 +143,105 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         }
 
         /// <summary>
+        /// Produces the /failures response from one bounded, projected scan of the XXXInstances table: every
+        /// Failed row created inside [From, To], with only the columns the grouping needs.
+        ///
+        /// The reason a row failed is its Output. When the output was too big for a table column the
+        /// framework stores a blob URL there instead; those are downloaded (at most
+        /// <see cref="MaxFailureOutputDownloads"/> per request, so one request cannot turn into hundreds of
+        /// blob reads) and cut to <see cref="MaxFailureOutputChars"/> characters - the signature only ever
+        /// needs the first line. Rows past that budget carry <see cref="LargeOutputPlaceholder"/>, which
+        /// groups them together honestly instead of pretending they all failed for the same reason.
+        ///
+        /// Entity rows are skipped: an entity has no orchestrator to group under. The grouping itself lives
+        /// in the pure <see cref="FailuresAggregator"/>.
+        /// </summary>
+        public static async Task<FailuresResult> GetFailuresAsync(DurableTaskClient durableClient, string connName, string hubName, FailuresQuery query, CancellationToken ct)
+        {
+            ArgumentNullException.ThrowIfNull(query);
+
+            var tableClient = TableClient.GetTableClient(connName);
+
+            // A cap of 0 means 'the caller did not set one' (ITableClient.QueryAsync rejects anything below 1)
+            int cap = query.Cap > 0 ? query.Cap : DefaultStatsScanCap;
+
+            // CreateQueryFilter escapes and formats the interpolated values, so the dates come out as the
+            // Edm.DateTime literals Table Storage expects. Both ends are inclusive, as for /stats.
+            string filter = Azure.Data.Tables.TableClient.CreateQueryFilter(
+                $"RuntimeStatus eq {FailedRuntimeStatus} and CreatedTime ge {query.From} and CreatedTime le {query.To}");
+
+            var (rows, truncated) = await tableClient.QueryAsync($"{hubName}Instances", filter, FailureColumns, cap, ct);
+
+            var failedRows = new List<FailedInstanceRow>();
+            int downloadsLeft = MaxFailureOutputDownloads;
+
+            foreach (var row in rows)
+            {
+                // An entity is not an orchestrator: it never appears on the Failures screen
+                if (ExpandedOrchestrationStatus.EntityIdRegex.IsMatch(row.PartitionKey))
+                {
+                    continue;
+                }
+
+                string output = row.GetString(OutputColumn);
+
+                if (LargeMessageBlobs.IsUrl(output))
+                {
+                    output = downloadsLeft > 0
+                        ? Truncate(await TryDownloadOutputAsync(connName, output), MaxFailureOutputChars)
+                        : LargeOutputPlaceholder;
+
+                    downloadsLeft--;
+                }
+
+                failedRows.Add(new FailedInstanceRow
+                {
+                    // The Instances row of an instance is (PartitionKey = instanceId, RowKey = "")
+                    InstanceId = row.PartitionKey,
+                    Name = row.GetString(NameColumn),
+                    CreatedTime = TryGetDateTimeOffset(row, CreatedTimeColumn) ?? default,
+                    LastUpdatedTime = TryGetDateTimeOffset(row, LastUpdatedTimeColumn) ?? default,
+                    CompletedTime = TryGetDateTimeOffset(row, CompletedTimeColumn),
+                    Output = output
+                });
+            }
+
+            var result = FailuresAggregator.Group(failedRows, truncated, cap);
+
+            // Scanned counts the rows the table returned, entity rows included: it is a statement about the
+            // scan (and about whether the cap bit), not about the groups.
+            result.Scanned = rows.Count;
+
+            return result;
+        }
+
+        /// <summary>
+        /// Downloads an offloaded Output. A blob that cannot be read (deleted, or a URL outside this
+        /// account) leaves the placeholder rather than failing the whole request.
+        /// </summary>
+        private static async Task<string> TryDownloadOutputAsync(string connName, string blobUrl)
+        {
+            try
+            {
+                return await LargeMessageBlobs.DownloadByUrlAsync(connName, blobUrl);
+            }
+            catch (Exception)
+            {
+                return LargeOutputPlaceholder;
+            }
+        }
+
+        private static string Truncate(string text, int maxChars)
+        {
+            if (string.IsNullOrEmpty(text) || text.Length <= maxChars)
+            {
+                return text;
+            }
+
+            return text.Substring(0, maxChars);
+        }
+
+        /// <summary>
         /// Lists the sub-orchestrations of an instance.
         ///
         /// DurableTask.Core names a sub-orchestration it was not given an explicit id for
@@ -281,6 +380,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         private const string CreatedTimeColumn = "CreatedTime";
         private const string LastUpdatedTimeColumn = "LastUpdatedTime";
         private const string CompletedTimeColumn = "CompletedTime";
+        private const string OutputColumn = "Output";
         private const string EventTypeColumn = "EventType";
         private const string GenerationColumn = "Generation";
         private const string TimestampColumn = "_Timestamp";
@@ -304,6 +404,18 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         // beyond it the list is cut short (and Complete is false anyway).
         internal const int MaxChildRowsToScan = 500;
 
+        // The RuntimeStatus value the /failures scan filters on, spelled as the framework stores it.
+        internal const string FailedRuntimeStatus = "Failed";
+
+        // How many offloaded Outputs one /failures request may download, and how much of each is kept.
+        // The signature only ever needs the first line, and a hub where hundreds of failures offloaded
+        // their output must not turn one request into hundreds of blob reads.
+        internal const int MaxFailureOutputDownloads = 20;
+        internal const int MaxFailureOutputChars = 2048;
+
+        /// <summary>Stands in for an Output that was offloaded and not downloaded (or could not be read).</summary>
+        internal const string LargeOutputPlaceholder = "(large output)";
+
         // PartitionKey and RowKey come back regardless - ITableClient adds them to every projection
         private static readonly string[] MarkerColumns = new[] { EventTypeColumn, TimestampColumn };
 
@@ -313,5 +425,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         // Exactly the four fields of contracts section 6 ChildInstance that are not the id (PartitionKey)
         private static readonly string[] ChildColumns = new[] { NameColumn, RuntimeStatusColumn, CreatedTimeColumn, LastUpdatedTimeColumn };
+
+        // Everything FailuresAggregator needs: the times, the orchestrator name and the error payload.
+        // Input and CustomStatus - the other fat columns - are left behind.
+        private static readonly string[] FailureColumns = new[] { NameColumn, CreatedTimeColumn, LastUpdatedTimeColumn, CompletedTimeColumn, OutputColumn };
     }
 }
