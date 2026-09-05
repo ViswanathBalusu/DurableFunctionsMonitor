@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.Azure.Functions.Worker.Http;
 using Azure.Core;
 using Azure.Core.Pipeline;
+using Azure.Data.Tables;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Queues;
@@ -237,6 +238,40 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 // Using classic connection string
                 return new BlobServiceClient(connectionString, options);
+            }
+        }
+
+        /// <summary>
+        /// A TableServiceClient for the given connection setting, built the same way as the blob and queue
+        /// clients above (connection string, or an identity-based connection through
+        /// '{conn}__tableServiceUri' / '{conn}__accountName').
+        ///
+        /// ITableClient covers the reads and writes of existing tables; this is for the one thing it does
+        /// not do - creating a table (the audit log creates its own on first write).
+        /// </summary>
+        public static TableServiceClient GetTableServiceClient(string connStringName)
+        {
+            var options = new TableClientOptions();
+            ApplyCustomUserAgent(options);
+
+            string connectionString = Environment.GetEnvironmentVariable(connStringName);
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                // Trying with Managed Identity/local Azure login
+
+                string tableServiceUri = Environment.GetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingTableServiceUriSuffix);
+                if (string.IsNullOrEmpty(tableServiceUri))
+                {
+                    string accountName = Environment.GetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingAccountNameSuffix);
+                    tableServiceUri = $"https://{accountName}.table.core.windows.net";
+                }
+
+                return new TableServiceClient(new Uri(tableServiceUri), IdentityBasedTokenSource.GetCredential(), options);
+            }
+            else
+            {
+                // Using classic connection string
+                return new TableServiceClient(connectionString, options);
             }
         }
 

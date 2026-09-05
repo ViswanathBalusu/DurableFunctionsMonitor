@@ -91,6 +91,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 // grouped-SQL stats), so /failures answers 400 and the Failures screen shows its
                 // empty state on MSSQL.
                 extPoints.GetFailuresRoutine = null;
+
+                // The audit log lives in an Azure Table, which a SQL Task Hub has no storage account
+                // for. Until a SQL audit store exists, nothing is written and /audit reports itself
+                // as disabled.
+                extPoints.WriteAuditRecordRoutine = null;
+                extPoints.ReadAuditRecordsRoutine = null;
             });
         }
 

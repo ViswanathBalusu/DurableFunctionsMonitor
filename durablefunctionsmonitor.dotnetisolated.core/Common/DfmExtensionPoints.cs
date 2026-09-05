@@ -166,10 +166,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             this.GetChildrenRoutine = AzureStorageAggregations.GetChildrenAsync;
             this.GetStorageHealthRoutine = StorageHealth.GetAsync;
             this.GetFailuresRoutine = AzureStorageAggregations.GetFailuresAsync;
+            this.WriteAuditRecordRoutine = AuditStore.WriteAsync;
+            this.ReadAuditRecordsRoutine = AuditStore.ReadAsync;
 
-            // The audit routines above intentionally stay null here: B5 assigns their Azure Storage
-            // defaults, and until then /audit answers 400 and /about reports the capability as false
-            // for every provider.
+            // Auditing is off until an operator sets DFM_AUDIT_ENABLED: the routines above are wired,
+            // but Capabilities.audit (and the middleware) also require DfmSettings.AuditEnabled, so
+            // nothing is written or served until then.
         }
     }
 }

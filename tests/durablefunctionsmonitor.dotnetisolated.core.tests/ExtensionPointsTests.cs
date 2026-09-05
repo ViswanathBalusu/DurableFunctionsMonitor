@@ -37,14 +37,16 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
-        public void AuditRoutinesAreNullByDefault()
+        public void AuditRoutinesHaveTheirAzureStorageDefaults()
         {
             // Act
             var extensionPoints = new DfmExtensionPoints();
 
-            // Assert
-            Assert.IsNull(extensionPoints.WriteAuditRecordRoutine);
-            Assert.IsNull(extensionPoints.ReadAuditRecordsRoutine);
+            // Assert (B5-S2-T1 wired AuditStore as the default. Wiring them does not turn auditing on:
+            // both the middleware and Capabilities.audit also require DfmSettings.AuditEnabled, which an
+            // operator opts into with DFM_AUDIT_ENABLED - see AuditCapabilityRequiresBothTheSettingAndTheRoutine)
+            Assert.IsNotNull(extensionPoints.WriteAuditRecordRoutine);
+            Assert.IsNotNull(extensionPoints.ReadAuditRecordsRoutine);
         }
 
         [TestMethod]
@@ -53,8 +55,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             // Act
             var extensionPoints = new DfmExtensionPoints();
 
-            // Assert (B2 gave these two their Azure Storage default; the ones still asserted null above
-            // are waiting for B5)
+            // Assert (B2 gave these two their Azure Storage default)
             Assert.IsNotNull(extensionPoints.GetEpisodeMarkersRoutine);
             Assert.IsNotNull(extensionPoints.GetInstanceRowInfoRoutine);
         }
