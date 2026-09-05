@@ -63,6 +63,13 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 extPoints.GetInstanceHistoryRoutine = (client, connName, hubName, instanceId) => Task.FromResult(GetInstanceHistory(client, connName, hubName, instanceId));
                 extPoints.GetParentInstanceIdRoutine = GetParentInstanceId;
                 extPoints.GetTaskHubNamesRoutine = GetTaskHubNames;
+
+                // The history query above returns complete payloads, and the defaults for the two editing routines
+                // work on Azure Storage tables. Editing dt.History/dt.Payloads is not implemented yet, so the
+                // update-input-and-rewind and replay endpoints answer 400 for this provider.
+                extPoints.GetHistoryEventInputRoutine = null;
+                extPoints.UpdateHistoryEventInputRoutine = null;
+                extPoints.TruncateHistoryRoutine = null;
             });
         }
 
@@ -161,6 +168,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                     IIF(h2.TaskID IS NULL, h.Timestamp, h2.Timestamp) as Timestamp, 
                     IIF(h2.TaskID IS NULL, h.EventType, h2.EventType) as EventType,
                     h.TaskID as EventId,
+                    h.SequenceNumber as SequenceNumber,
                     h.Name as Name,
                     IIF(h2.TaskID IS NULL, NULL, h.Timestamp) as ScheduledTime,
                     p1.Text as Input,
@@ -248,6 +256,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
         {
             var evt = new HistoryEvent
             {
+                SequenceNumber = reader["SequenceNumber"] is DBNull ? null : Convert.ToInt64(reader["SequenceNumber"]),
                 Timestamp = ((DateTime)reader["Timestamp"]).ToUniversalTime(),
                 EventType = reader["EventType"].ToString(),
                 EventId = reader["EventId"] is DBNull ? null : (int?)reader["EventId"],

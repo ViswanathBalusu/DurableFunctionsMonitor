@@ -61,6 +61,19 @@ An incarnation of DurableFunctionsMonitor that can be "injected" into your [.NET
    }
    ```
 
+## Editing an instance's inputs
+
+Besides what the UI offers, the backend can edit the inputs an orchestration instance received and re-run it from there. These endpoints live under `/a/p/i/{connName}-{hubName}/orchestrations('{instanceId}')/`, take and return JSON, and are not exposed by the UI yet.
+
+* `GET input-events` lists the instance's input-bearing events (`ExecutionStarted` and every `EventRaised`) with their payloads, and says for each one which of the operations below applies, and why not otherwise. Send the returned `sequenceNumber` back to address an event.
+* `POST update-input-and-rewind` with `{ "sequenceNumber": 27, "input": { ... }, "reason": "optional" }` replaces the input of the last input-bearing event of a **failed** instance and rewinds it. Only the failed steps run again, now seeing the edited input.
+* `POST replay` with `{ "sequenceNumber": 27, "input": { ... }, "terminateIfRunning": false }` deletes the history from the last `EventRaised` event onward, reopens the instance and raises that event again with the same or an edited payload (`input` is optional), so that everything after the event runs again, activities and sub-orchestrations included. The instance must be in a terminal state, or `terminateIfRunning` must be set.
+* `POST restart-in-place` with `{ "input": { ... } }` purges a **failed** instance that has not received any external events and starts it again under the same instance ID, with the same or an edited input (`input` is optional).
+
+`replay` and `restart-in-place` rewrite Task Hub storage and re-execute work that already ran, so they are off by default and answer `403` until you enable them with `DFM_DANGEROUS_OPERATIONS_ENABLED=true` or `settings.DangerousOperationsEnabled = true`. They are never available in read-only mode or to read-only roles. When enabled, `/about` lists the `DurableFunctionsMonitor.DangerousOperations` permission.
+
+Editing history is implemented for the default Azure Storage provider. Other providers get `400` from `update-input-and-rewind` and `replay` unless they supply `extensionPoints.GetHistoryEventInputRoutine`, `UpdateHistoryEventInputRoutine` and `TruncateHistoryRoutine`; `restart-in-place` works with any provider. Edited payloads must fit inline (60 KB). The design, the storage-engine behaviour it relies on and the risks (for one, a replayed instance can still receive late messages from its previous run) are written up in [docs/plans/input-events-restart-rewind-replay.md](../docs/plans/input-events-restart-rewind-replay.md).
+
 ## Limitations
 
 * Multiple Storage connection strings are not supported, only the default one (`AzureWebJobsStorage`).

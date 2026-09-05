@@ -38,7 +38,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             if (mode == DfmMode.Normal)
             {
-                permissions.Add("DurableFunctionsMonitor.ReadWrite");
+                permissions.Add(Globals.ReadWritePermission);
+
+                if (this.Settings.DangerousOperationsEnabled)
+                {
+                    permissions.Add(Globals.DangerousOperationsPermission);
+                }
             }
 
             return await req.ReturnJson(new 

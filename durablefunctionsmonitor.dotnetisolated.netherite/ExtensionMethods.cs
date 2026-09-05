@@ -31,6 +31,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
                 // Netherite does not maintain the XXXInstances/XXXHistory tables the default routine
                 // looks for, so Task Hub names have to be read from its own partitions table instead.
                 extPoints.GetTaskHubNamesRoutine = GetTaskHubNames;
+
+                // Netherite keeps history in FASTER storage, which cannot be edited from outside, so the
+                // update-input-and-rewind and replay endpoints answer 400 for this provider.
+                extPoints.GetHistoryEventInputRoutine = null;
+                extPoints.UpdateHistoryEventInputRoutine = null;
+                extPoints.TruncateHistoryRoutine = null;
             });
         }
 

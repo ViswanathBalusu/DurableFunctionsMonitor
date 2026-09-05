@@ -41,6 +41,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string DFM_ROLES_CLAIM_NAME = "DFM_ROLES_CLAIM_NAME";
         public const string DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX = "DFM_ALTERNATIVE_CONNECTION_STRING_";
         public const string DFM_INGRESS_ROUTE_PREFIX = "DFM_INGRESS_ROUTE_PREFIX";
+        public const string DFM_DANGEROUS_OPERATIONS_ENABLED = "DFM_DANGEROUS_OPERATIONS_ENABLED";
     }
 
     static class Globals
@@ -69,6 +70,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string IdentityBasedConnectionSettingCredentialValue = "managedidentity";
 
         public const string DfmModeContextValue = "DfmModeContextValue";
+
+        // Permission names returned by the /about endpoint, which the UI uses to decide what to show
+        public const string ReadWritePermission = "DurableFunctionsMonitor.ReadWrite";
+        public const string DangerousOperationsPermission = "DurableFunctionsMonitor.DangerousOperations";
 
         public const string DfMonDisableNewParentIdResolutionAlgorithm = "DfMonDisableNewParentIdResolutionAlgorithm";
 
@@ -128,7 +133,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         }
 
         // A custom way of returning JSON
-        public static async Task<HttpResponseData> ReturnJson(this HttpRequestData req, object result, Func<string, string> applyThisToJson = null)
+        public static async Task<HttpResponseData> ReturnJson(this HttpRequestData req, object result, Func<string, string> applyThisToJson = null, HttpStatusCode status = HttpStatusCode.OK)
         {
             string json = JsonConvert.SerializeObject(result, Globals.SerializerSettings);
             if (applyThisToJson != null)
@@ -136,7 +141,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 json = applyThisToJson(json);
             }
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
+            var response = req.CreateResponse(status);
             response.Headers.Add("Content-Type", "application/json");
             await response.WriteStringAsync(json);
 

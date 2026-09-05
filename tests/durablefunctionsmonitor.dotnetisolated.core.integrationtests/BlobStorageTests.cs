@@ -145,8 +145,8 @@ namespace durablefunctionsmonitor.dotnetisolated.core.integrationtests
 
             // This is what the large-payload download endpoint does with the URL it finds in the
             // orchestration status
-            Orchestration.CheckBlobUrl(blobUrl, blobService.Uri);
-            var (containerName, parsedBlobName) = Orchestration.SplitBlobUrl(blobService.Uri, blobUrl);
+            LargeMessageBlobs.CheckBlobUrl(blobUrl, blobService.Uri);
+            var (containerName, parsedBlobName) = LargeMessageBlobs.SplitBlobUrl(blobService.Uri, blobUrl);
 
             // Assert
 
