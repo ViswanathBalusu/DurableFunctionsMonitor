@@ -23,6 +23,8 @@
     class?: string;
     /** The inline sizing a screen sets on the frame (the view strip leaves no top border). */
     style?: string;
+    /** The inline sizing of the strip inside it: the peek draws the same lanes at 10 px of padding. */
+    innerStyle?: string;
     onLaneEnter?: (key: string) => void;
     onLaneLeave?: () => void;
     /** A click anywhere on the lane that is not its label (which follows its own href). */
@@ -43,6 +45,7 @@
     ariaLabel,
     class: className,
     style,
+    innerStyle,
     onLaneEnter,
     onLaneLeave,
     onLaneClick,
@@ -124,7 +127,7 @@
   > .axis + .lane*`, each lane a label and a `.track` of absolutely positioned `.bar`s.
 -->
 <div bind:this={root} class={cn('swim', className)} {style} role="group" aria-label={ariaLabel}>
-  <div class="swim-in" style={`min-width:${minWidth}px`}>
+  <div class="swim-in" style={`min-width:${minWidth}px;${innerStyle ?? ''}`}>
     <div class="axis">
       <span class="meta">{axisLabel}</span>
       <span class="ticks">

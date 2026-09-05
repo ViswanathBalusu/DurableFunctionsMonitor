@@ -3,8 +3,11 @@
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
+import type { Endpoints } from '$lib/api/endpoints';
 import type { PeekItem } from '$lib/state/peek.svelte';
+import { PEEK_LANES } from './PeekTimeline.svelte';
 import PeekHarness from '../../../tests/unit/harnesses/PeekHarness.svelte';
+import { spansResponse } from '../../../tests/unit/fixtures/spans';
 
 const orchestration: PeekItem = {
   id: 'order-2026-0917',
@@ -72,7 +75,7 @@ describe('PeekPanel', () => {
       ['last updated', '2026-09-04 14:02:58'],
       ['duration', '47 s'],
       ['customStatus', '{"stage":"charging"}'],
-      // E8 owns the history count; the panel says it does not know rather than guessing
+      // Nothing has counted the history: the panel says it does not know rather than guessing
       ['history', '—'],
     ]);
   });
@@ -85,6 +88,86 @@ describe('PeekPanel', () => {
     // Local time in the test's zone, which is not UTC; and a missing customStatus is "none"
     expect(values[0]).toMatch(/^2026-09-04 \d{2}:02:11$/);
     expect(values[3]).toBe('none');
+  });
+
+  it('draws the run the backend describes, four lanes of it', async () => {
+    const asked: string[] = [];
+
+    await openPeek({
+      capabilities: { spans: true },
+      endpoints: {
+        spans: async (instanceId: string) => {
+          asked.push(instanceId);
+
+          return spansResponse();
+        },
+      } as unknown as Endpoints,
+    });
+
+    await waitFor(() => expect(panel().querySelectorAll('.swim .lane')).toHaveLength(PEEK_LANES));
+
+    expect(asked).toEqual(['order-2026-0917']);
+
+    const labels = Array.from(panel().querySelectorAll('.swim .lane .lbl')).map((lbl) => lbl.textContent?.trim());
+
+    // The workspace's own lanes, cut where a side panel runs out of room
+    expect(labels).toEqual(['ProcessOrder', 'ReserveInventory', 'ChargePayment', 'ChargePayment (retry 2)']);
+
+    // ...and the summary counts the whole history rather than saying it does not know
+    const history = Array.from(panel().querySelectorAll('.kv dt')).find((dt) => dt.textContent === 'history');
+
+    expect(history?.nextElementSibling?.textContent?.trim()).toBe('31 rows · 18.2 KB');
+  });
+
+  it('asks for no spans on a backend that serves none', async () => {
+    let asked = 0;
+
+    await openPeek({
+      endpoints: {
+        spans: async () => {
+          asked += 1;
+
+          return spansResponse();
+        },
+      } as unknown as Endpoints,
+    });
+
+    expect(asked).toBe(0);
+    expect(panel().querySelectorAll('.swim .lane')).toHaveLength(1);
+  });
+
+  it('falls back to the one bar it can draw when the spans cannot be fetched', async () => {
+    await openPeek({
+      capabilities: { spans: true },
+      endpoints: {
+        spans: async () => {
+          throw new Error('500 Internal Server Error');
+        },
+      } as unknown as Endpoints,
+    });
+
+    // A peek is a glance: a failure here costs the picture, and says nothing about it
+    expect(panel().querySelectorAll('.swim .lane')).toHaveLength(1);
+    expect(panel().querySelector('.swim .bar')).toHaveClass('orch');
+  });
+
+  it('asks for nothing at all for an entity, which has no spans to ask about', async () => {
+    let asked = 0;
+
+    await openPeek({
+      item: entity,
+      capabilities: { spans: true },
+      endpoints: {
+        spans: async () => {
+          asked += 1;
+
+          return spansResponse();
+        },
+      } as unknown as Endpoints,
+    });
+
+    expect(asked).toBe(0);
+    expect(panel().querySelector('.swim')).toBeNull();
   });
 
   it('draws the orchestration timeline as one lane', async () => {

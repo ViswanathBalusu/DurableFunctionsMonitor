@@ -5,10 +5,12 @@
 
 <script lang="ts">
   import { getContext } from 'svelte';
+  import type { SpansResponse } from '$lib/api/types';
   import Button from '$lib/components/Button.svelte';
   import Kv, { type KvRow } from '$lib/components/Kv.svelte';
   import JsonPre from '$lib/components/json/JsonPre.svelte';
   import * as Sheet from '$lib/components/ui/sheet/index.js';
+  import { fmtBytes } from '$lib/format/bytes';
   import { fmtDuration } from '$lib/format/duration';
   import { formatJson, previewJson } from '$lib/format/json';
   import { statusClass } from '$lib/format/status';
@@ -35,6 +37,49 @@
   const item = $derived(peek.item);
   const isEntity = $derived(item?.kind === 'DurableEntity');
 
+  /**
+   * `/spans` for the peeked row (E8-S4-T1): the mini timeline draws its first lanes and the summary
+   * counts its history rows. One request per peek, and only where the backend serves them; a peek of
+   * something else while it is in flight drops the answer, because it is about the row that was open.
+   */
+  let spans = $state<SpansResponse | null>(null);
+  let peeked = 0;
+
+  $effect(() => {
+    const current = item;
+
+    spans = null;
+
+    if (!current || current.kind === 'DurableEntity' || !app.capabilities.spans) {
+      return;
+    }
+
+    const requestId = ++peeked;
+
+    void (async () => {
+      try {
+        const response = await app.endpoints.spans(current.id);
+
+        if (requestId === peeked) {
+          spans = response;
+        }
+      } catch {
+        // A peek is a glance: the timeline falls back to the one bar the row itself can draw
+      }
+    })();
+  });
+
+  /** `31 rows · 18.2 KB`, once something has counted them (DFM App.dc.html L166). */
+  const history = $derived.by(() => {
+    if (!spans) {
+      return item?.history ?? '—';
+    }
+
+    const counted = `${spans.historyRows} rows`;
+
+    return spans.historyBytes === null ? counted : `${counted} · ${fmtBytes(spans.historyBytes)}`;
+  });
+
   const rows = $derived.by<KvRow[]>(() => {
     if (!item) {
       return [];
@@ -48,8 +93,7 @@
       { k: 'duration', v: fmtDuration(item.duration), mono: true },
       // A one-line preview; the full value is on the instance screen, which `Open` goes to
       { k: 'customStatus', v: item.customStatus == null ? 'none' : previewJson(item.customStatus), mono: true },
-      // E8 counts the history rows and their size; until it has, this panel does not guess
-      { k: 'history', v: item.history ?? '—', mono: true },
+      { k: 'history', v: history, mono: true },
     ];
   });
 
@@ -127,7 +171,7 @@
         {:else}
           <div>
             <h3 class="section-h">Timeline</h3>
-            <PeekTimeline {item} />
+            <PeekTimeline {item} {spans} />
           </div>
 
           {#if onAction}

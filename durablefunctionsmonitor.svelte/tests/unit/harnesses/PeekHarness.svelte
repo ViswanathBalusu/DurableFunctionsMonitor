@@ -5,6 +5,7 @@
   import type { BackendClient } from '$lib/api/client';
   import type { Endpoints } from '$lib/api/endpoints';
   import { normalizeAbout } from '$lib/api/endpoints';
+  import type { Capabilities } from '$lib/api/types';
   import { host } from '$lib/host.svelte';
   import { Router } from '$lib/router.svelte';
   import PeekPanel, { type PeekAction } from '$lib/shell/PeekPanel.svelte';
@@ -18,6 +19,8 @@
     readOnly = false,
     showTimeAs = 'UTC',
     withActions = false,
+    capabilities = {},
+    endpoints = {},
     onAction,
   }: {
     /** The row the stand-in list peeks when it is clicked. */
@@ -26,6 +29,9 @@
     showTimeAs?: ShowTimeAs;
     /** Stands in for E5's `app.actions`, which the shell will pass once it exists. */
     withActions?: boolean;
+    /** What `/about` announced; the peek asks for `/spans` only where they exist (E8-S4-T1). */
+    capabilities?: Partial<Capabilities>;
+    endpoints?: Partial<Endpoints>;
     onAction?: (action: PeekAction, item: PeekItem) => void;
   } = $props();
 
@@ -41,10 +47,11 @@
   // svelte-ignore state_referenced_locally
   prefs.showTimeAs = showTimeAs;
 
+  // svelte-ignore state_referenced_locally
   const app = new AppState({
     host,
     client: {} as BackendClient,
-    endpoints: {} as Endpoints,
+    endpoints: endpoints as Endpoints,
     router: new Router({ mode: 'history', routePrefix: '' }),
     prefs,
   });
@@ -53,6 +60,7 @@
   app.about = normalizeAbout({
     accountName: 'mystorageaccount',
     hubName: 'DurableFunctionsHub',
+    capabilities: capabilities as Capabilities,
     readOnly,
     permissions: readOnly ? [] : ['DurableFunctionsMonitor.ReadWrite'],
   });
