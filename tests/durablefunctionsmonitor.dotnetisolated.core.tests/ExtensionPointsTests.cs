@@ -44,7 +44,6 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             // Assert
             Assert.IsNull(extensionPoints.GetFailuresRoutine);
-            Assert.IsNull(extensionPoints.GetStorageHealthRoutine);
             Assert.IsNull(extensionPoints.WriteAuditRecordRoutine);
             Assert.IsNull(extensionPoints.ReadAuditRecordsRoutine);
         }
@@ -70,6 +69,17 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             // Assert (B1-S3-T1 wired AzureStorageAggregations.GetChildrenAsync as the default, so
             // /about reports capabilities.children == true for Azure Storage)
             Assert.IsNotNull(extensionPoints.GetChildrenRoutine);
+        }
+
+        [TestMethod]
+        public void StorageHealthRoutineHasItsAzureStorageDefault()
+        {
+            // Act
+            var extensionPoints = new DfmExtensionPoints();
+
+            // Assert (B4-S1-T2 wired StorageHealth.GetAsync as the default, so /about reports
+            // capabilities.storageHealth == true for Azure Storage)
+            Assert.IsNotNull(extensionPoints.GetStorageHealthRoutine);
         }
 
         [TestMethod]

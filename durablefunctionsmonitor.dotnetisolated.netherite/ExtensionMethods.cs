@@ -54,6 +54,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
                 // to match generated child ids in and no parent column to filter by, so
                 // orchestrations('{id}')/children answers 400 and /about reports capabilities.children == false.
                 extPoints.GetChildrenRoutine = null;
+
+                // Netherite keeps its state in EventHubs partitions and FASTER stores, not in the
+                // control queues, lease blobs and Partitions table /storage reports on, so
+                // /storage answers 400 and /about reports capabilities.storageHealth == false.
+                extPoints.GetStorageHealthRoutine = null;
             });
         }
 

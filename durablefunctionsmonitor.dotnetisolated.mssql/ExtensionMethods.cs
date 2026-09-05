@@ -80,6 +80,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 extPoints.GetInstanceRowInfoRoutine = GetInstanceRowInfo;
                 extPoints.GetStatsRoutine = GetStats;
                 extPoints.GetChildrenRoutine = GetChildren;
+
+                // A SQL Task Hub has no storage account behind it: no control queues, no leases
+                // container, no Partitions table. So /storage answers 400 and /about reports
+                // capabilities.storageHealth == false.
+                extPoints.GetStorageHealthRoutine = null;
             });
         }
 
