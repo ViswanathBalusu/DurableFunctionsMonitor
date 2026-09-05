@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import Page from '$lib/components/Page.svelte';
+  import HistoryTab from '$lib/instance/HistoryTab.svelte';
   import InstanceActions from '$lib/instance/InstanceActions.svelte';
   import InstanceHeader from '$lib/instance/InstanceHeader.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
@@ -59,6 +60,8 @@
     <div class="tabbody" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
       {#if tab === 'summary'}
         <p class="meta">The summary is the column beside this one on a wider screen.</p>
+      {:else if tab === 'history'}
+        <HistoryTab {instance} />
       {:else}
         <p class="meta">The {tab} tab is not built yet.</p>
       {/if}
