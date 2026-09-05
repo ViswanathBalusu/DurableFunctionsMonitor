@@ -9,7 +9,8 @@
 import type { Endpoints } from '$lib/api/endpoints';
 import type { OrchestrationStatus, RuntimeStatus, StatsByName } from '$lib/api/types';
 import { buildInstancesFilter, columnPredicate, type FilterOperator } from '$lib/filters/odata';
-import { label as rangeLabel, resolve } from '$lib/filters/time-range';
+import { label as rangeLabel, resolve, toQuery as rangeQuery } from '$lib/filters/time-range';
+import { parsePath, toTarget } from '$lib/router.svelte';
 import { fmtInt } from '$lib/format/number';
 import { ViewStateStorage } from '$lib/storage/view-state-storage';
 import type { ITypedLocalStorage } from '$lib/storage/typed-local-storage';
@@ -94,6 +95,13 @@ export class Instances {
   /** The last error, so the screen can show it instead of an empty table. */
   error = $state<string | null>(null);
 
+  /**
+   * The shared time range the rows on screen were loaded for, as a comparable string. The screen
+   * watches it: the range lives outside this state (it is the app's), so a change from the top bar
+   * or from a saved view has to be noticed rather than announced.
+   */
+  loadedRangeKey = $state('');
+
   /** The orchestrator names the facet offers, from /stats; empty without the capability. */
   nameOptions = $state<StatsByName[]>([]);
 
@@ -163,6 +171,29 @@ export class Instances {
 
   get orderByClause(): string {
     return this.dir === 'desc' ? `${this.orderBy} desc` : this.orderBy;
+  }
+
+  /**
+   * The whole view as a query string: every filter, the columns and the sort, plus the shared time
+   * range - written out even when it is the default one, because a saved view has to keep the range
+   * it was saved with rather than inherit whatever the range happens to be when it is opened.
+   */
+  get viewQuery(): string {
+    const params = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(this.#viewStateValues())) {
+      if (value) {
+        params.set(key, value);
+      }
+    }
+
+    for (const [key, value] of Object.entries(rangeQuery(this.#app.timeRange))) {
+      if (value) {
+        params.set(key, value);
+      }
+    }
+
+    return params.toString();
   }
 
   /** Page one, replacing whatever is on screen. */
@@ -336,10 +367,26 @@ export class Instances {
     return isSet;
   }
 
+  /**
+   * Opens a saved view (E4-S2-T4): the in-app URL it was saved as. Navigating is what restores it -
+   * every filter and the time range live in the route query - and the state then re-reads itself
+   * from there. Only from there: a field the saved view does not carry is a field it does not
+   * filter on, so the stored view state must not fill it back in.
+   */
+  applyUrl(url: string): void {
+    const [path, search = ''] = url.split('?');
+
+    this.#app.router.navigate(toTarget(parsePath(path, this.#app.router.routePrefix)), { query: search });
+
+    this.#readViewState({ fromQueryOnly: true });
+    this.#apply();
+  }
+
   /** Reads the filters out of the route query, falling back to what was stored (contracts §8). */
-  #readViewState(): void {
+  #readViewState(options: { fromQueryOnly?: boolean } = {}): void {
     const query = this.#app.router.current.query;
-    const read = (field: keyof InstancesViewState): string => query.get(field) ?? this.#storage.getItem(field) ?? '';
+    const read = (field: keyof InstancesViewState): string =>
+      query.get(field) ?? (options.fromQueryOnly ? '' : (this.#storage.getItem(field) ?? ''));
 
     const statuses = read('status');
     const names = read('name');
@@ -364,9 +411,9 @@ export class Instances {
     this.hiddenColumns = hidden ? hidden.split('|').filter(Boolean) : [...DEFAULT_HIDDEN_COLUMNS];
   }
 
-  /** Writes them back, to the URL and to the storage behind it. */
-  #writeViewState(): void {
-    const values: InstancesViewState = {
+  /** The view state as it goes on the URL; empty means "not set", which deletes the key. */
+  #viewStateValues(): InstancesViewState {
+    return {
       status: this.statuses.join(','),
       name: this.names.join(','),
       col: this.column,
@@ -378,6 +425,11 @@ export class Instances {
       dir: this.dir,
       hidden: this.hiddenColumns.join('|'),
     };
+  }
+
+  /** Writes them back, to the URL and to the storage behind it. */
+  #writeViewState(): void {
+    const values = this.#viewStateValues();
 
     this.#app.router.setQuery(Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value || null])));
 
@@ -398,6 +450,7 @@ export class Instances {
     const requestId = ++this.#requestId;
     const skip = options.append ? this.rows.length : 0;
 
+    this.loadedRangeKey = JSON.stringify(this.#app.timeRange);
     this.loading = true;
     this.error = null;
 

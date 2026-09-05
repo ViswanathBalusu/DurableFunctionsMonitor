@@ -87,6 +87,17 @@ Accept:
 - [ ] Saving then selecting a view restores statuses, names, free filter and range.
 Test: as above.
 
+**Deviation, E4-S2-T4 (2026-09-05).** A view is stored as `{ name, url }`, the shape contracts §12
+already gave `SavedView`, and the URL is the whole in-app link (`/{hub}/instances?<query>`) rather
+than a bare query string - it is what `Router.href` produces and what `parsePath` reads back. Three
+members landed in `instances.svelte.ts` for it, which E4-S1-T2 item 6 deferred here: `viewQuery`
+(the filters, the columns, the sort and the time range, the range written out even when it is the
+default one, so a saved view keeps the range it was saved with), `applyUrl` (navigate, re-read the
+view state *from the query alone* - a field the saved view does not carry is one it does not filter
+on, so the stored view state must not fill it back in - then reload), and `loadedRangeKey`, which
+moved out of `Instances.svelte`: the screen now compares the shared range against the range the
+state last loaded for, so opening a saved view that carries its own range is one reload, not two.
+
 ### E4-S3 Table view
 
 #### E4-S3-T1 Columns and table wiring

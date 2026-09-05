@@ -7,6 +7,7 @@
   import FilterChips from '$lib/instances/FilterChips.svelte';
   import FilterRail from '$lib/instances/FilterRail.svelte';
   import InstancesTable from '$lib/instances/InstancesTable.svelte';
+  import SavedViewsMenu from '$lib/instances/SavedViewsMenu.svelte';
   import ViewStrip from '$lib/instances/ViewStrip.svelte';
   import { label as rangeLabel } from '$lib/filters/time-range';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
@@ -22,14 +23,10 @@
   /** `?selectAll=1` from VS Code: the rows are not there yet when the flag is read. */
   let selectAllPending = $state(false);
 
-  /** The range the list on screen was loaded for; a plain variable, so watching it cannot loop. */
-  let loadedRangeKey = '';
-
   onMount(() => {
     startOpen = instances.takeFlag('start');
     selectAllPending = instances.takeFlag('selectAll');
 
-    loadedRangeKey = JSON.stringify(app.timeRange);
     void instances.reload();
 
     instances.startAutoRefresh();
@@ -46,17 +43,16 @@
   /**
    * The shared time range lives in the URL, so a change from anywhere is a new first page. Keyed on
    * the range itself and not on the query: writing a filter to the URL is already a reload of its
-   * own, and this must not make it two. The load is queued rather than started inside the effect,
-   * which is not the place to be writing state (the progress counter, the rows).
+   * own, and this must not make it two - and the key belongs to the state, which sets it as it
+   * loads, so a reload started elsewhere (a saved view carrying its own range) counts as this one.
+   * The load is queued rather than started inside the effect, which is not the place to be writing
+   * state (the progress counter, the rows).
    */
   $effect(() => {
-    const key = JSON.stringify(app.timeRange);
-
-    if (key === loadedRangeKey) {
+    if (JSON.stringify(app.timeRange) === instances.loadedRangeKey) {
       return;
     }
 
-    loadedRangeKey = key;
     queueMicrotask(() => void instances.reload());
   });
 
@@ -82,6 +78,8 @@
     <span class="meta">{instances.matchLabel}</span>
 
     <div class="row" style="margin-left:auto;gap:10px">
+      <SavedViewsMenu {instances} />
+
       <!-- The dialog itself is E4-S7; the flag it opens from is the one ?start=1 already sets -->
       <Button
         variant="primary"
