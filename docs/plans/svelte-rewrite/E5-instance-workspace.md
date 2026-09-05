@@ -203,6 +203,17 @@ Accept:
 - [ ] `toMermaid` output starts with `sequenceDiagram` and contains `par 2 calls` for two parallel `ChargePayment` schedules at the same second.
 Test: as above.
 
+**Deviation, E5-S5-T1 (2026-09-05).** The external actor is a participant only when a message needs
+one - and then it is first, as the plan says. The mockup's own diagram (L193) has four lanes and no
+`.` lane: its ten messages (L327-L336) are the orchestrator's calls, its returns, one failure, one
+external event drawn as a loop on the orchestrator's lane, and the sub-orchestration call. An
+`ExecutionTerminated` or `ExecutionCompleted` is what brings `.` in. `ExecutionStarted`,
+`OrchestratorStarted`, `TimerCreated` and `TimerFired` are not messages at all here (React drew the
+timers as external arrows): the orchestrator's lane starting is the diagram, a timer is time passing
+on it, and drawing them would put eleven arrows where the mockup has ten. `toMermaid` is generated
+from this model rather than being React's string, so what is copied is what is on screen - which is
+the point of the two being one thing now.
+
 #### E5-S5-T2 SequenceDiagram and Sequence tab
 Files: `src/lib/charts/SequenceDiagram.svelte`, `src/lib/instance/SequenceTab.svelte`, tests
 Depends: E5-S5-T1, E1-S8-T1
