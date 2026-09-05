@@ -93,6 +93,25 @@
     };
   });
 
+  /**
+   * The spans and the children are capabilities, and `/about` answers after the first render - so
+   * the `refreshAll()` on mount asks for nothing, and has to ask again once it is known what there
+   * is to ask for. Everything else the workspace loads is unconditional.
+   */
+  let loadedCapabilities = '';
+
+  $effect(() => {
+    const key = JSON.stringify([app.capabilities.spans, app.capabilities.children]);
+
+    if (key === loadedCapabilities) {
+      return;
+    }
+
+    loadedCapabilities = key;
+
+    queueMicrotask(() => void instance.spans.load());
+  });
+
   const tab = $derived(instance.tab);
 </script>
 

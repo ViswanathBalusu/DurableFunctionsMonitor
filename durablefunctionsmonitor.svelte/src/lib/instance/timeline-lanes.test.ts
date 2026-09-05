@@ -263,6 +263,41 @@ describe('timeline-lanes: the grouping rules', () => {
     expect(open.lanes[1].bars[0].title).toBe('external event, still waiting');
   });
 
+  it('keeps every episode on the orchestrator lane, even one that never closed', () => {
+    // A batch that lost its lease writes an `OrchestratorStarted` with no `OrchestratorCompleted`,
+    // so the episode never ends - and every later one overlaps it
+    const { lanes } = buildTimeline({
+      name: 'ProcessOrderOrchestrator',
+      running: true,
+      spans: of([
+        span({
+          id: 'e1',
+          kind: 'orchestrator',
+          name: 'ProcessOrderOrchestrator',
+          start: '2026-09-04T14:02:20.000Z',
+          end: null,
+          status: 'running',
+          sequenceNumbers: [],
+          durationMs: null,
+        }),
+        span({
+          id: 'e2',
+          kind: 'orchestrator',
+          name: 'ProcessOrderOrchestrator',
+          attempt: 2,
+          start: '2026-09-04T14:02:21.000Z',
+          end: '2026-09-04T14:02:21.100Z',
+          status: 'completed',
+          sequenceNumbers: [],
+          durationMs: 100,
+        }),
+      ]),
+    });
+
+    expect(labels(lanes)).toEqual(['ProcessOrderOrchestrator']);
+    expect(lanes[0].bars.map((bar) => bar.key)).toEqual(['e1', 'e2']);
+  });
+
   it('has an orchestrator lane for a provider that reports no episodes at all', () => {
     const { lanes } = buildTimeline({
       spans: of([span()]),

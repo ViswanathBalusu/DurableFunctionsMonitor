@@ -328,6 +328,11 @@ function isRetryBackoff(timer: Span, calls: Span[]): boolean {
  * The lane this bar goes in: the one its key names, or the next copy of it when the last bar there
  * has not ended yet. Two bars at once in one track would draw one over the other, and the picture
  * would say that a fan-out of ten calls was one call.
+ *
+ * The orchestrator is the exception: its episodes are one thing happening over and over (design §8:
+ * "a thin ink bar at the top lane"), and a history that leaves an episode open - a batch that lost
+ * its lease, and never wrote its `OrchestratorCompleted` - would otherwise push every later episode
+ * onto a second lane with the same label.
  */
 function laneFor(drafts: Draft[], byKey: Map<string, Draft>, lane: Lane, span: Span, bar: SwimlaneBar): Draft {
   const start = Date.parse(span.start);
@@ -353,7 +358,7 @@ function laneFor(drafts: Draft[], byKey: Map<string, Draft>, lane: Lane, span: S
       return draft;
     }
 
-    if (start >= existing.lastEnd) {
+    if (lane.orchestrator || start >= existing.lastEnd) {
       return existing;
     }
   }

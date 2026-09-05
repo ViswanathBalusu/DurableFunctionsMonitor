@@ -78,15 +78,24 @@ test('filters by orchestrator name from the facet', async ({ page }) => {
 
   await page.getByRole('button', { name: '+ orchestrator' }).click();
 
-  // With /stats the facet offers the names it counted; without it, one is typed in
-  const typed = page.getByRole('textbox', { name: 'Orchestrator name' });
+  // With /stats the facet offers the names it counted; without it, one is typed in. The text box is
+  // also what it offers while /stats is still answering, so this waits for the names rather than
+  // asking what is on screen at this instant: on a hub with enough instances to make the count slow,
+  // the box that `isVisible()` found has been replaced by the time anything is typed into it.
+  const named = page.getByRole('menuitemcheckbox', { name: new RegExp(FILLER_ORCHESTRATOR) });
+  const counted = await named
+    .waitFor({ state: 'visible', timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false);
 
-  if (await typed.isVisible()) {
+  if (counted) {
+    await named.click();
+    await page.keyboard.press('Escape');
+  } else {
+    const typed = page.getByRole('textbox', { name: 'Orchestrator name' });
+
     await typed.fill(FILLER_ORCHESTRATOR);
     await typed.press('Enter');
-  } else {
-    await page.getByRole('menuitemcheckbox', { name: new RegExp(FILLER_ORCHESTRATOR) }).click();
-    await page.keyboard.press('Escape');
   }
 
   await expect(page.locator('.chips2 .fchip').filter({ hasText: FILLER_ORCHESTRATOR })).toBeVisible();

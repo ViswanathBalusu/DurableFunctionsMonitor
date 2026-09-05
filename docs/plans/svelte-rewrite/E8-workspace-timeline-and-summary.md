@@ -110,3 +110,29 @@ Do:
 Accept:
 - [ ] Green.
 Test: itself.
+
+**Deviation, E8-S5-T1 (2026-09-05).** Four things the specs found against the real host.
+
+(1) The workspace loaded no spans and no children at all. `refreshAll()` runs on mount, and every
+capability is false until `/about` answers - which is after the first render - so the one load it
+made asked for nothing and nothing asked again. The screen now watches `capabilities.spans` and
+`capabilities.children` and loads once they are known, as E7 does for the Overview and the Functions
+screen. No unit test caught it because the harness sets `/about` before mounting.
+
+(2) The seeded history leaves one `OrchestratorStarted` without its `OrchestratorCompleted` - a batch
+that lost its lease - so B2 reports an episode that never ended. Under the overlap rule that pushed
+every later episode onto a second lane with the same label, so the orchestrator is now exempt from
+that rule: its episodes are one thing happening over and over (design §8, "a thin ink bar at the top
+lane"), and two lanes called `ProcessOrderOrchestrator` say something that is not true.
+
+(3) The spec asserts eight lanes, not nine, for the reason recorded under E8-S2-T1, and it reads the
+failed attempt's `Timeout 4 s` from the lane rather than from the bar: the seeded instance is still
+running, so the window grows with it, and a four-second bar stops being wide enough to hold its own
+text after a couple of minutes - at which point the lane says it beside the bar instead.
+
+(4) `instances.spec.ts` "filters by orchestrator name from the facet" failed in two of three full
+runs, and passed alone every time. The facet offers a text box while `/stats` is still counting and
+the names it counted afterwards, and the spec asked which of the two was on screen at one instant -
+so on a hub with enough instances to make the count slow, the box it found had been replaced by the
+time it typed into it. It now waits for the names, and falls back to the box only when they never
+come. Nothing in E8 caused it; E8 made the hub big enough to show it.
