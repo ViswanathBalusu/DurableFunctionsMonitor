@@ -43,5 +43,61 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.AreEqual(hubName, s3);
             Assert.AreEqual(connName + "-" + hubName, s4);
         }
+
+        [TestMethod]
+        public void GetQueueServiceClientBuildsExpectedUriFromAccountName()
+        {
+            // Arrange
+
+            string connStringName = $"MyQueueConnStringName{DateTime.Now.Ticks}";
+            string accountName = "mystorageaccount";
+
+            Environment.SetEnvironmentVariable(connStringName, null);
+            Environment.SetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingQueueServiceUriSuffix, null);
+            Environment.SetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingAccountNameSuffix, accountName);
+
+            try
+            {
+                // Act
+
+                var client = Globals.GetQueueServiceClient(connStringName);
+
+                // Assert
+
+                Assert.AreEqual(new Uri($"https://{accountName}.queue.core.windows.net"), client.Uri);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingAccountNameSuffix, null);
+            }
+        }
+
+        [TestMethod]
+        public void GetQueueServiceClientUsesExplicitQueueServiceUriWhenPresent()
+        {
+            // Arrange
+
+            string connStringName = $"MyQueueConnStringName{DateTime.Now.Ticks}";
+            string queueServiceUri = "https://myexplicitaccount.queue.core.windows.net";
+
+            Environment.SetEnvironmentVariable(connStringName, null);
+            Environment.SetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingQueueServiceUriSuffix, queueServiceUri);
+            Environment.SetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingAccountNameSuffix, null);
+
+            try
+            {
+                // Act
+
+                var client = Globals.GetQueueServiceClient(connStringName);
+
+                // Assert
+
+                Assert.AreEqual(new Uri(queueServiceUri), client.Uri);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingQueueServiceUriSuffix, null);
+            }
+        }
     }
 }

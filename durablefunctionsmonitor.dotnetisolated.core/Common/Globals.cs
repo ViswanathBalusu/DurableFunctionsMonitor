@@ -10,6 +10,7 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
+using Azure.Storage.Queues;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -65,6 +66,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string IdentityBasedConnectionSettingAccountNameSuffix = "__accountName";
         public const string IdentityBasedConnectionSettingTableServiceUriSuffix = "__tableServiceUri";
         public const string IdentityBasedConnectionSettingBlobServiceUriSuffix = "__blobServiceUri";
+        public const string IdentityBasedConnectionSettingQueueServiceUriSuffix = "__queueServiceUri";
         public const string IdentityBasedConnectionSettingCredentialSuffix = "__credential";
         public const string IdentityBasedConnectionSettingClientIdSuffix = "__clientId";
         public const string IdentityBasedConnectionSettingCredentialValue = "managedidentity";
@@ -232,6 +234,32 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 // Using classic connection string
                 return new BlobServiceClient(connectionString, options);
+            }
+        }
+
+        public static QueueServiceClient GetQueueServiceClient(string connStringName)
+        {
+            var options = new QueueClientOptions();
+            ApplyCustomUserAgent(options);
+
+            string connectionString = Environment.GetEnvironmentVariable(connStringName);
+            if (string.IsNullOrEmpty(connectionString))
+            {
+                // Trying with Managed Identity/local Azure login
+
+                string queueServiceUri = Environment.GetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingQueueServiceUriSuffix);
+                if (string.IsNullOrEmpty(queueServiceUri))
+                {
+                    string accountName = Environment.GetEnvironmentVariable(connStringName + Globals.IdentityBasedConnectionSettingAccountNameSuffix);
+                    queueServiceUri = $"https://{accountName}.queue.core.windows.net";
+                }
+
+                return new QueueServiceClient(new Uri(queueServiceUri), IdentityBasedTokenSource.GetCredential(), options);
+            }
+            else
+            {
+                // Using classic connection string
+                return new QueueServiceClient(connectionString, options);
             }
         }
 
