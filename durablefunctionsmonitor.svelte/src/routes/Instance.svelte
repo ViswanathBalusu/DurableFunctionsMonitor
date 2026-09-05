@@ -11,6 +11,7 @@
   import RecoveryDialog from '$lib/instance/RecoveryDialog.svelte';
   import SequenceTab from '$lib/instance/SequenceTab.svelte';
   import SummaryColumn from '$lib/instance/SummaryColumn.svelte';
+  import TimelineTab from '$lib/instance/TimelineTab.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
   import { outcomeAction, type Recovery } from '$lib/instance/input-outcomes';
   import StartNewInstanceDialog from '$lib/instances/StartNewInstanceDialog.svelte';
@@ -114,6 +115,8 @@
       {#if tab === 'summary'}
         <!-- The Summary tab is the column to the left, which the CSS moves here below 1100px -->
         <p class="meta">The summary is the column beside this one on a wider screen.</p>
+      {:else if tab === 'timeline'}
+        <TimelineTab {instance} />
       {:else if tab === 'history'}
         <HistoryTab {instance} />
       {:else if tab === 'inputs'}

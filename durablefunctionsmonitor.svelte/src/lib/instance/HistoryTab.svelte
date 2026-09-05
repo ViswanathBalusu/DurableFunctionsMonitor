@@ -19,9 +19,30 @@
 
   interface Props {
     instance: InstanceState;
+    /**
+     * Linked mode (E8): the same rows under the Timeline tab's swimlane. There is no rail - the
+     * timeline is drawn over the whole execution, and a filtered history would not match it - and
+     * no ScheduledTime column, because the timer bars above say when a timer was due.
+     */
+    linked?: boolean;
+    /** The rows of the hovered span, marked `.hl` (E8-S2-T2). */
+    highlightKey?: string | readonly string[] | null;
+    onRowEnter?: (row: HistoryEvent) => void;
+    onRowLeave?: () => void;
+    onRowClick?: (row: HistoryEvent) => void;
+    /** Replaces the footer, which in linked mode says how much of the history is on screen. */
+    tableFooter?: Snippet;
   }
 
-  let { instance }: Props = $props();
+  let {
+    instance,
+    linked = false,
+    highlightKey = null,
+    onRowEnter,
+    onRowLeave,
+    onRowClick,
+    tableFooter,
+  }: Props = $props();
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -39,7 +60,9 @@
 
   /** The base definitions with this component's snippets attached (as InstancesTable does). */
   const columns = $derived<ColumnDef<HistoryEvent>[]>(
-    historyColumns().map((column) => ({ ...column, cell: cellFor(column.id) })),
+    historyColumns()
+      .filter((column) => !linked || column.id !== 'ScheduledTime')
+      .map((column) => ({ ...column, cell: cellFor(column.id) })),
   );
 
   function cellFor(id: string): Snippet<[HistoryEvent]> | undefined {
@@ -121,50 +144,60 @@
   explains the rewound rows. The backend filters history from a start time only, which is why Till is
   there but dead - leaving it out would read as a filter the UI forgot.
 -->
-<div class="row" style="align-items:flex-end">
-  <Field label="From">
-    <DateTimeField
-      bind:value={from}
-      {showTimeAs}
-      granularity="second"
-      ariaLabel="From"
-      {enabled}
-      enabledLabel="Set"
-      onEnabledChange={toggle}
-    />
-  </Field>
+{#if !linked}
+  <div class="row" style="align-items:flex-end">
+    <Field label="From">
+      <DateTimeField
+        bind:value={from}
+        {showTimeAs}
+        granularity="second"
+        ariaLabel="From"
+        {enabled}
+        enabledLabel="Set"
+        onEnabledChange={toggle}
+      />
+    </Field>
 
-  <Field label="Till" for="dfm-history-till">
-    <TextInput
-      id="dfm-history-till"
-      mono
-      disabled
-      value=""
-      placeholder="now"
-      style="width:190px"
-      title="The backend filters history from a start time only"
-    />
-  </Field>
+    <Field label="Till" for="dfm-history-till">
+      <TextInput
+        id="dfm-history-till"
+        mono
+        disabled
+        value=""
+        placeholder="now"
+        style="width:190px"
+        title="The backend filters history from a start time only"
+      />
+    </Field>
 
-  <Button onclick={apply}>Apply</Button>
+    <Button onclick={apply}>Apply</Button>
 
-  <span class="meta" style="margin-left:auto">
-    {history.rows.length} events shown{history.hasMore ? ' so far' : ''}
-  </span>
-</div>
+    <span class="meta" style="margin-left:auto">
+      {history.rows.length} events shown{history.hasMore ? ' so far' : ''}
+    </span>
+  </div>
+{/if}
 
 <DataTable
   {columns}
   rows={history.rows}
   rowKey={historyKey}
   rowStatus={(row) => spineOf(row, instance.status)}
+  {highlightKey}
+  {onRowEnter}
+  onRowLeave={() => onRowLeave?.()}
+  {onRowClick}
   keep
   ariaLabel="History"
 >
   {#snippet footer()}
-    <span class="meta"> Rewound rows arrive as GenericEvent with a “Rewound:” reason and the continued spine. </span>
-    {#if history.hasMore}
-      <Button onclick={() => void history.loadMore()} disabled={history.loading}>Load more</Button>
+    {#if tableFooter}
+      {@render tableFooter()}
+    {:else}
+      <span class="meta"> Rewound rows arrive as GenericEvent with a “Rewound:” reason and the continued spine. </span>
+      {#if history.hasMore}
+        <Button onclick={() => void history.loadMore()} disabled={history.loading}>Load more</Button>
+      {/if}
     {/if}
   {/snippet}
 </DataTable>

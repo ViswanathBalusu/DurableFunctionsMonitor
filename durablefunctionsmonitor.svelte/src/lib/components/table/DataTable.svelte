@@ -33,8 +33,11 @@
      * cells still carry their `data-label`, so the mobile card layout still names them.
      */
     hideHeader?: boolean;
-    /** The row to mark with `.hl` (the timeline hover linkage). */
-    highlightKey?: string | null;
+    /**
+     * The row (or rows) to mark with `.hl`. The Timeline tab hovers a span, and a span covers
+     * every history row it was built from, so this takes a list as readily as one key.
+     */
+    highlightKey?: string | readonly string[] | null;
     ariaLabel: string;
     /** Rendered inside `.tfoot` under the table. */
     footer?: Snippet;
@@ -159,6 +162,10 @@
     selected = new Set(selected.has(key) ? [...selected].filter((other) => other !== key) : [...selected, key]);
   }
 
+  function isHighlighted(key: string): boolean {
+    return Array.isArray(highlightKey) ? highlightKey.includes(key) : highlightKey === key;
+  }
+
   function cellValue(column: ColumnDef<Row>, row: Row): string {
     const value = column.accessor?.(row);
     return value === null || value === undefined ? '' : String(value);
@@ -217,7 +224,7 @@
           data-st={spineAttr(rowStatus?.(row))}
           data-clickable={onRowClick ? 'true' : undefined}
           aria-selected={selectable ? selected.has(key) : undefined}
-          class={highlightKey === key ? 'hl' : undefined}
+          class={isHighlighted(key) ? 'hl' : undefined}
           onclick={() => onRowClick?.(row)}
           onmouseenter={() => onRowEnter?.(row)}
           onmouseleave={() => onRowLeave?.(row)}

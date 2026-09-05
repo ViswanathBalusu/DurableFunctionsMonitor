@@ -11,7 +11,11 @@
     formatTick?: (date: Date, index: number) => string;
     /** The axis label above the lane labels ("span"). */
     axisLabel?: string;
-    /** The lane (or bar) to outline, for the hover linkage with the History table. */
+    /**
+     * The lane (or bar) to outline, for the hover linkage with the History table. A lane is
+     * outlined when it is the one named or when it holds the bar that is: hovering the row of a
+     * second attempt has to light up the lane that attempt is drawn on.
+     */
     highlightKey?: string | null;
     /** The narrowest the lane strip may get before it scrolls horizontally. */
     minWidth?: number;
@@ -105,9 +109,13 @@
     return svg;
   }
 
-  /** The rendered element, so a caller can measure it. */
+  /** The rendered element, so a caller can measure it - or scroll a lane of it into view. */
   export function element(): HTMLDivElement | null {
     return root;
+  }
+
+  function isLaneHighlighted(lane: Swimlane): boolean {
+    return highlightKey !== null && (lane.key === highlightKey || lane.bars.some((bar) => bar.key === highlightKey));
   }
 </script>
 
@@ -129,7 +137,8 @@
     {#each lanes as lane (lane.key)}
       <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
       <div
-        class={cn('lane', highlightKey === lane.key ? 'hl' : '')}
+        class={cn('lane', isLaneHighlighted(lane) ? 'hl' : '')}
+        data-lane={lane.key}
         onmouseenter={() => onLaneEnter?.(lane.key)}
         onmouseleave={() => onLaneLeave?.()}
         onclick={() => onLaneClick?.(lane.key)}
@@ -149,6 +158,7 @@
             <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
             <div
               class={cn('bar', bar.cls ?? '', highlightKey === bar.key ? 'hl' : '')}
+              data-bar={bar.key}
               style={`left:${bar.left}%;width:${bar.width}%`}
               title={bar.title}
               onclick={() => onBarClick?.(lane.key, bar)}
