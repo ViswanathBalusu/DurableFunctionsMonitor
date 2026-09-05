@@ -53,6 +53,15 @@ Accept:
 - [ ] Delete confirm enables only on an exact match.
 Test: as above.
 
+**Deviation, E6-S2-T3 (2026-09-05).** Three things the plan leaves open. (1) The clean confirm is
+disabled while neither box is checked: that request asks the backend to remove nothing and release
+nothing, which is the same "a filter that matches nothing is not a filter" rule E6-S2-T2 states for
+the purge statuses. (2) A successful clean calls `app.refresh()` - it is opened from the Entities
+screen too (E10), whose rows it has just deleted. (3) "show a note (VS Code)" is
+`DELETE_TASK_HUB_VSCODE_NOTE`: the webview has no login screen to navigate to (the hub was chosen
+when the view was opened), so the dialog stays, says the hub no longer exists and spends its own
+field and confirm. Both dialogs reset when they open, as React's dialog states did.
+
 ### E6-S3 Appearance
 
 #### E6-S3-T1 AppearancePanel

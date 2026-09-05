@@ -6,7 +6,7 @@
   import type { BackendClient } from '$lib/api/client';
   import { normalizeAbout, type Endpoints } from '$lib/api/endpoints';
   import type { About, Capabilities } from '$lib/api/types';
-  import { host } from '$lib/host.svelte';
+  import { host, type Host } from '$lib/host.svelte';
   import { Router } from '$lib/router.svelte';
   import { APP_CONTEXT_KEY, AppState } from '$lib/state/app.svelte';
   import { Prefs } from '$lib/state/prefs.svelte';
@@ -20,6 +20,7 @@
     readOnly = false,
     dangerous = false,
     about: aboutOverrides = {},
+    host: hostOverrides = {},
     props = {},
   }: {
     /** The route component under test. */
@@ -33,6 +34,8 @@
     readOnly?: boolean;
     dangerous?: boolean;
     about?: Partial<About>;
+    /** What this host is: the webview differs from the browser in more than one screen. */
+    host?: Partial<Host>;
     /** Props for the component under test - a dialog needs `open`, a panel usually needs nothing. */
     props?: Record<string, unknown>;
   } = $props();
@@ -41,7 +44,11 @@
   // svelte-ignore state_referenced_locally
   window.history.replaceState({}, '', path);
 
-  const prefs = new Prefs(host, {
+  // Read once on purpose, like the path above: one host per test
+  // svelte-ignore state_referenced_locally
+  const screenHost: Host = { ...host, ...hostOverrides };
+
+  const prefs = new Prefs(screenHost, {
     setItem: () => {},
     setItems: () => {},
     getItem: () => null,
@@ -50,7 +57,7 @@
 
   // svelte-ignore state_referenced_locally
   const app = new AppState({
-    host,
+    host: screenHost,
     client: client as BackendClient,
     endpoints: endpoints as Endpoints,
     router: new Router({ mode: 'history', routePrefix: '' }),
