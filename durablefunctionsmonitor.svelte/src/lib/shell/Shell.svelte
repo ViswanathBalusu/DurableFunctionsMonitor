@@ -1,13 +1,15 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import ProgressBar from '$lib/components/ProgressBar.svelte';
+  import ActionDialogs from '$lib/instance/ActionDialogs.svelte';
+  import { entityKey, type ActionKind } from '$lib/instance/actions.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Palette } from '$lib/state/palette.svelte';
   import Outlet from './Outlet.svelte';
   import BottomNav from './BottomNav.svelte';
   import CommandPalette from './CommandPalette.svelte';
   import MoreSheet from './MoreSheet.svelte';
-  import PeekPanel from './PeekPanel.svelte';
+  import PeekPanel, { type PeekAction } from './PeekPanel.svelte';
   import SideNav from './SideNav.svelte';
   import ToastHost from './ToastHost.svelte';
   import TopBar from './TopBar.svelte';
@@ -42,6 +44,16 @@
     onOpenPalette?.();
     palette.toggle();
   }
+
+  /** What the peek panel's buttons are called, and which confirm dialog each of them opens. */
+  const PEEK_ACTIONS: Record<PeekAction, ActionKind> = {
+    suspend: 'suspend',
+    resume: 'resume',
+    raiseEvent: 'raise',
+    terminate: 'terminate',
+    sendSignal: 'signal',
+    purge: 'purge',
+  };
 
   // The extension's menu commands need a screen to navigate to, so they wait for the shell
   onMount(() => installVsCodeCommands(app));
@@ -85,6 +97,17 @@
 <MoreSheet bind:open={moreOpen} onOpenPalette={togglePalette} />
 
 <!-- Outside `.shell`: these are overlays over the whole app, not part of the content column -->
-<PeekPanel />
+<PeekPanel
+  onAction={(action, item) =>
+    app.actions.open(PEEK_ACTIONS[action], {
+      id: item.id,
+      name: item.name,
+      status: item.status,
+      isEntity: item.kind === 'DurableEntity',
+      key: entityKey(item.id),
+      customStatus: item.customStatus,
+    })}
+/>
 <CommandPalette {palette} />
+<ActionDialogs />
 <ToastHost />

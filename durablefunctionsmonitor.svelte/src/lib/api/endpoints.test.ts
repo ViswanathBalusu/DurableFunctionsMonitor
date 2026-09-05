@@ -136,12 +136,15 @@ describe('instance actions', () => {
     });
   });
 
-  it('passes null through when clearing the custom status', async () => {
+  it('sends no body at all when clearing the custom status', async () => {
     const { client, last } = recordingClient();
 
     await createEndpoints(client).setCustomStatus('order-1', null);
 
-    expect(last()).toMatchObject({ url: "/orchestrations('order-1')/set-custom-status", body: null });
+    // Not `null`: the backend parses the body as a JSON object, and an empty body is how it is told
+    // there is no custom status any more
+    expect(last()).toMatchObject({ url: "/orchestrations('order-1')/set-custom-status" });
+    expect(last().body).toBeUndefined();
   });
 
   it('restarts with or without a new id', async () => {

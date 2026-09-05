@@ -11,6 +11,7 @@ import type { About, Capabilities } from '../api/types';
 import { VsCodeBackendClient } from '../api/vscode-client';
 import type { BackendClient } from '../api/client';
 import { DEFAULT_TIME_RANGE, parseTimeRange, toQuery, type TimeRange } from '../filters/time-range';
+import { Actions } from '../instance/actions.svelte';
 import { host as defaultHost, type Host } from '../host.svelte';
 import { Router } from '../router.svelte';
 import { ViewStateStorage } from '../storage/view-state-storage';
@@ -54,6 +55,12 @@ export class AppState {
 
   /** The one toast at a time (E2-S6); the host lives in the shell. */
   readonly toast = new Toasts();
+
+  /**
+   * The instance action confirms (E5-S1-T2). One set of dialogs, mounted once in the shell, opened
+   * from the workspace header, the peek panel, the palette and the Failures rows alike.
+   */
+  readonly actions: Actions = new Actions(this);
 
   /** What `/about` answered, or null until it has. */
   about = $state<About | null>(null);

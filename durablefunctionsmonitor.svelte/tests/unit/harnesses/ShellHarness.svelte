@@ -22,6 +22,7 @@
     hubNames = ['DurableFunctionsHub'],
     suggestions = [],
     userName = '',
+    endpoints = {},
     onOpenPalette,
     onSignOut,
   }: {
@@ -35,6 +36,8 @@
     hubNames?: string[];
     suggestions?: string[];
     userName?: string;
+    /** What the shell's own overlays call - the action confirms, mainly; the rest are stubbed. */
+    endpoints?: Partial<Endpoints>;
     onOpenPalette?: () => void;
     onSignOut?: () => void;
   } = $props();
@@ -58,6 +61,7 @@
     endpoints: {
       taskHubNames: async () => hubNames,
       idSuggestions: async () => suggestions,
+      ...endpoints,
     } as unknown as Endpoints,
     router: new Router({ mode: 'history', routePrefix: '' }),
     prefs,

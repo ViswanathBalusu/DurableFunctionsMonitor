@@ -45,6 +45,21 @@ Accept:
 - [ ] `custom` with an empty editor posts an empty body (clears the status).
 Test: as above.
 
+**Deviation, E5-S1-T2 (2026-09-05).** The accept criterion "posts an empty body" was a defect, not a
+description: `endpoints.setCustomStatus(id, null)` went through `client.post` -> `JSON.stringify`,
+putting the four characters `null` on the wire, and the backend parses the body as a JSON object
+(`JObject.Parse("null")` throws). React sent nothing at all - axios drops a null body - so the
+endpoint now maps null to no body, and its test says why.
+Three things the plan leaves open. (1) The purge wording for an entity is the Entities screen's own
+(ScreenEntities.dc.html L102, "Removes the entity row and its history…", confirm "Purge entity"),
+since the workspace of an entity offers Send signal and Purge alone; the sub-orchestration line has
+a plural form for when E8 reports more than one child. (2) The signal toast is `Signal sent to
+{key}` rather than the mockup's `{confirm} sent for {id}` rule, which would read "Send signal sent
+for". `InstanceState.raiseEvent` therefore takes an optional message - the endpoint is the same one,
+only what it is called changes. (3) `one-off-actions.ts` and `InstanceState` share one copy table
+(`ACTION_CONFIRM`, `ACTION_VERBS`, `actionToast`) so the same action cannot say two different things
+depending on where it was started from.
+
 ### E5-S2 Header
 
 #### E5-S2-T1 InstanceHeader

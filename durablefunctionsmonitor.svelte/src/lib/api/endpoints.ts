@@ -171,9 +171,14 @@ export function createEndpoints(client: BackendClient) {
     raiseEvent: (instanceId: string, name: string, data: unknown): Promise<void> =>
       client.post<void>(instancePath(instanceId, '/raise-event'), { name, data }),
 
-    /** An empty body clears the custom status, which is why null is passed through rather than dropped. */
+    /**
+     * Null clears the custom status, and clearing it means sending no body at all: the backend parses
+     * whatever body it is given as a JSON object, and the four characters `null` are not one - they
+     * are what `JSON.stringify(null)` would put on the wire. React sent nothing here too (axios drops
+     * a null body), which is why this has always been the shape the backend expects.
+     */
     setCustomStatus: (instanceId: string, value: unknown | null): Promise<void> =>
-      client.post<void>(instancePath(instanceId, '/set-custom-status'), value),
+      client.post<void>(instancePath(instanceId, '/set-custom-status'), value ?? undefined),
 
     restart: (instanceId: string, restartWithNewInstanceId: boolean): Promise<void> =>
       client.post<void>(instancePath(instanceId, '/restart'), { restartWithNewInstanceId }),

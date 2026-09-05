@@ -8,6 +8,7 @@
 // whole workspace at once rather than each tab reloading itself out of step with the rest.
 
 import type { FunctionMapResponse, OrchestrationDetails, RuntimeStatus } from '$lib/api/types';
+import { ACTION_VERBS, actionToast, type ActionKind } from '$lib/instance/actions.svelte';
 import type { AppState } from './app.svelte';
 import { InstanceHistoryState } from './instance-history.svelte';
 
@@ -325,55 +326,46 @@ export class InstanceState {
   // ScreenInstance.dc.html L370-L387), reloads the workspace, and leaves the dialog to close itself.
 
   suspend(reason = ''): Promise<boolean> {
-    return this.#act('suspend', `Suspended ${this.instanceId}`, () =>
-      this.#app.endpoints.postAction(this.instanceId, 'suspend', reason || undefined),
-    );
+    return this.#act('suspend', () => this.#app.endpoints.postAction(this.instanceId, 'suspend', reason || undefined));
   }
 
   resume(reason = ''): Promise<boolean> {
-    return this.#act('resume', `Resumed ${this.instanceId}`, () =>
-      this.#app.endpoints.postAction(this.instanceId, 'resume', reason || undefined),
-    );
+    return this.#act('resume', () => this.#app.endpoints.postAction(this.instanceId, 'resume', reason || undefined));
   }
 
   rewind(reason = ''): Promise<boolean> {
-    return this.#act('rewind', `Rewind sent for ${this.instanceId}`, () =>
-      this.#app.endpoints.postAction(this.instanceId, 'rewind', reason || undefined),
-    );
+    return this.#act('rewind', () => this.#app.endpoints.postAction(this.instanceId, 'rewind', reason || undefined));
   }
 
   terminate(reason = ''): Promise<boolean> {
-    return this.#act('terminate', `Terminate sent for ${this.instanceId}`, () =>
+    return this.#act('terminate', () =>
       this.#app.endpoints.postAction(this.instanceId, 'terminate', reason || undefined),
     );
   }
 
   /** The instance is gone afterwards, so nothing is reloaded - the list is what is left to show. */
   purge(): Promise<boolean> {
-    return this.#act('purge', `Purged ${this.instanceId}`, () => this.#app.endpoints.purge(this.instanceId), {
+    return this.#act('purge', () => this.#app.endpoints.purge(this.instanceId), {
       reload: false,
       after: () => this.#app.router.navigate({ name: 'instances', hub: this.#app.hub }),
     });
   }
 
   restart(restartWithNewInstanceId = true): Promise<boolean> {
-    return this.#act('restart', `Restart sent for ${this.instanceId}`, () =>
-      this.#app.endpoints.restart(this.instanceId, restartWithNewInstanceId),
-    );
+    return this.#act('restart', () => this.#app.endpoints.restart(this.instanceId, restartWithNewInstanceId));
   }
 
-  /** Also the entity signal: the endpoint is the same one (contracts §6). */
-  raiseEvent(name: string, data: unknown): Promise<boolean> {
-    return this.#act('raise event', `Raise event sent for ${this.instanceId}`, () =>
-      this.#app.endpoints.raiseEvent(this.instanceId, name, data),
-    );
+  /**
+   * Also the entity signal: the endpoint is the same one (contracts §6), and only what the toast
+   * calls it changes - which is why the caller may say what that is.
+   */
+  raiseEvent(name: string, data: unknown, message?: string): Promise<boolean> {
+    return this.#act('raise', () => this.#app.endpoints.raiseEvent(this.instanceId, name, data), { message });
   }
 
   /** Null clears it: the backend takes an empty body as "no custom status" (contracts §6). */
   setCustomStatus(value: unknown | null): Promise<boolean> {
-    return this.#act('set customStatus', `Set customStatus sent for ${this.instanceId}`, () =>
-      this.#app.endpoints.setCustomStatus(this.instanceId, value),
-    );
+    return this.#act('custom', () => this.#app.endpoints.setCustomStatus(this.instanceId, value));
   }
 
   /**
@@ -381,10 +373,9 @@ export class InstanceState {
    * and why and changes nothing else - the dialog that called stays open so it can be tried again.
    */
   async #act(
-    verb: string,
-    message: string,
+    kind: ActionKind,
     run: () => Promise<unknown>,
-    options: { reload?: boolean; after?: () => void } = {},
+    options: { reload?: boolean; after?: () => void; message?: string } = {},
   ): Promise<boolean> {
     if (this.busy) {
       return false;
@@ -395,7 +386,7 @@ export class InstanceState {
     try {
       await this.#app.track(run);
 
-      this.#app.toast.ok(message);
+      this.#app.toast.ok(options.message ?? actionToast(kind, this.instanceId));
       options.after?.();
 
       if (options.reload !== false) {
@@ -404,7 +395,7 @@ export class InstanceState {
 
       return true;
     } catch (error) {
-      this.#app.toast.fromError(`Failed to ${verb}`, error);
+      this.#app.toast.fromError(`Failed to ${ACTION_VERBS[kind]}`, error);
 
       return false;
     } finally {
