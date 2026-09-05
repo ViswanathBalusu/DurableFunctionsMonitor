@@ -134,6 +134,16 @@ export function toTarget(parsed: ParsedRoute | Route): RouteTarget {
   }
 }
 
+/**
+ * True when the router should take a link click rather than the browser: a plain left click. A
+ * Ctrl/Cmd/Shift/middle click is the user asking for another tab or window, which is the browser's
+ * job - and a click the router takes has to have its default prevented, or the page reloads under
+ * the app it just navigated.
+ */
+export function isRouterClick(event: MouseEvent): boolean {
+  return event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey;
+}
+
 export function toSearchParams(query?: QueryInit): URLSearchParams {
   if (!query) {
     return new URLSearchParams();

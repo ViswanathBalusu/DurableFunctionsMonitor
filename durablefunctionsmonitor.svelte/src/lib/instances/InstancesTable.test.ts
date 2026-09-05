@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { createEvent, fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import type { OrchestrationStatus, OrchestrationsQuery } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
@@ -144,6 +144,21 @@ describe('InstancesTable', () => {
 
     expect(window.location.pathname).toBe('/DurableFunctionsHub/instances/order-2026-09-04-000912');
     expect(app.peek.isOpen).toBe(false);
+  });
+
+  it('navigates in the app instead of letting the browser reload the page', async () => {
+    mount();
+
+    await waitFor(() => expect(rows()).toHaveLength(fixtures.length));
+
+    const link = rows()[0].querySelector('[data-label="instanceId"] .link') as HTMLElement;
+    const click = createEvent.click(link);
+
+    fireEvent(link, click);
+
+    // The href is real, so the link can be copied and opened in a new tab - but a plain click is ours
+    expect(click.defaultPrevented).toBe(true);
+    expect(window.location.pathname).toBe('/DurableFunctionsHub/instances/order-2026-09-04-000913');
   });
 
   it('sorts through the backend, and falls back to the default order on the third click', async () => {

@@ -9,6 +9,7 @@
   import JsonCell from '$lib/components/table/cells/JsonCell.svelte';
   import StatusCell from '$lib/components/table/cells/StatusCell.svelte';
   import { nextSort, type ColumnDef, type SortState } from '$lib/components/table/columns';
+  import { isRouterClick } from '$lib/router.svelte';
   import { fmtDuration } from '$lib/format/duration';
   import { fmtInt } from '$lib/format/number';
   import { fmtDateTime } from '$lib/format/time';
@@ -67,11 +68,28 @@
   function open(row: OrchestrationStatus, event: MouseEvent): void {
     // Ctrl/⌘ opens a second window, which is how the mockups let you compare two instances
     if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
       app.client.host.openInNewWindow(row.instanceId);
       return;
     }
 
+    if (!isRouterClick(event)) {
+      // Shift or the middle button: the browser's own way of opening the link elsewhere
+      return;
+    }
+
+    event.preventDefault();
     app.router.navigate({ name: 'instance', hub: app.hub, instanceId: row.instanceId });
+  }
+
+  /** The parent link navigates in the app as well; the anchor is there for copy and open-in-new. */
+  function openParent(instanceId: string, event: MouseEvent): void {
+    if (!isRouterClick(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    app.router.navigate({ name: 'instance', hub: app.hub, instanceId });
   }
 
   function sortBy(id: string): void {
@@ -129,7 +147,14 @@
 
 {#snippet parentCell(row: OrchestrationStatus)}
   {#if row.parentInstanceId}
-    <LinkButton mono stopPropagation href={href(row.parentInstanceId)}>{row.parentInstanceId}</LinkButton>
+    <LinkButton
+      mono
+      stopPropagation
+      href={href(row.parentInstanceId)}
+      onclick={(event) => openParent(row.parentInstanceId as string, event)}
+    >
+      {row.parentInstanceId}
+    </LinkButton>
   {:else}
     —
   {/if}

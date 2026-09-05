@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   Router,
+  isRouterClick,
   parsePath,
   queryString,
   routePath,
@@ -447,5 +448,17 @@ describe('Router in the VS Code host', () => {
 
     expect(router.mode).toBe('memory');
     expect(router.current.name).toBe('overview');
+  });
+});
+
+describe('isRouterClick', () => {
+  it('takes a plain left click and leaves every other one to the browser', () => {
+    expect(isRouterClick(new MouseEvent('click'))).toBe(true);
+
+    expect(isRouterClick(new MouseEvent('click', { button: 1 }))).toBe(false);
+    expect(isRouterClick(new MouseEvent('click', { ctrlKey: true }))).toBe(false);
+    expect(isRouterClick(new MouseEvent('click', { metaKey: true }))).toBe(false);
+    expect(isRouterClick(new MouseEvent('click', { shiftKey: true }))).toBe(false);
+    expect(isRouterClick(new MouseEvent('click', { altKey: true }))).toBe(false);
   });
 });
