@@ -1,2 +1,61 @@
 /* Additions the mockup stylesheet lacks. Keep small. Never override a dfm-ui.css rule here;
    change the component markup instead. */
+
+/* Svelte Flow (E5-S6-T2). Its own classes are what it positions and transforms with, so the design
+   system's look is applied to them rather than replacing them: the canvas keeps its dotted paper,
+   the edges are ink and square-cornered, and the controls and minimap wear `.gctl` and `.minimap`.
+   The node card itself is plain dfm-ui.css - only the frame Svelte Flow wraps it in is reset. */
+.svelte-flow {
+  --xy-background-color: transparent;
+  --xy-edge-stroke: var(--ink);
+  --xy-edge-stroke-selected: var(--ring);
+  --xy-edge-stroke-width: 2;
+  --xy-node-border-radius: 0;
+  --xy-node-background-color: transparent;
+  --xy-node-border: none;
+  --xy-node-boxshadow-hover: none;
+  --xy-node-boxshadow-selected: none;
+  --xy-attribution-background-color: transparent;
+}
+
+.svelte-flow__node {
+  /* The card draws its own border, shadow and radius */
+  padding: 0;
+  width: auto;
+  font-size: inherit;
+}
+
+.svelte-flow__edge.active .svelte-flow__edge-path {
+  stroke: var(--ring);
+  stroke-width: 3;
+}
+
+.svelte-flow__edge-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+/* The controls and the minimap are the mockup's own boxes, in the mockup's own corners */
+.svelte-flow__controls.gctl,
+.svelte-flow__minimap.minimap {
+  box-shadow: none;
+}
+
+.svelte-flow__controls.gctl button {
+  background: var(--card);
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  fill: var(--ink);
+}
+
+.svelte-flow__controls.gctl button:last-child {
+  border-bottom: 0;
+}
+
+.svelte-flow__minimap.minimap svg {
+  display: block;
+}
+
+.svelte-flow__attribution {
+  display: none;
+}
