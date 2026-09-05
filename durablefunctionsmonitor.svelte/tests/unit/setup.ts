@@ -67,6 +67,13 @@ if (!window.scrollTo) {
   window.scrollTo = vi.fn();
 }
 
+// jsdom implements no scrolling at all, so Element.scrollIntoView is missing; the menu, select and
+// command primitives call it whenever the active item changes, and an unhandled TypeError from a
+// keyboard interaction is easy to miss in a green test run.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}
+
 // jsdom has no Clipboard API; copy-to-clipboard buttons (instance id, JSON viewer) need one.
 Object.defineProperty(navigator, 'clipboard', {
   value: {
