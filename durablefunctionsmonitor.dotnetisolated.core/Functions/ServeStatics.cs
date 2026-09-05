@@ -51,10 +51,19 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     return req.CreateResponse(HttpStatusCode.NotFound);
                 }
 
+                // static/media has no single fixed content type, it is chosen by file extension
+                string contentTypeValue = contentType[1] ?? GetMediaContentType(path);
+
                 var fileResponse = req.CreateResponse(HttpStatusCode.OK);
 
-                fileResponse.Headers.Add("Content-Type", contentType[1]);
+                fileResponse.Headers.Add("Content-Type", contentTypeValue);
                 fileResponse.Headers.Add("Last-Modified", File.GetLastWriteTimeUtc(fullPath).ToString("R"));
+
+                if (contentType[0].StartsWith("static"))
+                {
+                    // static/css, static/js and static/media file names are content-hashed by the build, so they never change under the same name
+                    fileResponse.Headers.Add("Cache-Control", "public, max-age=31536000, immutable");
+                }
 
                 await fileResponse.WriteBytesAsync(await File.ReadAllBytesAsync(fullPath));
 
@@ -75,6 +84,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
 
             htmlResponse.Headers.Add("Content-Type", "text/html; charset=UTF-8");
+            htmlResponse.Headers.Add("Cache-Control", "no-cache");
 
             await htmlResponse.WriteStringAsync(await ReturnIndexHtml(this._logger, root, p1, req.Url.AbsolutePath));
 
@@ -100,10 +110,25 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             new [] {Path.Join("static", "css"), "text/css; charset=utf-8"},
             new [] {Path.Join("static", "js"), "application/javascript; charset=UTF-8"},
+            // Content type for static/media is chosen by file extension, see GetMediaContentType()
+            new [] {Path.Join("static", "media"), null},
             new [] {"manifest.json", "application/json; charset=UTF-8"},
             new [] {"favicon.png", "image/png"},
             new [] {"logo.svg", "image/svg+xml; charset=UTF-8"},
         };
+
+        // Picks a Content-Type for a file served from static/media, based on its extension
+        private static string GetMediaContentType(string path)
+        {
+            switch (Path.GetExtension(path).ToLowerInvariant())
+            {
+                case ".woff2": return "font/woff2";
+                case ".woff": return "font/woff";
+                case ".svg": return "image/svg+xml; charset=UTF-8";
+                case ".png": return "image/png";
+                default: return "application/octet-stream";
+            }
+        }
 
         private readonly ILogger _logger;
 
