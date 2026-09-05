@@ -101,6 +101,48 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         }
 
         /// <summary>
+        /// Produces the Task Hub statistics of the /stats endpoint from one bounded, projected scan of the
+        /// XXXInstances table: every row created inside [From, To], with only the five columns the aggregation
+        /// needs (plus PartitionKey, which ITableClient adds to every projection and which is the instance id).
+        ///
+        /// The scan is capped at <see cref="StatsQuery.Cap"/> rows (<see cref="DefaultStatsScanCap"/> when the
+        /// caller left it unset); hitting the cap is reported honestly as StatsResult.Partial, never hidden.
+        /// All the counting itself lives in the pure <see cref="StatsAggregator"/>, so Azure Storage and MSSQL
+        /// reach the same numbers from the same rows.
+        /// </summary>
+        public static async Task<StatsResult> GetStatsAsync(DurableTaskClient durableClient, string connName, string hubName, StatsQuery query, CancellationToken ct)
+        {
+            ArgumentNullException.ThrowIfNull(query);
+
+            var tableClient = TableClient.GetTableClient(connName);
+
+            // A cap of 0 means 'the caller did not set one' (ITableClient.QueryAsync rejects anything below 1),
+            // so fall back to the documented default rather than failing the request.
+            int cap = query.Cap > 0 ? query.Cap : DefaultStatsScanCap;
+
+            // CreateQueryFilter escapes and formats the interpolated values, so the dates come out as the
+            // Edm.DateTime literals Table Storage expects. Both ends are inclusive, matching StatsAggregator's
+            // binning rule (a row exactly at To lands in the last bin).
+            string filter = Azure.Data.Tables.TableClient.CreateQueryFilter(
+                $"CreatedTime ge {query.From} and CreatedTime le {query.To}");
+
+            var (rows, truncated) = await tableClient.QueryAsync($"{hubName}Instances", filter, StatsColumns, cap, ct);
+
+            var instanceRows = rows.Select(row => new InstanceRowLite
+            {
+                // The Instances row of an instance is (PartitionKey = instanceId, RowKey = "")
+                InstanceId = row.PartitionKey,
+                Name = row.GetString(NameColumn),
+                RuntimeStatus = row.GetString(RuntimeStatusColumn),
+                CreatedTime = TryGetDateTimeOffset(row, CreatedTimeColumn) ?? default,
+                LastUpdatedTime = TryGetDateTimeOffset(row, LastUpdatedTimeColumn) ?? default,
+                CompletedTime = TryGetDateTimeOffset(row, CompletedTimeColumn)
+            });
+
+            return StatsAggregator.Aggregate(instanceRows, query, DateTimeOffset.UtcNow, truncated, cap);
+        }
+
+        /// <summary>
         /// Reads the values of an instance's XXXInstances row that the DurableTaskClient does not expose.
         /// Returns null when there is no such row (the instance never existed, or was purged).
         /// HistoryBytesEstimate is always null here: Azure Storage cannot tell the size of a history without
@@ -122,6 +164,28 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 Generation = TryGetInt32(instanceEntity, GenerationColumn),
                 HistoryBytesEstimate = null
             };
+        }
+
+        // TableEntity.GetDateTimeOffset() casts too, so a column another tool wrote as a string (or left out
+        // entirely) would throw. A date that cannot be read is reported as 'unknown' instead.
+        private static DateTimeOffset? TryGetDateTimeOffset(TableEntity entity, string columnName)
+        {
+            if (!entity.TryGetValue(columnName, out object value) || value == null)
+            {
+                return null;
+            }
+
+            switch (value)
+            {
+                case DateTimeOffset dateTimeOffsetValue:
+                    return dateTimeOffsetValue.ToUniversalTime();
+                case DateTime dateTimeValue:
+                    return new DateTimeOffset(dateTimeValue.ToUniversalTime(), TimeSpan.Zero);
+                case string stringValue:
+                    return DateTimeOffset.TryParse(stringValue, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal, out var parsedValue) ? parsedValue : null;
+                default:
+                    return null;
+            }
         }
 
         // TableEntity.GetInt32() casts, so it throws when the column was written as an Int64 (or as a string,
@@ -151,6 +215,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         internal const string OrchestratorCompletedEventType = "OrchestratorCompleted";
 
         private const string ExecutionIdColumn = "ExecutionId";
+        private const string NameColumn = "Name";
+        private const string RuntimeStatusColumn = "RuntimeStatus";
+        private const string CreatedTimeColumn = "CreatedTime";
+        private const string LastUpdatedTimeColumn = "LastUpdatedTime";
+        private const string CompletedTimeColumn = "CompletedTime";
         private const string EventTypeColumn = "EventType";
         private const string GenerationColumn = "Generation";
         private const string TimestampColumn = "_Timestamp";
@@ -160,7 +229,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         // history table.
         internal const int MaxEpisodeMarkerRowsToScan = 20000;
 
+        // Decision D10: an Instances scan never reads more than this many rows. Overridable per request
+        // through StatsQuery.Cap, which the /stats function fills from DfmSettings (env DFM_STATS_CAP).
+        internal const int DefaultStatsScanCap = 50000;
+
         // PartitionKey and RowKey come back regardless - ITableClient adds them to every projection
         private static readonly string[] MarkerColumns = new[] { EventTypeColumn, TimestampColumn };
+
+        // Everything StatsAggregator needs and nothing else: Input, Output and CustomStatus are the big
+        // columns of an Instances row and are never pulled over the wire for statistics.
+        private static readonly string[] StatsColumns = new[] { NameColumn, RuntimeStatusColumn, CreatedTimeColumn, LastUpdatedTimeColumn, CompletedTimeColumn };
     }
 }

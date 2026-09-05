@@ -45,6 +45,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
                 // capabilities.episodeMarkers == false.
                 extPoints.GetEpisodeMarkersRoutine = null;
                 extPoints.GetInstanceRowInfoRoutine = null;
+
+                // Netherite has no XXXInstances table to scan either, so there are no Task Hub statistics:
+                // /stats answers 400 and /about reports capabilities.stats == false.
+                extPoints.GetStatsRoutine = null;
             });
         }
 

@@ -23,7 +23,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var capabilities = Capabilities.Compute(settings, ext, DfmMode.Normal);
 
             // Assert
-            Assert.IsFalse(capabilities.Stats);
+            Assert.IsTrue(capabilities.Stats); // B1-S2-T2 sets the Azure Storage default
             Assert.IsFalse(capabilities.Failures);
             Assert.IsTrue(capabilities.Spans);
             Assert.IsFalse(capabilities.Children);
@@ -62,7 +62,9 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var capabilities = Capabilities.Compute(settings, ext, DfmMode.Normal);
 
             // Assert
-            Assert.IsFalse(capabilities.Stats);
+            // MSSQL currently inherits the Azure Storage stats default (B1-S2-T4 replaces it with the
+            // grouped-SQL implementation; either way the capability is true for this provider).
+            Assert.IsTrue(capabilities.Stats);
             Assert.IsFalse(capabilities.Failures);
             Assert.IsFalse(capabilities.Children);
             Assert.IsFalse(capabilities.StorageHealth);
@@ -90,6 +92,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 TruncateHistoryRoutine = null,
                 GetEpisodeMarkersRoutine = null,
                 GetInstanceRowInfoRoutine = null,
+                GetStatsRoutine = null,
             };
 
             // Act
