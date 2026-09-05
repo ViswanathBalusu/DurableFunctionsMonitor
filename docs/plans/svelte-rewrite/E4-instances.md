@@ -38,6 +38,12 @@ Accept:
 - [ ] Column `lastEvent` with an applied value adds `lastEvent` to the visible columns.
 Test: `instances.test.ts` with the fake endpoints (records the exact `$filter`).
 
+**Deviation, E4-S1-T2 (2026-09-05).** `src/lib/format/number.ts` (`fmtInt`, `fmtPct`) lands with this
+task: contracts §10 names both functions but no earlier task created the file, and `matchLabel` is
+the first thing that needs `fmtInt`. Saved views (item 6) stay with E4-S2-T4, which owns the menu;
+what this task added for them is `takeFlag('start' | 'selectAll')`, the one-shot URL flags, so the
+screen can open the Start dialog or select every loaded row and leave a reloadable URL behind.
+
 ### E4-S2 Header, chips and rail
 
 #### E4-S2-T1 Page frame and title row
