@@ -60,7 +60,7 @@ When a mockup and a design document disagree, the mockup wins for visuals and co
 | @azure/data-tables, @azure/storage-blob, @azure/storage-queue (dev, e2e seed) | 13.3.2, 12.33.0, 12.31.0 | |
 | Azure.Storage.Queues (NuGet) | 12.27.1 | backend B4 |
 
-Toolchain on the reference machine: Node 22.18, npm 11.6, .NET SDK 10.0.400, Azure Functions Core Tools 4.
+Toolchain on the reference machine: Node 22.23.2 (pinned in the repo-root `.node-version`; install with `fnm install` and let `fnm env --use-on-cd` select it), npm 11.6, .NET SDK 10.0.400, Azure Functions Core Tools 4 (`func` 4.126.0 from `%LOCALAPPDATA%/AzureFunctionsTools/Releases/4.126.0/cli_x64`).
 
 Dev tooling not listed above (eslint, eslint-plugin-svelte, typescript-eslint, prettier, prettier-plugin-svelte, @testing-library/jest-dom, ncp, rimraf, html-to-image if ever needed): take the latest stable at install time and pin it exactly (`--save-exact`); record the chosen versions in the E0-S1-T1 commit message.
 
