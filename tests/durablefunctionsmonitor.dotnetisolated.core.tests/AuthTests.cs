@@ -147,6 +147,21 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsTrue(allMarkedWithOperationKindWrite);
         }
 
+        // The batch endpoint (B3-S3-T2) is a Write operation: it drives the same eight instance actions as
+        // DfmPostOrchestrationFunction, just against many instances at once. It is already covered by the
+        // generic sweep above (it isn't in the read-only 'publicFunctions' list there), but this test pins
+        // it down explicitly so a future refactor of that sweep cannot silently stop covering it.
+        [TestMethod]
+        public void DfmBatchFunctionIsMarkedAsOperationKindWrite()
+        {
+            var method = typeof(Batch).GetMethod(nameof(Batch.DfmBatchFunction));
+
+            var attribute = method.CustomAttributes.SingleOrDefault(a => a.AttributeType == typeof(OperationKindAttribute));
+
+            Assert.IsNotNull(attribute, "DfmBatchFunction must carry [OperationKind]");
+            Assert.AreEqual(OperationKind.Write, (OperationKind)attribute.NamedArguments.Single().TypedValue.Value);
+        }
+
         [TestMethod]
         public void ReturnsUnauthorizedResultIfTaskHubNotAllowed()
         {
