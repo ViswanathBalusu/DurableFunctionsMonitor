@@ -4,6 +4,7 @@
   import HistoryTab from '$lib/instance/HistoryTab.svelte';
   import InstanceActions from '$lib/instance/InstanceActions.svelte';
   import InstanceHeader from '$lib/instance/InstanceHeader.svelte';
+  import RawTab from '$lib/instance/RawTab.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { InstanceState } from '$lib/state/instance.svelte';
@@ -62,6 +63,8 @@
         <p class="meta">The summary is the column beside this one on a wider screen.</p>
       {:else if tab === 'history'}
         <HistoryTab {instance} />
+      {:else if tab === 'raw'}
+        <RawTab {instance} />
       {:else}
         <p class="meta">The {tab} tab is not built yet.</p>
       {/if}

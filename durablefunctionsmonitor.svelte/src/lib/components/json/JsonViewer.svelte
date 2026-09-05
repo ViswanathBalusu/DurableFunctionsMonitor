@@ -34,7 +34,14 @@
     }
 
     target.set(content);
-    target.expand([], () => true);
+
+    try {
+      target.expand([], () => true);
+    } catch {
+      // The editor's own root is not mounted yet, or is already gone - a value that arrives while
+      // the screen is still building it, or a screen being torn down. The next run expands it;
+      // letting this throw would take the screen down over a cosmetic call.
+    }
   });
 
   function countNodes(node: unknown): number {
