@@ -46,6 +46,11 @@ export const AZURITE_CONNECTION_STRING =
 /** The partition count `taskhub.json` declares, and therefore the number of control queues. */
 export const PARTITION_COUNT = 4;
 
+/**
+ * One entity as the Table SDK wants it: whatever columns the row carries, plus the two keys.
+ * @typedef {Record<string, unknown> & { partitionKey: string; rowKey: string }} TableRow
+ */
+
 /** Table Storage refuses transactions of more than 100 entities. */
 const MAX_BATCH_SIZE = 100;
 
@@ -141,10 +146,10 @@ export function blobEndpointOf(connectionString) {
  * @param {import('./fixtures.mjs').SeedInstance} instance
  * @param {string} hub
  * @param {string} largeMessageBaseUrl
- * @returns {Record<string, unknown>}
+ * @returns {TableRow}
  */
 export function instanceEntity(instance, hub, largeMessageBaseUrl) {
-  /** @type {Record<string, unknown>} */
+  /** @type {TableRow} */
   const entity = {
     partitionKey: instance.instanceId,
     rowKey: '',
@@ -188,10 +193,10 @@ export function instanceEntity(instance, hub, largeMessageBaseUrl) {
  *
  * @param {import('./fixtures.mjs').SeedInstance} instance
  * @param {import('./fixtures.mjs').SeedHistoryRow} row
- * @returns {Record<string, unknown>}
+ * @returns {TableRow}
  */
 export function historyEntity(instance, row) {
-  /** @type {Record<string, unknown>} */
+  /** @type {TableRow} */
   const entity = {
     partitionKey: instance.instanceId,
     rowKey: historyRowKey(row.sequenceNumber),
@@ -254,7 +259,7 @@ export function historyEntity(instance, row) {
  * checkpoints against.
  *
  * @param {import('./fixtures.mjs').SeedInstance} instance
- * @returns {Record<string, unknown>}
+ * @returns {TableRow}
  */
 export function sentinelEntity(instance) {
   return {
@@ -320,7 +325,7 @@ async function createTable(tableService, name) {
 
 /**
  * @param {import('@azure/data-tables').TableClient} tableClient
- * @param {Record<string, unknown>[]} entities all of one partition
+ * @param {TableRow[]} entities all of one partition
  * @returns {Promise<void>}
  */
 async function upsertBatch(tableClient, entities) {

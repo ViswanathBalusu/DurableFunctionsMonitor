@@ -30,7 +30,8 @@ interface ListedInstance {
 
 async function listInstances(request: APIRequestContext) {
   const query = new URLSearchParams({ $top: '50', $filter: everySeededInstance });
-  const response = await request.get(`/a/p/i/--${hub}/orchestrations?${query}`);
+  // Relative: Playwright's baseURL carries the host's route prefix, which a leading slash would drop
+  const response = await request.get(`a/p/i/--${hub}/orchestrations?${query}`);
 
   expect(response.status()).toBe(200);
 
