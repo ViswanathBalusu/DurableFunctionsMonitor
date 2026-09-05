@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- App shell — src/App.svelte + src/lib/shell/{SideNav,TopBar,BottomNav,PeekPanel,CommandPalette,Toast}.svelte
+     Theme = data-theme attribute on the document element, mode = .dark class, density = data-density; persisted as dfm.theme / dfm.mode / dfm.density (ITypedLocalStorage).
+     Routes: overview, instances, instance/{id}, failures, entities, functions, storage, activity, settings, login. -->
+<sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+  <dc-import name="ScreenLogin" on-enter="{{ enterHub }}" on-toast="{{ toast }}" hint-size="100%,100vh"></dc-import>
+</sc-if>
+<sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+<div class="shell {{ shellClass }}">
+  <nav class="snav" aria-label="Main">
+    <div class="brand"><div class="logo" aria-hidden="true"></div><span class="lbl">DFM</span></div>
+    <button class="item {{ navOverview }}" onClick="{{ goOverview }}" title="Overview"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8"></rect><rect x="13" y="3" width="8" height="8"></rect><rect x="3" y="13" width="8" height="8"></rect><rect x="13" y="13" width="8" height="8"></rect></svg><span class="lbl">Overview</span></button>
+    <button class="item {{ navInstances }}" onClick="{{ goInstances }}" title="Instances"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg><span class="lbl">Instances</span></button>
+    <button class="item {{ navFailures }}" onClick="{{ goFailures }}" title="Failures"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 17H3z"></path><line x1="12" y1="10" x2="12" y2="14"></line><line x1="12" y1="17" x2="12" y2="17.5"></line></svg><span class="lbl">Failures</span><span class="cnt chip st-failed sm">9</span></button>
+    <button class="item {{ navEntities }}" onClick="{{ goEntities }}" title="Entities"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16"></rect><rect x="9" y="9" width="6" height="6"></rect></svg><span class="lbl">Entities</span></button>
+    <button class="item {{ navFunctions }}" onClick="{{ goFunctions }}" title="Functions"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="6" r="3"></circle><circle cx="18" cy="18" r="3"></circle><line x1="9" y1="11" x2="15" y2="7"></line><line x1="9" y1="13" x2="15" y2="17"></line></svg><span class="lbl">Functions</span></button>
+    <button class="item {{ navStorage }}" onClick="{{ goStorage }}" title="Storage"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"></ellipse><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"></path><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"></path></svg><span class="lbl">Storage</span></button>
+    <button class="item {{ navActivity }}" onClick="{{ goActivity }}" title="Activity"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="3 12 7 12 10 5 14 19 17 12 21 12"></polyline></svg><span class="lbl">Activity</span></button>
+    <div class="gap"></div>
+    <button class="item {{ navSettings }}" onClick="{{ goSettings }}" title="Settings"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19 12a7 7 0 0 0-.1-1.2l2.1-1.6-2-3.4-2.5 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.5-1-2 3.4 2.1 1.6A7 7 0 0 0 5 12c0 .4 0 .8.1 1.2L3 14.8l2 3.4 2.5-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.5 1 2-3.4-2.1-1.6c.1-.4.1-.8.1-1.2z"></path></svg><span class="lbl">Settings</span></button>
+    <button class="item muted" onClick="{{ toggleCollapse }}" title="{{ collapseTitle }}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="{{ collapseGlyph }}"></polyline></svg><span class="lbl">Collapse</span></button>
+  </nav>
+  <div class="main">
+    <header class="topbar">
+      <div class="logo" aria-hidden="true"></div>
+      <span class="display hide-m" style="font-size:16px;white-space:nowrap">Durable Functions Monitor</span>
+      <span class="muted hide-m" aria-hidden="true">/</span>
+      <div class="anchor">
+        <button class="btn flat" onClick="{{ toggleHubMenu }}" aria-haspopup="menu" aria-expanded="{{ hubMenu }}" style="font-family:var(--font-mono);font-weight:600;gap:10px;padding:0 10px"><span>{{ hub }}</span><span class="meta hide-m" style="font-family:var(--font-sans)">{{ account }}</span><span class="tri down" aria-hidden="true"></span></button>
+        <sc-if value="{{ hubMenu }}" hint-placeholder-val="{{ false }}">
+          <div class="pop" role="menu" style="min-width:320px">
+            <div class="meta" style="padding:6px 10px">Task hubs in {{ account }}</div>
+            <sc-for list="{{ hubs }}" as="h" hint-placeholder-count="3">
+              <button class="mi {{ h.cls }}" role="menuitemradio" aria-checked="{{ h.active }}" onClick="{{ h.pick }}"><span class="mono" style="font-weight:600">{{ h.name }}</span><span class="meta" style="margin-left:auto">{{ h.meta }}</span></button>
+            </sc-for>
+            <div class="sep"></div>
+            <button class="mi" role="menuitem" onClick="{{ goLogin }}">Switch account or connection…</button>
+          </div>
+        </sc-if>
+      </div>
+      <div class="anchor grow" style="max-width:340px;min-width:140px">
+        <input ref="{{ findRef }}" class="input mono" placeholder="Find instance   /" aria-label="Find instance" value="{{ findQuery }}" onChange="{{ onFindChange }}" onFocus="{{ onFindFocus }}" onKeyDown="{{ onFindKey }}">
+        <sc-if value="{{ findOpen }}" hint-placeholder-val="{{ false }}">
+          <div class="pop" role="listbox" style="width:100%;min-width:280px">
+            <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3">
+              <button class="mi mono" role="option" onMouseDown="{{ s.pick }}">{{ s.id }}</button>
+            </sc-for>
+            <sc-if value="{{ noSuggestions }}" hint-placeholder-val="{{ false }}"><div class="meta" style="padding:8px 10px">No instance id starts with that.</div></sc-if>
+          </div>
+        </sc-if>
+      </div>
+      <sc-if value="{{ readOnly }}" hint-placeholder-val="{{ false }}"><span class="chip sm" style="background:var(--muted)" title="/about does not list DurableFunctionsMonitor.ReadWrite">Read only</span></sc-if>
+      <sc-if value="{{ dangerous }}" hint-placeholder-val="{{ true }}"><span class="dbadge sm hide-m" title="/about lists DurableFunctionsMonitor.DangerousOperations">Dangerous operations on</span></sc-if>
+      <div class="grow hide-m"></div>
+      <div class="sel hide-m"><select class="input" aria-label="Auto-refresh" style="width:auto" value="{{ autoRefresh }}" onChange="{{ onAutoRefresh }}"><option>Never</option><option>Every 1 sec.</option><option>Every 5 sec.</option><option>Every 10 sec.</option></select></div>
+      <div class="seg hide-m" role="group" aria-label="Show time as"><button aria-pressed="{{ utc }}" onClick="{{ setUtc }}">UTC</button><button aria-pressed="{{ local }}" onClick="{{ setLocal }}">Local</button></div>
+      <div class="anchor hide-m">
+        <button class="btn" onClick="{{ toggleThemeMenu }}" aria-haspopup="menu" aria-expanded="{{ themeMenu }}"><span class="swq" style="background:var(--primary)" aria-hidden="true"></span>{{ themeLabel }}</button>
+        <sc-if value="{{ themeMenu }}" hint-placeholder-val="{{ false }}">
+          <div class="pop right" role="menu" style="min-width:270px;padding:8px">
+            <div class="meta" style="padding:4px 10px 6px">Theme · data-theme</div>
+            <sc-for list="{{ themes }}" as="t" hint-placeholder-count="5">
+              <button class="ttile {{ t.cls }}" role="menuitemradio" aria-checked="{{ t.active }}" onClick="{{ t.pick }}"><span class="sw" aria-hidden="true"><i style="background:{{ t.paper }}"></i><i style="background:{{ t.ink }}"></i><i style="background:{{ t.primary }}"></i></span><span>{{ t.label }}</span><span class="meta" style="margin-left:auto;font-weight:400">{{ t.idea }}</span></button>
+            </sc-for>
+            <div class="sep"></div>
+            <div class="meta" style="padding:4px 10px 6px">Mode · .dark</div>
+            <button class="check" role="switch" aria-checked="{{ dark }}" onClick="{{ toggleDark }}" style="width:100%;justify-content:space-between;height:36px;padding:0 10px"><span>Dark mode</span><span class="switch {{ darkCls }}" aria-hidden="true"></span></button>
+            <button class="check" role="switch" aria-checked="{{ comfortable }}" onClick="{{ toggleDensity }}" style="width:100%;justify-content:space-between;height:36px;padding:0 10px"><span>Comfortable density</span><span class="switch {{ comfortableCls }}" aria-hidden="true"></span></button>
+          </div>
+        </sc-if>
+      </div>
+      <button class="btn flat hide-m" onClick="{{ openPalette }}" title="Command palette"><span class="fine">Ctrl K</span></button>
+      <div class="anchor">
+        <button class="btn flat" onClick="{{ toggleUserMenu }}" aria-haspopup="menu" aria-expanded="{{ userMenu }}" style="padding:0 8px"><span class="avatar" aria-hidden="true">c</span><span class="hide-m">chandra</span></button>
+        <sc-if value="{{ userMenu }}" hint-placeholder-val="{{ false }}">
+          <div class="pop right" role="menu"><div class="meta" style="padding:6px 10px">chandra@contoso.com · ReadWrite</div><button class="mi" role="menuitem" onClick="{{ goSettings }}">Settings</button><button class="mi show-m" role="menuitem" onClick="{{ openPalette }}">Command palette</button><div class="sep"></div><button class="mi" role="menuitem" onClick="{{ goLogin }}">Sign out</button></div>
+        </sc-if>
+      </div>
+    </header>
+    <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}"><div class="progress" role="progressbar" aria-label="Loading" style="border-width:0 0 var(--border-width) 0"></div></sc-if>
+    <main class="content" id="main">
+      <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+        <dc-import name="ScreenOverview" range="{{ range }}" on-range="{{ setRange }}" partial="{{ partial }}" empty="{{ emptyHub }}" read-only="{{ readOnly }}" on-navigate="{{ navigate }}" on-peek="{{ openPeek }}" on-toast="{{ toast }}" on-refresh="{{ refresh }}" hint-size="100%,900px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isInstances }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenInstances" range="{{ range }}" on-range="{{ setRange }}" empty="{{ emptyHub }}" read-only="{{ readOnly }}" initial-status="{{ instancesStatus }}" initial-name="{{ instancesName }}" start-new="{{ instancesStart }}" on-navigate="{{ navigate }}" on-peek="{{ openPeek }}" on-toast="{{ toast }}" on-refresh="{{ refresh }}" hint-size="100%,900px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isInstance }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenInstance" instance-id="{{ instanceId }}" tab="{{ wsTab }}" read-only="{{ readOnly }}" dangerous="{{ dangerous }}" on-navigate="{{ navigate }}" on-toast="{{ toast }}" on-refresh="{{ refresh }}" hint-size="100%,1200px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isFailures }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenFailures" range="{{ range }}" on-range="{{ setRange }}" empty="{{ emptyHub }}" read-only="{{ readOnly }}" dangerous="{{ dangerous }}" on-navigate="{{ navigate }}" on-peek="{{ openPeek }}" on-toast="{{ toast }}" hint-size="100%,800px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isEntities }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenEntities" empty="{{ emptyHub }}" read-only="{{ readOnly }}" on-navigate="{{ navigate }}" on-peek="{{ openPeek }}" on-toast="{{ toast }}" hint-size="100%,700px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isFunctions }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenFunctions" range="{{ range }}" on-range="{{ setRange }}" on-navigate="{{ navigate }}" on-toast="{{ toast }}" hint-size="100%,800px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isStorage }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenStorage" on-navigate="{{ navigate }}" on-toast="{{ toast }}" on-refresh="{{ refresh }}" hint-size="100%,800px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isActivity }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenActivity" range="{{ range }}" on-range="{{ setRange }}" empty="{{ emptyHub }}" on-navigate="{{ navigate }}" hint-size="100%,700px"></dc-import>
+      </sc-if>
+      <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="ScreenSettings" theme="{{ theme }}" dark="{{ dark }}" density="{{ density }}" utc="{{ utc }}" read-only="{{ readOnly }}" dangerous="{{ dangerous }}" partial="{{ partial }}" empty="{{ emptyHub }}" hub="{{ hub }}" account="{{ account }}" on-theme="{{ setTheme }}" on-dark="{{ setDark }}" on-density="{{ setDensity }}" on-utc="{{ setUtcValue }}" on-read-only="{{ setReadOnly }}" on-dangerous="{{ setDangerous }}" on-partial="{{ setPartial }}" on-empty="{{ setEmpty }}" on-navigate="{{ navigate }}" on-toast="{{ toast }}" on-refresh="{{ refresh }}" hint-size="100%,1200px"></dc-import>
+      </sc-if>
+    </main>
+  </div>
+  <nav class="bottom-nav" aria-label="Main">
+    <button class="{{ navOverview }}" onClick="{{ goOverview }}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8"></rect><rect x="13" y="3" width="8" height="8"></rect><rect x="3" y="13" width="8" height="8"></rect><rect x="13" y="13" width="8" height="8"></rect></svg>Overview</button>
+    <button class="{{ navInstances }}" onClick="{{ goInstances }}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><line x1="4" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="20" y2="18"></line></svg>Instances</button>
+    <button class="{{ navFailures }}" onClick="{{ goFailures }}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 17H3z"></path><line x1="12" y1="10" x2="12" y2="14"></line><line x1="12" y1="17" x2="12" y2="17.5"></line></svg>Failures<span class="bcnt">9</span></button>
+    <button class="{{ navEntities }}" onClick="{{ goEntities }}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>Entities</button>
+    <button class="{{ moreCls }}" onClick="{{ toggleMore }}" aria-expanded="{{ moreOpen }}"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>More</button>
+  </nav>
+</div>
+<sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+  <div class="overlay" onClick="{{ closeMore }}">
+    <div class="sheet" role="menu" onClick="{{ stop }}">
+      <div class="meta" style="padding:4px 12px 8px">More</div>
+      <button class="item {{ navFunctions }}" role="menuitem" onClick="{{ goFunctions }}">Functions</button>
+      <button class="item {{ navStorage }}" role="menuitem" onClick="{{ goStorage }}">Storage</button>
+      <button class="item {{ navActivity }}" role="menuitem" onClick="{{ goActivity }}">Activity</button>
+      <button class="item {{ navSettings }}" role="menuitem" onClick="{{ goSettings }}">Settings<span class="meta" style="margin-left:auto">theme, mode, density</span></button>
+      <div class="sep"></div>
+      <button class="item" role="menuitem" onClick="{{ openPalette }}">Command palette</button>
+      <button class="item" role="menuitem" onClick="{{ goLogin }}">Switch hub or sign out</button>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ peekOpen }}" hint-placeholder-val="{{ false }}">
+  <div class="overlay clear" onClick="{{ closePeek }}">
+    <aside class="peek" onClick="{{ stop }}" aria-label="Instance peek">
+      <div class="phead">
+        <div class="tile {{ peekStCls }}" style="width:72px;height:72px">{{ peekItem.status }}</div>
+        <div class="grow"><div class="mono" style="font-size:20px;font-weight:600;overflow-wrap:anywhere;line-height:1.2">{{ peekItem.id }}</div><div class="meta" style="margin-top:4px">{{ peekItem.name }} · {{ peekItem.kind }}</div></div>
+        <button class="btn primary" onClick="{{ openPeeked }}">Open</button>
+        <button class="btn ghost" onClick="{{ closePeek }}" aria-label="Close" style="padding:0 10px">×</button>
+      </div>
+      <div class="pbody">
+        <div>
+          <h3 class="section-h">Summary</h3>
+          <dl class="kv">
+            <dt>created</dt><dd class="mono">{{ peekItem.created }}</dd>
+            <dt>last updated</dt><dd class="mono">{{ peekItem.updated }}</dd>
+            <dt>duration</dt><dd class="mono">{{ peekItem.duration }}</dd>
+            <dt>customStatus</dt><dd class="mono">{{ peekItem.customText }}</dd>
+            <dt>history</dt><dd class="mono">{{ peekItem.history }}</dd>
+          </dl>
+        </div>
+        <sc-if value="{{ peekIsOrch }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <h3 class="section-h">Timeline</h3>
+            <div class="swim"><div class="swim-in" style="min-width:0;padding:10px">
+              <div class="axis"><span></span><span class="ticks"><span>{{ peekItem.t0 }}</span><span>{{ peekItem.t1 }}</span></span></div>
+              <div class="lane"><span class="lbl">{{ peekItem.name }}</span><div class="track"><div class="bar orch" style="left:0;width:100%"></div></div></div>
+              <div class="lane"><span class="lbl">ReserveInventory</span><div class="track"><div class="bar st-completed" style="left:1%;width:9%"></div><span class="blbl" style="left:11%">1.9 s</span></div></div>
+              <div class="lane"><span class="lbl">ChargePayment</span><div class="track"><div class="bar st-completed" style="left:11%;width:16%">3.1 s</div></div></div>
+              <div class="lane"><span class="lbl">{{ peekItem.lastLane }}</span><div class="track"><div class="bar {{ peekItem.lastLaneCls }}" style="left:29%;width:64%">{{ peekItem.lastLaneText }}</div></div></div>
+            </div></div>
+          </div>
+          <div class="row">
+            <button class="btn sm" onClick="{{ peekAction }}" disabled="{{ readOnly }}">Suspend</button>
+            <button class="btn sm" onClick="{{ peekAction }}" disabled="{{ readOnly }}">Raise event</button>
+            <button class="btn sm destructive" onClick="{{ peekAction }}" disabled="{{ readOnly }}">Terminate</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ peekIsEntity }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <h3 class="section-h">State</h3>
+            <div class="brutal-flat" style="overflow:hidden"><div class="jse-bar"><span class="on">tree</span><span>text</span><span style="margin-left:auto">copy</span></div><pre class="json">{{ peekItem.stateText }}</pre></div>
+          </div>
+          <div class="row"><button class="btn sm" onClick="{{ peekAction }}" disabled="{{ readOnly }}">Send signal</button><button class="btn sm destructive" onClick="{{ peekAction }}" disabled="{{ readOnly }}">Purge</button></div>
+        </sc-if>
+        <p class="meta">Esc or click outside to close. The list keeps its scroll position and selection.</p>
+      </div>
+    </aside>
+  </div>
+</sc-if>
+<sc-if value="{{ paletteOpen }}" hint-placeholder-val="{{ false }}">
+  <div class="overlay pal" onClick="{{ closePalette }}">
+    <div class="palette" role="dialog" aria-modal="true" aria-label="Command palette" onClick="{{ stop }}">
+      <input autoFocus="{{ true }}" placeholder="Type a command, a screen or an instance id" aria-label="Command" value="{{ paletteQuery }}" onChange="{{ onPaletteChange }}" onKeyDown="{{ onPaletteKey }}">
+      <div class="plist">
+        <sc-for list="{{ paletteGroups }}" as="g" hint-placeholder-count="3">
+          <div class="grp">{{ g.name }}</div>
+          <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="4">
+            <button class="prow {{ it.cls }}" onClick="{{ it.run }}" onMouseEnter="{{ it.hover }}"><span>{{ it.label }}</span><span class="kbd">{{ it.kbd }}</span></button>
+          </sc-for>
+        </sc-for>
+        <sc-if value="{{ paletteEmpty }}" hint-placeholder-val="{{ false }}"><div class="meta" style="padding:16px">Nothing matches. Try a screen, a theme name or an instance id.</div></sc-if>
+      </div>
+      <div class="pfoot fine muted">Up and down to move · Enter to run · Esc to close · Ctrl K opens this anywhere</div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{ toastOpen }}" hint-placeholder-val="{{ false }}">
+  <div class="toast {{ toastCls }}" role="status"><span class="grow">{{ toastMsg }}</span><sc-if value="{{ toastRetry }}" hint-placeholder-val="{{ false }}"><button class="btn" onClick="{{ retry }}">Retry</button></sc-if><button class="btn ghost" style="height:28px;padding:0 8px" onClick="{{ closeToast }}" aria-label="Dismiss">×</button></div>
+</sc-if>
+</sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startTheme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;poster&quot;,&quot;tsType&quot;:&quot;'poster'|'riso'|'memphis'|'blueprint'|'hazard'&quot;,&quot;options&quot;:[&quot;poster&quot;,&quot;riso&quot;,&quot;memphis&quot;,&quot;blueprint&quot;,&quot;hazard&quot;],&quot;section&quot;:&quot;Appearance&quot;},&quot;startDark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Appearance&quot;}}">
+class Component extends DCLogic {
+  state = {
+    route: 'overview', instanceId: 'order-2026-09-04-000913', wsTab: 'timeline', instancesStatus: '', instancesName: '', instancesStart: false,
+    theme: 'poster', dark: false, density: 'compact', collapsed: false,
+    hubMenu: false, themeMenu: false, userMenu: false, moreOpen: false,
+    findQuery: '', findFocus: false,
+    paletteOpen: false, paletteQuery: '', paletteIndex: 0,
+    peek: null, toast: null, loading: false,
+    readOnly: false, dangerous: true, partial: false, emptyHub: false,
+    range: 'Last 24 hours', utc: true, autoRefresh: 'Every 5 sec.', hub: 'DurableFunctionsHub', account: 'dfmstorage001'
+  };
+  THEMES = [
+    { key: 'poster', label: 'Poster', idea: 'bone, black, print', paper: '#F8F6F1', ink: '#000000', primary: '#FFD400' },
+    { key: 'riso', label: 'Riso', idea: 'newsprint, halftone', paper: '#F2EEE6', ink: '#231F20', primary: '#FF48B0' },
+    { key: 'memphis', label: 'Memphis', idea: 'pastels, thick line', paper: '#F6F3FA', ink: '#000000', primary: '#FF9ECF' },
+    { key: 'blueprint', label: 'Blueprint', idea: 'cobalt line, grid', paper: '#EEF2FF', ink: '#1636E0', primary: '#FF6A00' },
+    { key: 'hazard', label: 'Hazard', idea: 'signage, stripes', paper: '#F4F4F1', ink: '#000000', primary: '#FFC800' }
+  ];
+  IDS = ['order-2026-09-04-000913', 'order-2026-09-04-000912', 'order-2026-09-04-000911', 'order-2026-09-04-000907', 'order-2026-09-04-000899', 'nightly-reconcile-20260903', '8f3a1b2c-4d5e-6f70-8192-a3b4c5d6e7f8', '@counter@warehouse-07', '@counter@warehouse-12'];
+  HUBS = [
+    { name: 'DurableFunctionsHub', meta: '12,408 instances · 4 partitions' },
+    { name: 'OrdersHub', meta: '3,102 instances · 4 partitions' },
+    { name: 'LedgerHub', meta: '188 instances · 1 partition' }
+  ];
+  findRef = React.createRef();
+
+  componentDidMount() {
+    const ls = window.localStorage;
+    const next = {
+      theme: ls.getItem('dfm.theme') || this.props.startTheme || 'poster',
+      dark: ls.getItem('dfm.mode') ? ls.getItem('dfm.mode') === 'dark' : !!this.props.startDark,
+      density: ls.getItem('dfm.density') || 'compact',
+      collapsed: ls.getItem('dfm.nav') === 'collapsed'
+    };
+    if (!this.THEMES.some(t => t.key === next.theme)) next.theme = 'poster';
+    this.setState(next, () => this.applyHtml());
+    this._onKey = (e) => this.onKey(e);
+    this._onDoc = (e) => {
+      const s = this.state;
+      if (!(s.hubMenu || s.themeMenu || s.userMenu || s.findFocus)) return;
+      if (e.target && e.target.closest && e.target.closest('.anchor')) return;
+      this.setState({ hubMenu: false, themeMenu: false, userMenu: false, findFocus: false });
+    };
+    window.addEventListener('keydown', this._onKey);
+    document.addEventListener('mousedown', this._onDoc);
+  }
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this._onKey);
+    document.removeEventListener('mousedown', this._onDoc);
+    clearTimeout(this._toastT); clearTimeout(this._loadT);
+  }
+  applyHtml() {
+    const h = document.documentElement;
+    h.setAttribute('data-theme', this.state.theme);
+    h.classList.toggle('dark', !!this.state.dark);
+    h.setAttribute('data-density', this.state.density);
+  }
+  setTheme(t) { localStorage.setItem('dfm.theme', t); this.setState({ theme: t }, () => this.applyHtml()); }
+  setDark(d) { localStorage.setItem('dfm.mode', d ? 'dark' : 'light'); this.setState({ dark: !!d }, () => this.applyHtml()); }
+  setDensity(d) { localStorage.setItem('dfm.density', d); this.setState({ density: d }, () => this.applyHtml()); }
+  closeAll() { return { hubMenu: false, themeMenu: false, userMenu: false, findFocus: false, moreOpen: false, paletteOpen: false }; }
+  go(route, params) {
+    const p = params || {};
+    const next = Object.assign(this.closeAll(), { route, peek: null, instancesStatus: p.status || '', instancesName: p.name || '', instancesStart: !!p.start });
+    if (route === 'instance') { next.instanceId = p.instanceId || this.state.instanceId; next.wsTab = p.tab || 'timeline'; }
+    this.setState(next);
+    window.scrollTo(0, 0);
+  }
+  onKey(e) {
+    const tag = (e.target && e.target.tagName) || '';
+    const typing = /INPUT|TEXTAREA|SELECT/.test(tag);
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); this.setState(s => Object.assign(this.closeAll(), { paletteOpen: !s.paletteOpen, paletteQuery: '', paletteIndex: 0 })); return; }
+    if (e.key === 'Escape') { this.setState(Object.assign(this.closeAll(), { peek: null })); return; }
+    if (typing || this.state.paletteOpen || this.state.route === 'login') return;
+    if (e.key === '/') { e.preventDefault(); if (this.findRef.current) this.findRef.current.focus(); return; }
+    if (e.key === 'g') { this._g = Date.now(); return; }
+    if (this._g && Date.now() - this._g < 900) {
+      const m = { o: 'overview', i: 'instances', f: 'failures', e: 'entities', s: 'settings' };
+      if (m[e.key]) this.go(m[e.key]);
+      this._g = 0;
+    }
+  }
+  toast(kind, message, retry) {
+    clearTimeout(this._toastT);
+    const ok = kind === 'ok';
+    this.setState({ toast: { ok, message, retry: !!retry } });
+    if (ok) this._toastT = setTimeout(() => this.setState({ toast: null }), 5000);
+  }
+  refresh() {
+    clearTimeout(this._loadT);
+    this.setState({ loading: true });
+    this._loadT = setTimeout(() => this.setState({ loading: false }), 1200);
+  }
+  paletteGroups() {
+    const q = this.state.paletteQuery.trim().toLowerCase();
+    const s = this.state;
+    const go = (r, p) => () => this.go(r, p);
+    const groups = [
+      { name: 'Go to', items: [
+        ['Overview', 'g o', go('overview')], ['Instances', 'g i', go('instances')], ['Failures', 'g f', go('failures')], ['Entities', 'g e', go('entities')],
+        ['Functions', '', go('functions')], ['Storage', '', go('storage')], ['Activity', '', go('activity')], ['Settings', 'g s', go('settings')],
+        ['Instance order-2026-09-04-000913', '', go('instance', { instanceId: 'order-2026-09-04-000913' })],
+        ['Instance order-2026-09-04-000911 (failed)', '', go('instance', { instanceId: 'order-2026-09-04-000911', tab: 'inputs' })]
+      ] },
+      { name: 'Actions', items: [
+        ['Start new instance', '', go('instances', { start: true })],
+        ['Refresh', '', () => { this.refresh(); this.setState(this.closeAll()); }],
+        ['Suspend current instance', '', () => { this.setState(this.closeAll()); this.toast('ok', 'Suspended order-2026-09-04-000913'); }],
+        ['Purge instance history…', '', go('settings')],
+        ['Switch task hub', '', () => this.setState(Object.assign(this.closeAll(), { hubMenu: true }))]
+      ] },
+      { name: 'Preferences', items: [
+        [s.dark ? 'Switch to light mode' : 'Switch to dark mode', '', () => { this.setDark(!s.dark); this.setState(this.closeAll()); }],
+        ...this.THEMES.map(t => ['Theme: ' + t.label, t.key === s.theme ? 'current' : '', () => { this.setTheme(t.key); this.setState(this.closeAll()); }]),
+        [s.density === 'comfortable' ? 'Density: compact rows (36 px)' : 'Density: comfortable rows (44 px)', '', () => { this.setDensity(s.density === 'comfortable' ? 'compact' : 'comfortable'); this.setState(this.closeAll()); }],
+        ...['Last 15 minutes', 'Last hour', 'Last 24 hours', 'Last 7 days', 'Last 30 days'].map(r => ['Time range: ' + r, r === s.range ? 'current' : '', () => this.setState(Object.assign(this.closeAll(), { range: r }))]),
+        [s.utc ? 'Show time as local' : 'Show time as UTC', '', () => this.setState(Object.assign(this.closeAll(), { utc: !s.utc }))]
+      ] }
+    ];
+    let idx = 0;
+    const out = [];
+    groups.forEach(g => {
+      const items = g.items.filter(it => !q || it[0].toLowerCase().includes(q)).map(it => {
+        const i = idx++;
+        return { label: it[0], kbd: it[1], run: it[2], cls: i === this.state.paletteIndex ? 'sel' : '', hover: () => { if (this.state.paletteIndex !== i) this.setState({ paletteIndex: i }); } };
+      });
+      if (items.length) out.push({ name: g.name, items });
+    });
+    return { groups: out, count: idx };
+  }
+  renderVals() {
+    const s = this.state;
+    const go = (r, p) => () => this.go(r, p);
+    const nav = (n) => s.route === n ? 'active' : '';
+    const themeObj = this.THEMES.find(t => t.key === s.theme) || this.THEMES[0];
+    const pal = this.paletteGroups();
+    const q = s.findQuery.trim().toLowerCase();
+    const suggestions = q ? this.IDS.filter(id => id.toLowerCase().startsWith(q)).slice(0, 6) : [];
+    const peek = s.peek;
+    const peekItem = peek ? Object.assign({
+      customText: peek.custom || 'none', history: peek.history || '31 rows · 18.2 KB', kind: peek.kind || 'Orchestration',
+      t0: (peek.created || '').slice(11) || '14:02:11', t1: (peek.updated || '').slice(11) || '14:02:58',
+      lastLane: peek.status === 'Failed' ? 'ChargePayment (retry 2)' : 'NotifyCustomer (sub)',
+      lastLaneCls: peek.status === 'Failed' ? 'st-failed' : (peek.status === 'Completed' ? 'st-completed' : 'st-running'),
+      lastLaneText: peek.status === 'Failed' ? 'timeout' : (peek.status === 'Completed' ? '4.2 s' : 'running'),
+      stateText: peek.state || '{ "value": 1284 }'
+    }, peek) : {};
+    const stCls = peek ? 'st-' + String(peek.status || '').toLowerCase() : '';
+    return {
+      isLogin: s.route === 'login', isApp: s.route !== 'login',
+      shellClass: s.collapsed ? 'collapsed' : '',
+      collapseTitle: s.collapsed ? 'Expand' : 'Collapse',
+      collapseGlyph: s.collapsed ? '9 6 15 12 9 18' : '15 6 9 12 15 18',
+      navOverview: nav('overview'), navInstances: nav('instances') || nav('instance'), navFailures: nav('failures'), navEntities: nav('entities'),
+      navFunctions: nav('functions'), navStorage: nav('storage'), navActivity: nav('activity'), navSettings: nav('settings'),
+      moreCls: s.moreOpen || ['functions', 'storage', 'activity', 'settings'].includes(s.route) ? 'active' : '',
+      goOverview: go('overview'), goInstances: go('instances'), goFailures: go('failures'), goEntities: go('entities'), goFunctions: go('functions'),
+      goStorage: go('storage'), goActivity: go('activity'), goSettings: go('settings'), goLogin: go('login'),
+      isOverview: s.route === 'overview', isInstances: s.route === 'instances', isInstance: s.route === 'instance', isFailures: s.route === 'failures',
+      isEntities: s.route === 'entities', isFunctions: s.route === 'functions', isStorage: s.route === 'storage', isActivity: s.route === 'activity', isSettings: s.route === 'settings',
+      toggleCollapse: () => { const c = !s.collapsed; localStorage.setItem('dfm.nav', c ? 'collapsed' : 'open'); this.setState({ collapsed: c }); },
+      hub: s.hub, account: s.account, hubMenu: s.hubMenu,
+      hubs: this.HUBS.map(h => ({ name: h.name, meta: h.meta, active: h.name === s.hub, cls: h.name === s.hub ? 'active' : '', pick: () => { this.setState(Object.assign(this.closeAll(), { hub: h.name, route: 'overview' })); this.refresh(); } })),
+      toggleHubMenu: () => this.setState(Object.assign(this.closeAll(), { hubMenu: !s.hubMenu })),
+      findRef: this.findRef, findQuery: s.findQuery, findOpen: s.findFocus && q.length > 0, suggestions: suggestions.map(id => ({ id, pick: () => { this.setState({ findQuery: '' }); this.go('instance', { instanceId: id }); } })),
+      noSuggestions: suggestions.length === 0,
+      onFindChange: (e) => this.setState({ findQuery: e.target.value, findFocus: true }),
+      onFindFocus: () => this.setState(Object.assign(this.closeAll(), { findFocus: true })),
+      onFindKey: (e) => { if (e.key === 'Enter') { const id = suggestions[0] || s.findQuery.trim(); if (id) { this.setState({ findQuery: '' }); this.go('instance', { instanceId: id }); } } if (e.key === 'Escape') { e.target.blur(); this.setState({ findFocus: false }); } },
+      readOnly: s.readOnly, dangerous: s.dangerous,
+      autoRefresh: s.autoRefresh, onAutoRefresh: (e) => this.setState({ autoRefresh: e.target.value }),
+      utc: s.utc, local: !s.utc, setUtc: () => this.setState({ utc: true }), setLocal: () => this.setState({ utc: false }),
+      themeMenu: s.themeMenu, toggleThemeMenu: () => this.setState(Object.assign(this.closeAll(), { themeMenu: !s.themeMenu })),
+      themeLabel: themeObj.label + (s.dark ? ' · Dark' : ' · Light'),
+      themes: this.THEMES.map(t => ({ key: t.key, label: t.label, idea: t.idea, paper: t.paper, ink: t.ink, primary: t.primary, active: t.key === s.theme, cls: t.key === s.theme ? 'active' : '', pick: () => this.setTheme(t.key) })),
+      dark: s.dark, darkCls: s.dark ? 'on' : '', toggleDark: () => this.setDark(!s.dark),
+      comfortable: s.density === 'comfortable', comfortableCls: s.density === 'comfortable' ? 'on' : '', toggleDensity: () => this.setDensity(s.density === 'comfortable' ? 'compact' : 'comfortable'),
+      userMenu: s.userMenu, toggleUserMenu: () => this.setState(Object.assign(this.closeAll(), { userMenu: !s.userMenu })),
+      openPalette: () => this.setState(Object.assign(this.closeAll(), { paletteOpen: true, paletteQuery: '', paletteIndex: 0 })),
+      closePalette: () => this.setState({ paletteOpen: false }),
+      paletteOpen: s.paletteOpen, paletteQuery: s.paletteQuery, paletteGroups: pal.groups, paletteEmpty: pal.count === 0,
+      onPaletteChange: (e) => this.setState({ paletteQuery: e.target.value, paletteIndex: 0 }),
+      onPaletteKey: (e) => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); this.setState({ paletteIndex: Math.min(pal.count - 1, s.paletteIndex + 1) }); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState({ paletteIndex: Math.max(0, s.paletteIndex - 1) }); }
+        else if (e.key === 'Enter') { const flat = pal.groups.flatMap(g => g.items); const it = flat[s.paletteIndex]; if (it) it.run(); }
+      },
+      loading: s.loading, refresh: () => this.refresh(),
+      moreOpen: s.moreOpen, toggleMore: () => this.setState(Object.assign(this.closeAll(), { moreOpen: !s.moreOpen })), closeMore: () => this.setState({ moreOpen: false }),
+      stop: (e) => e.stopPropagation(),
+      peekOpen: !!peek, peekItem, peekStCls: stCls, peekIsOrch: !!peek && peek.kind !== 'DurableEntity', peekIsEntity: !!peek && peek.kind === 'DurableEntity',
+      openPeek: (item) => this.setState(Object.assign(this.closeAll(), { peek: item })),
+      closePeek: () => this.setState({ peek: null }),
+      openPeeked: () => this.go('instance', { instanceId: peek ? peek.id : s.instanceId }),
+      peekAction: (e) => { const label = e.currentTarget.textContent; this.setState({ peek: null }); this.toast('ok', label + ' sent for ' + (peek ? peek.id : '')); },
+      toastOpen: !!s.toast, toastCls: s.toast && s.toast.ok ? 'ok' : '', toastMsg: s.toast ? s.toast.message : '', toastRetry: !!(s.toast && s.toast.retry),
+      closeToast: () => this.setState({ toast: null }), retry: () => { this.setState({ toast: null }); this.refresh(); },
+      toast: (kind, message, retry) => this.toast(kind, message, retry),
+      navigate: (route, params) => this.go(route, params),
+      range: s.range, setRange: (r) => this.setState({ range: r }),
+      partial: s.partial, emptyHub: s.emptyHub, theme: s.theme, density: s.density,
+      instancesStatus: s.instancesStatus, instancesName: s.instancesName, instancesStart: s.instancesStart, instanceId: s.instanceId, wsTab: s.wsTab,
+      setTheme: (t) => this.setTheme(t), setDark: (d) => this.setDark(d), setDensity: (d) => this.setDensity(d), setUtcValue: (u) => this.setState({ utc: !!u }),
+      setReadOnly: (v) => this.setState({ readOnly: !!v }), setDangerous: (v) => this.setState({ dangerous: !!v }), setPartial: (v) => this.setState({ partial: !!v }), setEmpty: (v) => this.setState({ emptyHub: !!v }),
+      enterHub: (hub) => { this.setState(Object.assign(this.closeAll(), { hub: hub || s.hub, route: 'overview' })); this.refresh(); }
+    };
+  }
+}
+</script>
+</body>
+</html>

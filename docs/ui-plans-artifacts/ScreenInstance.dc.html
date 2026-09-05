@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/orchestrations/{instanceId} — src/routes/Instance.svelte
+     (+ lib/instance/{InstanceHeader,SummaryColumn,TimelineTab,HistoryTable,InputsTab,InputEventCard,SequenceTab,GraphTab,RawTab,ConfirmDialog,RecoveryDialog}.svelte)
+     Data: GET orchestrations('{id}'), /history, /spans, /children, /input-events; POST suspend|resume|rewind|terminate|raise-event|set-custom-status|restart|purge, update-input-and-rewind (Write), replay + restart-in-place (Dangerous). -->
+<section class="page" data-screen-label="Instance workspace">
+  <div class="row" style="gap:8px"><button class="link meta" onClick="{{ goInstances }}">Instances</button><span class="meta">/</span><span class="mono muted">{{ id }}</span></div>
+  <header class="hero">
+    <div class="tile {{ stCls }}">{{ status }}<br><span class="mono" style="font-weight:600">{{ duration }}</span></div>
+    <div style="min-width:0">
+      <h1>{{ id }}</h1>
+      <div class="hmeta">
+        <span style="font-weight:700;color:var(--foreground)">{{ name }}</span>
+        <span class="mono">created {{ created }} UTC</span>
+        <span class="mono">updated {{ updatedAgo }}</span>
+        <span>parent: <span class="mono">{{ parent }}</span></span>
+        <span>children: <button class="link mono" onClick="{{ tabSummaryGo }}">1</button></span>
+        <span class="mono">history 31 rows</span>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" onClick="{{ openSuspend }}" disabled="{{ readOnly }}">{{ suspendLabel }}</button>
+      <button class="btn" onClick="{{ openRaise }}" disabled="{{ readOnly }}">Raise event</button>
+      <button class="btn" onClick="{{ openCustom }}" disabled="{{ readOnly }}">Set customStatus</button>
+      <button class="btn" onClick="{{ openRestart }}" disabled="{{ readOnly }}">Restart</button>
+      <button class="btn" onClick="{{ openRewind }}" disabled="{{ rewindDisabled }}" title="{{ rewindTitle }}">Rewind</button>
+      <button class="btn destructive" onClick="{{ openTerminate }}" disabled="{{ readOnly }}">Terminate</button>
+      <button class="btn destructive" onClick="{{ openPurge }}" disabled="{{ readOnly }}">Purge</button>
+    </div>
+  </header>
+  <div class="tabs" role="tablist">
+    <button class="tab summary-tab" role="tab" aria-selected="{{ tabSummary }}" onClick="{{ setTabSummary }}">Summary</button>
+    <button class="tab" role="tab" aria-selected="{{ tabTimeline }}" onClick="{{ setTabTimeline }}">Timeline</button>
+    <button class="tab" role="tab" aria-selected="{{ tabHistory }}" onClick="{{ setTabHistory }}">History</button>
+    <button class="tab" role="tab" aria-selected="{{ tabInputs }}" onClick="{{ setTabInputs }}">Inputs (2)</button>
+    <button class="tab" role="tab" aria-selected="{{ tabSequence }}" onClick="{{ setTabSequence }}">Sequence</button>
+    <button class="tab" role="tab" aria-selected="{{ tabGraph }}" onClick="{{ setTabGraph }}">Graph</button>
+    <button class="tab" role="tab" aria-selected="{{ tabRaw }}" onClick="{{ setTabRaw }}">Raw</button>
+    <button class="tab" role="tab" aria-selected="{{ tabCustom }}" onClick="{{ setTabCustom }}">OrderSummary</button>
+    <span class="grow"></span>
+    <div class="sel" style="align-self:center;margin-bottom:4px"><select class="input" style="height:30px;width:auto" aria-label="Auto-refresh" defaultValue="Every 5 sec."><option>Never</option><option>Every 1 sec.</option><option>Every 5 sec.</option><option>Every 10 sec.</option></select></div>
+    <button class="btn ghost sm" style="align-self:center;margin:0 0 4px 6px" onClick="{{ refresh }}">Refresh</button>
+  </div>
+  <div class="ws" data-tab="{{ tab }}">
+    <aside class="summary" aria-label="Summary">
+      <div class="panel">
+        <div class="panel-h"><h3>Where the time went</h3><span class="fine muted" style="margin-left:auto">/spans · 47.2 s</span></div>
+        <div class="wbar" aria-hidden="true"><i class="st-completed" style="width:19%"></i><i class="wait" style="width:66%"></i><i class="st-suspended" style="width:6%"></i><i class="orch" style="width:9%"></i></div>
+        <dl class="kv" style="grid-template-columns:auto 1fr auto;margin-top:10px">
+          <dt><span class="swq st-completed"></span> activities</dt><dd class="mono">9.1 s</dd><dd class="mono muted">19 %</dd>
+          <dt><span class="swq" style="background-image:repeating-linear-gradient(45deg,var(--ink) 0 1px,transparent 1px 4px)"></span> external event</dt><dd class="mono">31.0 s</dd><dd class="mono muted">66 %</dd>
+          <dt><span class="swq st-suspended"></span> timers</dt><dd class="mono">3.0 s</dd><dd class="mono muted">6 %</dd>
+          <dt><span class="swq" style="background:var(--ink)"></span> orchestrator</dt><dd class="mono">4.1 s</dd><dd class="mono muted">9 %</dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Input</h3><button class="btn ghost sm" style="margin-left:auto" onClick="{{ openInputJson }}">open</button></div>
+        <pre class="json" style="padding:0;background:transparent;white-space:pre-wrap;overflow-wrap:anywhere;max-height:96px;overflow:hidden"><span class="jp">{</span> <span class="jk">"orderId"</span><span class="jp">:</span> <span class="js">"A-1043"</span><span class="jp">,</span> <span class="jk">"customerId"</span><span class="jp">:</span> <span class="jn">88214</span><span class="jp">,</span> <span class="jk">"items"</span><span class="jp">:</span> <span class="jp">[</span> <span class="jp">{</span> <span class="jk">"sku"</span><span class="jp">:</span> <span class="js">"SKU-4471"</span><span class="jp">,</span> <span class="jk">"qty"</span><span class="jp">:</span> <span class="jn">2</span> <span class="jp">}</span> <span class="jp">]</span> <span class="jp">}</span></pre>
+        <div class="panel-h" style="margin-top:12px"><h3>Output</h3><span class="meta" style="margin-left:auto">none yet</span></div>
+        <div class="panel-h" style="margin-top:12px"><h3>customStatus</h3><button class="btn ghost sm" style="margin-left:auto" onClick="{{ openCustom }}" disabled="{{ readOnly }}">edit</button></div>
+        <pre class="json" style="padding:0;background:transparent;white-space:pre-wrap"><span class="jp">{</span> <span class="jk">"step"</span><span class="jp">:</span> <span class="js">"ChargePayment"</span><span class="jp">,</span> <span class="jk">"attempt"</span><span class="jp">:</span> <span class="jn">2</span> <span class="jp">}</span></pre>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Children</h3><span class="fine muted" style="margin-left:auto">/children · complete</span></div>
+        <div class="row" style="justify-content:space-between"><button class="link mono" onClick="{{ openChild }}">NotifyCustomer</button><span class="chip st-running sm">Running</span></div>
+        <div class="panel-h" style="margin-top:14px"><h3>Execution</h3></div>
+        <dl class="kv">
+          <dt>executionId</dt><dd class="mono">c4f1e2d3</dd>
+          <dt>generation</dt><dd class="mono">0</dd>
+          <dt>history</dt><dd class="mono">31 rows · 18.2 KB</dd>
+          <dt>large blobs</dt><dd class="mono">0</dd>
+          <dt>tags</dt><dd><span class="chip sm">region:eu</span></dd>
+        </dl>
+      </div>
+    </aside>
+    <div class="tabbody">
+      <sc-if value="{{ tabTimeline }}" hint-placeholder-val="{{ true }}">
+        <div class="swim"><div class="swim-in">
+          <div class="axis"><span class="meta">span</span><span class="ticks"><span>14:02:11</span><span>14:02:20</span><span>14:02:30</span><span>14:02:40</span><span>14:02:50</span><span>14:03:00</span></span></div>
+          <sc-for list="{{ lanes }}" as="l" hint-placeholder-count="7">
+            <div class="lane {{ l.hl }}" onMouseEnter="{{ l.enter }}" onMouseLeave="{{ leave }}"><span class="lbl" title="{{ l.label }}">{{ l.label }}</span><div class="track">
+              <sc-for list="{{ l.bars }}" as="b" hint-placeholder-count="1"><div class="bar {{ b.cls }}" style="left:{{ b.left }}%;width:{{ b.width }}%" title="{{ b.title }}">{{ b.text }}</div></sc-for>
+              <sc-if value="{{ l.hasLbl }}" hint-placeholder-val="{{ false }}"><span class="blbl" style="left:{{ l.lblLeft }}%">{{ l.lbl }}</span></sc-if>
+              <sc-if value="{{ l.now }}" hint-placeholder-val="{{ false }}"><div class="now" style="left:96%"></div></sc-if>
+            </div></div>
+          </sc-for>
+        </div></div>
+        <div class="row" style="justify-content:space-between"><div class="legend"><span><i class="st-completed"></i>activity</span><span><i class="st-failed"></i>failed</span><span><i class="st-running"></i>running</span><span><i class="st-suspended"></i>timer</span><span><i style="border-style:dotted"></i>waiting for event</span><span><i style="background:var(--ink)"></i>orchestrator replay</span></div><span class="meta">hover a span to find its history rows</span></div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th class="spine"></th><th>#</th><th>Timestamp</th><th>EventType</th><th>Name</th><th>Duration</th><th>Result / Details</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ history }}" as="h" hint-placeholder-count="8">
+                <tr class="{{ h.hl }}" data-st="{{ h.st }}" onMouseEnter="{{ h.enter }}" onMouseLeave="{{ leave }}">
+                  <td class="spine"></td>
+                  <td class="mono" data-label="#">{{ h.n }}</td>
+                  <td class="mono" data-label="Timestamp">{{ h.t }}</td>
+                  <td data-label="EventType">{{ h.type }}<sc-if value="{{ h.input }}" hint-placeholder-val="{{ false }}"><button class="tag" onClick="{{ h.goInput }}">input</button></sc-if></td>
+                  <td class="mono" data-label="Name">{{ h.name }}</td>
+                  <td class="mono" data-label="Duration">{{ h.dur }}</td>
+                  <td class="mono trunc" data-label="Result"><sc-if value="{{ h.hasRes }}" hint-placeholder-val="{{ false }}"><button class="link mono" onClick="{{ h.openRes }}">{{ h.res }}</button></sc-if></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <div class="tfoot"><span class="meta">31 of 31 events · SequenceNumber from the provider</span><button class="btn ghost sm" onClick="{{ setTabHistory }}">Open History tab</button></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ tabHistory }}" hint-placeholder-val="{{ false }}">
+        <div class="row" style="align-items:flex-end">
+          <div class="field"><label>From</label><input class="input mono" style="width:190px" defaultValue="2026-09-04 14:02:11"></div>
+          <div class="field"><label>Till</label><input class="input mono" style="width:190px" placeholder="now"></div>
+          <button class="btn" onClick="{{ refresh }}">Apply</button>
+          <span class="meta" style="margin-left:auto">238 events in this execution · showing 31</span>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th class="spine"></th><th>#</th><th>Timestamp</th><th>EventType</th><th>Name</th><th>ScheduledTime</th><th>Duration</th><th>Result / Details</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ history }}" as="h" hint-placeholder-count="8">
+                <tr data-st="{{ h.st }}">
+                  <td class="spine"></td>
+                  <td class="mono" data-label="#">{{ h.n }}</td>
+                  <td class="mono" data-label="Timestamp">{{ h.t }}</td>
+                  <td data-label="EventType">{{ h.type }}<sc-if value="{{ h.input }}" hint-placeholder-val="{{ false }}"><button class="tag" onClick="{{ h.goInput }}">input</button></sc-if></td>
+                  <td class="mono" data-label="Name">{{ h.name }}</td>
+                  <td class="mono" data-label="ScheduledTime">{{ h.sched }}</td>
+                  <td class="mono" data-label="Duration">{{ h.dur }}</td>
+                  <td class="mono trunc" data-label="Result"><sc-if value="{{ h.hasRes }}" hint-placeholder-val="{{ false }}"><button class="link mono" onClick="{{ h.openRes }}">{{ h.res }}</button></sc-if></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <div class="tfoot"><span class="meta">Rewound rows arrive as GenericEvent with a “Rewound:” reason and the continued spine.</span><button class="btn" onClick="{{ refresh }}">Load more</button></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ tabInputs }}" hint-placeholder-val="{{ false }}">
+        <div class="row" style="justify-content:space-between;align-items:flex-start">
+          <div style="max-width:70ch"><h2 style="font-size:16px;font-weight:700">Inputs this instance received</h2><p style="margin-top:4px">Instance is <span class="chip {{ stCls }} sm">{{ status }}</span>. Edit the last input and rewind, replay from it, or restart from the initial input. Sequence numbers are the concurrency token; the list reloads after each run.</p></div>
+          <div class="row" style="gap:10px">
+            <sc-if value="{{ dangerous }}" hint-placeholder-val="{{ true }}"><span class="dbadge">Dangerous operations on</span></sc-if>
+            <sc-if value="{{ notDangerous }}" hint-placeholder-val="{{ false }}"><span class="chip" style="background:var(--muted)">Dangerous operations off</span></sc-if>
+            <div class="sel"><select class="input" style="height:30px;width:auto" aria-label="Mock outcome" value="{{ outcome }}" onChange="{{ setOutcome }}"><option value="200">Mock outcome: 200</option><option value="409">Mock outcome: 409 conflict</option><option value="413">Mock outcome: 413 too large</option><option value="500">Mock outcome: 500 recovery</option></select></div>
+          </div>
+        </div>
+        <sc-if value="{{ readOnly }}" hint-placeholder-val="{{ false }}"><div class="note"><span class="chip sm" style="background:var(--muted)">Read only</span>All three operations are disabled: /about does not list DurableFunctionsMonitor.ReadWrite.</div></sc-if>
+        <div class="card icard">
+          <div class="head"><span class="seq">#1</span><span class="ev">ExecutionStarted</span><span class="mono">ProcessOrderOrchestrator</span><span class="when">2026-09-04 14:02:11.913</span></div>
+          <div class="bodyrow">
+            <div class="ed ro"><pre><span class="jp">{</span>
+  <span class="jk">"orderId"</span><span class="jp">:</span> <span class="js">"A-1043"</span><span class="jp">,</span>
+  <span class="jk">"customerId"</span><span class="jp">:</span> <span class="jn">88214</span><span class="jp">,</span>
+  <span class="jk">"items"</span><span class="jp">:</span> <span class="jp">[</span> <span class="jp">{</span> <span class="jk">"sku"</span><span class="jp">:</span> <span class="js">"SKU-4471"</span><span class="jp">,</span> <span class="jk">"qty"</span><span class="jp">:</span> <span class="jn">2</span> <span class="jp">}</span> <span class="jp">]</span>
+<span class="jp">}</span></pre><div class="foot">read only · 0.2 KB</div></div>
+            <div class="ops">
+              <div class="op"><button class="btn danger" disabled="{{ true }}">Restart in place</button><div class="why">The instance has received external events. Use replay or update-input-and-rewind on the last one instead.</div></div>
+              <div class="op"><button class="btn" disabled="{{ true }}">Update input and rewind</button><div class="why">Only the last input-bearing event can be edited, and this instance has received external events since it started.</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card icard">
+          <div class="head"><span class="seq">#27</span><span class="ev">EventRaised</span><span class="mono">PaymentApproved</span><span class="chip sm" style="background:var(--accent);color:var(--accent-foreground)">last</span><span class="when">2026-09-04 14:02:24.913</span></div>
+          <div class="bodyrow">
+            <div class="ed {{ edCls }}"><textarea aria-label="Input of event #27" value="{{ inputText }}" onChange="{{ setInputText }}" readOnly="{{ editorReadOnly }}" rows="7"></textarea>
+              <div class="foot">
+                <sc-if value="{{ edited }}" hint-placeholder-val="{{ true }}"><span class="chip st-running sm">edited</span></sc-if>
+                <sc-if value="{{ notEdited }}" hint-placeholder-val="{{ false }}"><span>stored input</span></sc-if>
+                <span class="meter {{ meterCls }}"><i style="--pct:{{ pct }}%"></i>{{ sizeLabel }} of 60 KB</span>
+                <sc-if value="{{ edited }}" hint-placeholder-val="{{ true }}"><button class="btn ghost" style="height:24px;padding:0 8px;margin-left:auto;font-size:12px" onClick="{{ resetInput }}">Reset to stored</button></sc-if>
+              </div>
+            </div>
+            <div class="ops">
+              <div class="op"><button class="btn" onClick="{{ openUpdate }}" disabled="{{ updateDisabled }}">Update input and rewind</button><div class="why">{{ updateWhy }}</div></div>
+              <div class="op"><button class="btn danger" onClick="{{ openReplay }}" disabled="{{ replayDisabled }}">Replay from #27</button><div class="why">{{ replayWhy }}</div></div>
+            </div>
+          </div>
+        </div>
+        <p class="meta">Buttons never disappear because of eligibility; a disabled button shows the backend reason verbatim. GET input-events answers 400 for entity ids, so this tab is hidden for entities.</p>
+      </sc-if>
+      <sc-if value="{{ tabSequence }}" hint-placeholder-val="{{ false }}">
+        <div class="seq"><div class="seq-in">
+          <div class="parts"><span></span><div class="part n-orchestrator">ProcessOrderOrchestrator</div><div class="part">ReserveInventory</div><div class="part">ChargePayment</div><div class="part">NotifyCustomer</div></div>
+          <div class="life" style="left:170px"></div><div class="life" style="left:330px"></div><div class="life" style="left:490px"></div><div class="life" style="left:650px"></div>
+          <sc-for list="{{ messages }}" as="m" hint-placeholder-count="8">
+            <div class="smsg"><span class="t">{{ m.t }}</span><div class="arrow {{ m.cls }}" style="left:{{ m.left }}px;width:{{ m.width }}px"><span>{{ m.label }}</span></div></div>
+          </sc-for>
+        </div></div>
+        <div class="row" style="justify-content:flex-end"><button class="btn ghost" onClick="{{ copyDiagram }}">Copy diagram code to clipboard</button><button class="btn ghost" onClick="{{ saveSvg }}">Save as SVG</button></div>
+      </sc-if>
+      <sc-if value="{{ tabGraph }}" hint-placeholder-val="{{ false }}">
+        <div class="graph" style="height:440px">
+          <div class="gcanvas" style="width:760px;height:430px">
+            <svg aria-hidden="true">
+              <polyline class="active" points="214,80 262,80 262,80 310,80"></polyline>
+              <polyline class="active" points="500,80 528,80 528,44 556,44"></polyline>
+              <polyline class="active" points="500,80 528,80 528,132 556,132"></polyline>
+              <polyline class="active" points="500,80 528,80 528,220 556,220"></polyline>
+              <polyline points="500,80 528,80 528,308 556,308"></polyline>
+              <polyline points="500,80 528,80 528,396 556,396"></polyline>
+              <rect x="306" y="76" width="8" height="8"></rect>
+              <rect class="active" x="552" y="40" width="8" height="8"></rect><rect class="active" x="552" y="128" width="8" height="8"></rect><rect class="active" x="552" y="216" width="8" height="8"></rect><rect x="552" y="304" width="8" height="8"></rect><rect x="552" y="392" width="8" height="8"></rect>
+            </svg>
+            <div class="node n-http" style="left:24px;top:44px"><div class="band"></div><div class="body"><div class="kind">HTTP trigger</div><div class="name">StartOrder</div></div></div>
+            <div class="node n-orchestrator sel" style="left:310px;top:36px"><div class="band"></div><div class="body"><div class="kind">Orchestrator · this instance</div><div class="name">ProcessOrderOrchestrator</div><div class="metrics"><span class="mini st-completed">1088</span><span class="mini st-running">14</span><span class="mini st-failed">8</span></div></div></div>
+            <div class="node n-activity" style="left:556px;top:12px"><div class="band"></div><div class="body"><div class="kind">Activity · 1 call</div><div class="name">ReserveInventory</div></div></div>
+            <div class="node n-activity" style="left:556px;top:100px"><div class="band"></div><div class="body"><div class="kind">Activity · 2 calls, 1 failed</div><div class="name">ChargePayment</div></div></div>
+            <div class="node n-suborchestrator" style="left:556px;top:188px"><div class="band"></div><div class="body"><div class="kind">Sub-orchestrator · running</div><div class="name">NotifyCustomer</div></div></div>
+            <div class="node n-activity" style="left:556px;top:276px"><div class="band"></div><div class="body"><div class="kind">Activity · not reached</div><div class="name">SendConfirmation</div></div></div>
+            <div class="node n-entity" style="left:556px;top:364px"><div class="band"></div><div class="body"><div class="kind">Entity · not reached</div><div class="name">Counter</div></div></div>
+          </div>
+          <div class="gctl"><button aria-label="Zoom in">+</button><button aria-label="Zoom out">−</button><button aria-label="Fit view">▢</button></div>
+          <div class="minimap" aria-hidden="true"><i style="left:6px;top:24px;width:24px;height:12px"></i><i style="left:44px;top:22px;width:28px;height:16px"></i><i style="left:84px;top:8px;width:26px;height:62px"></i></div>
+        </div>
+        <div class="row" style="justify-content:space-between"><span class="meta">The ring-colored path is what this instance actually called. Click a function to open its code in VS Code.</span><div class="row"><button class="btn ghost" onClick="{{ saveSvg }}">Save as SVG</button><button class="btn ghost" onClick="{{ openAzGraph }}">az-func-as-a-graph</button></div></div>
+      </sc-if>
+      <sc-if value="{{ tabRaw }}" hint-placeholder-val="{{ false }}">
+        <div class="brutal-flat" style="overflow:hidden;background:var(--card)">
+          <div class="jse-bar"><span class="on">tree</span><span>text</span><span>table</span><span style="margin-left:auto">search</span><span>copy</span></div>
+<pre class="json"><span class="jp">{</span>
+  <span class="jk">"instanceId"</span><span class="jp">:</span> <span class="js">"{{ id }}"</span><span class="jp">,</span>
+  <span class="jk">"name"</span><span class="jp">:</span> <span class="js">"{{ name }}"</span><span class="jp">,</span>
+  <span class="jk">"runtimeStatus"</span><span class="jp">:</span> <span class="js">"{{ status }}"</span><span class="jp">,</span>
+  <span class="jk">"entityType"</span><span class="jp">:</span> <span class="js">"Orchestration"</span><span class="jp">,</span>
+  <span class="jk">"createdTime"</span><span class="jp">:</span> <span class="js">"2026-09-04T14:02:11.913Z"</span><span class="jp">,</span>
+  <span class="jk">"lastUpdatedTime"</span><span class="jp">:</span> <span class="js">"2026-09-04T14:02:58.201Z"</span><span class="jp">,</span>
+  <span class="jk">"parentInstanceId"</span><span class="jp">:</span> <span class="jz">null</span><span class="jp">,</span>
+  <span class="jk">"lastEvent"</span><span class="jp">:</span> <span class="js">"TaskScheduled"</span><span class="jp">,</span>
+  <span class="jk">"input"</span><span class="jp">:</span> <span class="jp">{</span> <span class="jk">"orderId"</span><span class="jp">:</span> <span class="js">"A-1043"</span><span class="jp">,</span> <span class="jk">"customerId"</span><span class="jp">:</span> <span class="jn">88214</span><span class="jp">,</span> <span class="jk">"items"</span><span class="jp">:</span> <span class="jp">[</span> <span class="jp">{</span> <span class="jk">"sku"</span><span class="jp">:</span> <span class="js">"SKU-4471"</span><span class="jp">,</span> <span class="jk">"qty"</span><span class="jp">:</span> <span class="jn">2</span> <span class="jp">}</span> <span class="jp">]</span> <span class="jp">},</span>
+  <span class="jk">"customStatus"</span><span class="jp">:</span> <span class="jp">{</span> <span class="jk">"step"</span><span class="jp">:</span> <span class="js">"ChargePayment"</span><span class="jp">,</span> <span class="jk">"attempt"</span><span class="jp">:</span> <span class="jn">2</span> <span class="jp">},</span>
+  <span class="jk">"output"</span><span class="jp">:</span> <span class="jz">null</span><span class="jp">,</span>
+  <span class="jk">"duration"</span><span class="jp">:</span> <span class="jn">47201</span><span class="jp">,</span>
+  <span class="jk">"tabTemplateNames"</span><span class="jp">:</span> <span class="jp">[</span> <span class="js">"OrderSummary"</span> <span class="jp">]</span>
+<span class="jp">}</span></pre>
+        </div>
+        <div class="row" style="justify-content:flex-end"><button class="btn" onClick="{{ copyRaw }}">Copy to clipboard</button></div>
+      </sc-if>
+      <sc-if value="{{ tabCustom }}" hint-placeholder-val="{{ false }}">
+        <div class="panel">
+          <div class="panel-h"><h3>OrderSummary</h3><span class="fine muted" style="margin-left:auto">Liquid template · custom-tab-markup('OrderSummary')</span></div>
+          <dl class="kv"><dt>Order</dt><dd class="mono">A-1043</dd><dt>Customer</dt><dd class="mono">88214</dd><dt>Items</dt><dd>SKU-4471 × 2</dd><dt>Payment</dt><dd>approved by ops@contoso.com · 129.50 USD</dd><dt>Next step</dt><dd>NotifyCustomer is running</dd></dl>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  <sc-if value="{{ dlgOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeDlg }}">
+      <div class="dialog" role="dialog" aria-modal="true" onClick="{{ stop }}">
+        <sc-if value="{{ dlg.band }}" hint-placeholder-val="{{ false }}"><div class="warn"></div></sc-if>
+        <div class="body">
+          <h3 class="display">{{ dlg.title }}</h3>
+          <p>{{ dlg.body }}</p>
+          <sc-if value="{{ dlg.payload }}" hint-placeholder-val="{{ false }}"><div class="ed" style="min-height:0"><pre style="font-size:12px;max-height:150px">{{ dlg.payload }}</pre></div></sc-if>
+          <sc-if value="{{ dlg.terminateCheck }}" hint-placeholder-val="{{ false }}"><button class="check" onClick="{{ toggleTerminateFirst }}" role="checkbox" aria-checked="{{ terminateFirst }}"><span class="box {{ terminateFirstCls }}" aria-hidden="true"></span>Terminate the running instance first (waits up to 30 seconds)</button><p class="meta">Late messages from the previous run can still reach the replayed instance.</p></sc-if>
+          <sc-if value="{{ dlg.reason }}" hint-placeholder-val="{{ false }}"><div class="field"><label>Reason (optional)</label><input class="input" placeholder="Written to the audit log"></div></sc-if>
+          <sc-if value="{{ dlg.event }}" hint-placeholder-val="{{ false }}"><div class="field"><label>Event name</label><input class="input mono" defaultValue="{{ dlg.eventName }}"></div><div class="field"><label>Event data (JSON)</label><div class="ed" style="min-height:0"><textarea rows="4" defaultValue="{{ dlg.eventData }}"></textarea></div></div></sc-if>
+          <sc-if value="{{ dlg.custom }}" hint-placeholder-val="{{ false }}"><div class="field"><label>customStatus (JSON)</label><div class="ed" style="min-height:0"><textarea rows="4" defaultValue="{ &quot;step&quot;: &quot;ChargePayment&quot;, &quot;attempt&quot;: 2 }"></textarea></div></div></sc-if>
+          <sc-if value="{{ dlg.restartOpts }}" hint-placeholder-val="{{ false }}"><button class="check" onClick="{{ toggleNewId }}" role="checkbox" aria-checked="{{ newIdOn }}"><span class="box {{ newIdCls }}" aria-hidden="true"></span>Start with a new instance id</button></sc-if>
+          <sc-if value="{{ dlg.hint }}" hint-placeholder-val="{{ false }}"><p class="meta">{{ dlg.hint }}</p></sc-if>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ closeDlg }}">{{ dlg.cancel }}</button><sc-if value="{{ dlg.secondary }}" hint-placeholder-val="{{ false }}"><button class="btn" onClick="{{ secondaryDlg }}">{{ dlg.secondary }}</button></sc-if><button class="btn {{ dlg.cls }}" onClick="{{ confirmDlg }}" disabled="{{ dlg.confirmDisabled }}">{{ dlg.confirm }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ jsonOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeJson }}">
+      <div class="dialog" role="dialog" aria-modal="true" onClick="{{ stop }}">
+        <div class="body">
+          <h3 class="display">{{ json.title }}</h3>
+          <p class="meta">{{ json.sub }}</p>
+          <div class="brutal-flat" style="overflow:hidden"><div class="jse-bar"><span class="on">tree</span><span>text</span><span>table</span><span style="margin-left:auto">search</span></div><pre class="json">{{ json.text }}</pre></div>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ copyJsonDlg }}">Copy to clipboard</button><button class="btn primary" onClick="{{ closeJson }}">Close</button></div>
+      </div>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  STORED = '{\n  "approved": true,\n  "approver": "ops@contoso.com",\n  "amount": 129.5\n}';
+  INSTANCES = {
+    'order-2026-09-04-000913': { name: 'ProcessOrderOrchestrator', status: 'Running', created: '2026-09-04 14:02:11', updatedAgo: '47 s ago', duration: '00:00:47', parent: 'none' },
+    'order-2026-09-04-000911': { name: 'ProcessOrderOrchestrator', status: 'Failed', created: '2026-09-04 13:51:02', updatedAgo: '11 min ago', duration: '00:00:17', parent: 'none' },
+    'order-2026-09-04-000912': { name: 'ProcessOrderOrchestrator', status: 'Completed', created: '2026-09-04 13:58:40', updatedAgo: '4 min ago', duration: '00:00:25', parent: 'none' },
+    'order-2026-09-04-000907': { name: 'ProcessOrderOrchestrator', status: 'Failed', created: '2026-09-04 13:40:11', updatedAgo: '22 min ago', duration: '00:00:15', parent: 'none' },
+    'order-2026-09-04-000899': { name: 'ProcessOrderOrchestrator', status: 'Pending', created: '2026-09-04 12:10:04', updatedAgo: '1 h 52 min ago', duration: '—', parent: 'none' },
+    'nightly-reconcile-20260903': { name: 'ReconcileLedgerOrchestrator', status: 'Terminated', created: '2026-09-03 02:00:00', updatedAgo: '1 d ago', duration: '00:42:13', parent: 'none' }
+  };
+  LANES = [
+    { key: 'orch', label: 'ProcessOrderOrchestrator', bars: [{ cls: 'orch', left: 0, width: 2, title: 'replay 0.4 s' }, { cls: 'orch', left: 21, width: 2, title: 'replay 0.6 s' }, { cls: 'orch', left: 25, width: 1.5, title: 'replay' }, { cls: 'orch', left: 32, width: 2, title: 'replay' }], now: true },
+    { key: 'reserve', label: 'ReserveInventory', bars: [{ cls: 'st-completed', left: 0.4, width: 3.9, title: '1.9 s' }], lbl: '1.9 s' },
+    { key: 'charge1', label: 'ChargePayment', bars: [{ cls: 'st-completed', left: 4.5, width: 6.3, text: '3.1 s', title: '3.1 s' }] },
+    { key: 'charge2', label: 'ChargePayment (retry 2)', bars: [{ cls: 'st-failed', left: 11, width: 8.2, text: 'timeout 4.0 s', title: 'TaskFailed: timeout' }] },
+    { key: 'timer', label: 'retry backoff', bars: [{ cls: 'st-suspended', left: 19.4, width: 6.1, text: '3 s', title: 'timer 3 s' }] },
+    { key: 'event', label: 'wait PaymentApproved', bars: [{ cls: 'wait', left: 25.6, width: 1, title: '0.5 s' }], lbl: '0.5 s' },
+    { key: 'charge3', label: 'ChargePayment (retry 3)', bars: [{ cls: 'st-completed', left: 26.8, width: 6.3, text: '3.1 s', title: '3.1 s' }] },
+    { key: 'ship', label: 'wait ShipmentConfirmed', bars: [{ cls: 'wait', left: 33.6, width: 62.4, text: 'waiting 31 s', title: 'external event, still waiting' }] },
+    { key: 'sub', label: 'NotifyCustomer (sub)', bars: [{ cls: 'st-running', left: 34, width: 62, text: 'running 30.9 s', title: 'sub-orchestration running' }] }
+  ];
+  HISTORY = [
+    { n: 1, t: '14:02:11.913', type: 'ExecutionStarted', name: 'ProcessOrderOrchestrator', key: 'orch', input: true, res: '{"orderId":"A-1043","customerId":88214,…}', sched: '', dur: '' },
+    { n: 2, t: '14:02:12.004', type: 'TaskScheduled', name: 'ReserveInventory', key: 'reserve', sched: '', dur: '' },
+    { n: 5, t: '14:02:13.917', type: 'TaskCompleted', name: 'ReserveInventory', key: 'reserve', res: '{"sku":"SKU-4471","reserved":2}', dur: '1.9 s', st: 'Completed' },
+    { n: 6, t: '14:02:14.002', type: 'TaskScheduled', name: 'ChargePayment', key: 'charge1', dur: '' },
+    { n: 9, t: '14:02:17.106', type: 'TaskCompleted', name: 'ChargePayment', key: 'charge1', res: '{"transactionId":"tx_8f3a1b2c","amount":129.5,"currency":"USD"}', dur: '3.1 s', st: 'Completed' },
+    { n: 10, t: '14:02:17.210', type: 'TaskScheduled', name: 'ChargePayment', key: 'charge2', dur: '' },
+    { n: 14, t: '14:02:21.300', type: 'TaskFailed', name: 'ChargePayment', key: 'charge2', res: 'TimeoutException: payment gateway did not answer within 4 s', dur: '4.0 s', st: 'Failed' },
+    { n: 15, t: '14:02:21.402', type: 'TimerCreated', name: '', key: 'timer', sched: '14:02:24.402', dur: '' },
+    { n: 18, t: '14:02:24.410', type: 'TimerFired', name: '', key: 'timer', dur: '3.0 s', st: 'Suspended' },
+    { n: 27, t: '14:02:24.913', type: 'EventRaised', name: 'PaymentApproved', key: 'event', input: true, res: '{"approved":true,"approver":"ops@contoso.com","amount":129.5}', dur: '' },
+    { n: 28, t: '14:02:25.001', type: 'TaskScheduled', name: 'ChargePayment', key: 'charge3', dur: '' },
+    { n: 30, t: '14:02:28.114', type: 'TaskCompleted', name: 'ChargePayment', key: 'charge3', res: '{"transactionId":"tx_9c2d","amount":129.5,"currency":"USD"}', dur: '3.1 s', st: 'Completed' },
+    { n: 31, t: '14:02:28.400', type: 'SubOrchestrationInstanceCreated', name: 'NotifyCustomer', key: 'sub', res: 'order-2026-09-04-000913:0', dur: '', st: 'Running' }
+  ];
+  MESSAGES = [
+    { t: '14:02:11.913', a: 0, b: 1, label: 'ReserveInventory({sku, qty})' },
+    { t: '14:02:13.917', a: 1, b: 0, label: 'reserved 2', cls: 'back' },
+    { t: '14:02:14.002', a: 0, b: 2, label: 'ChargePayment(129.5 USD)' },
+    { t: '14:02:17.106', a: 2, b: 0, label: 'tx_8f3a1b2c', cls: 'back' },
+    { t: '14:02:17.210', a: 0, b: 2, label: 'ChargePayment (retry 2)' },
+    { t: '14:02:21.300', a: 2, b: 0, label: 'TaskFailed: timeout', cls: 'back failed' },
+    { t: '14:02:24.913', a: 0, b: 0, label: 'EventRaised PaymentApproved', self: true },
+    { t: '14:02:25.001', a: 0, b: 2, label: 'ChargePayment (retry 3)' },
+    { t: '14:02:28.114', a: 2, b: 0, label: 'tx_9c2d', cls: 'back' },
+    { t: '14:02:28.400', a: 0, b: 3, label: 'SubOrchestration NotifyCustomer' }
+  ];
+  state = { tab: null, hover: null, dlg: null, json: null, inputText: null, outcome: '200', terminateFirst: true, newIdOn: false, suspended: false };
+
+  componentDidUpdate(prev) {
+    if (prev.tab !== this.props.tab && this.props.tab) this.setState({ tab: this.props.tab });
+    if (prev.instanceId !== this.props.instanceId) this.setState({ hover: null, dlg: null, inputText: null });
+  }
+  inst() { return this.INSTANCES[this.props.instanceId] || Object.assign({}, this.INSTANCES['order-2026-09-04-000913'], { name: 'ProcessOrderOrchestrator' }); }
+  currentInput() { return this.state.inputText === null ? this.STORED : this.state.inputText; }
+  bytes() { return this.currentInput().length * 2; }
+  openDlg(kind) {
+    const p = this.props, s = this.state, id = p.instanceId, inst = this.inst();
+    const edited = this.currentInput() !== this.STORED;
+    const withInput = edited ? 'with your edited input' : 'with the stored input';
+    const preview = this.currentInput().split('\n').slice(0, 6).join('\n');
+    const defs = {
+      update: { title: 'Update input and rewind', body: 'Replaces the input of event #27 (PaymentApproved) and rewinds the instance ' + withInput + '. Only the failed steps run again and see the new input. Completed steps keep their results.', payload: preview, reason: true, confirm: 'Update and rewind', cls: 'primary', cancel: 'Cancel' },
+      replay: { title: 'Replay from event #27', body: 'Deletes history from event #27 onward, reopens the instance and raises PaymentApproved again ' + withInput + '. Every step after the event runs again, including activities that already completed.', band: true, payload: preview, terminateCheck: inst.status === 'Running', confirm: 'Replay from #27', cls: 'danger', cancel: 'Cancel' },
+      restart: { title: 'Purge and restart in place', body: 'Purges this instance, its history and its large-message blobs, then starts a new instance with the same id and the input shown. Sub-orchestrations of the old run are not purged.', band: true, payload: preview, confirm: 'Purge and restart', cls: 'danger', cancel: 'Cancel' },
+      terminate: { title: 'Terminate ' + id, body: 'Stops the instance where it is. Running activities finish but their results are ignored. This cannot be undone.', band: true, reason: true, confirm: 'Terminate', cls: 'destructive', cancel: 'Cancel' },
+      purge: { title: 'Purge ' + id, body: 'Removes the instance, its 31 history rows and its large-message blobs. The sub-orchestration NotifyCustomer is not purged.', band: true, confirm: 'Purge instance', cls: 'destructive', cancel: 'Cancel' },
+      rewind: { title: 'Rewind ' + id, body: 'Re-runs only the failed steps. Completed steps keep their results. Available for failed instances.', band: true, reason: true, confirm: 'Rewind', cls: 'primary', cancel: 'Cancel' },
+      raise: { title: 'Raise event', body: 'Sends an external event to this instance. The orchestrator must be waiting for an event with this exact name.', event: true, eventName: 'ShipmentConfirmed', eventData: '{ "carrier": "DHL", "trackingId": "JD014600003" }', confirm: 'Raise event', cls: 'primary', cancel: 'Cancel' },
+      custom: { title: 'Set customStatus', body: 'Overwrites the customStatus field of this instance. The orchestrator can overwrite it again on its next replay.', custom: true, confirm: 'Set customStatus', cls: 'primary', cancel: 'Cancel' },
+      restartPlain: { title: 'Restart ' + id, body: 'Starts the orchestration again with the same input. The current instance keeps its history.', restartOpts: true, confirm: 'Restart', cls: 'primary', cancel: 'Cancel' },
+      suspend: { title: (s.suspended ? 'Resume ' : 'Suspend ') + id, body: s.suspended ? 'Resumes the instance. Held timers and events are delivered.' : 'Pauses the instance. Timers and external events are held until you resume.', reason: true, confirm: s.suspended ? 'Resume' : 'Suspend', cls: 'primary', cancel: 'Cancel' },
+      recoverRestart: { title: 'The instance was purged but could not be restarted', body: 'Start it again with the input below. The purge removed the history and large-message blobs of ' + id + '.', band: true, payload: preview, confirm: 'Start new instance with this input', cls: 'primary', cancel: 'Close', secondary: 'Copy input', hint: '500 with a recovery payload. Rendered as a dialog, never as a toast.' },
+      recoverReplay: { title: 'History was cut and the instance reopened, but PaymentApproved was not raised', body: '14 rows were removed after event #27 and the instance is Running again. Raise the event now so the replay continues.', band: true, payload: preview, confirm: 'Raise event now', cls: 'primary', cancel: 'Close', hint: 'Opens Raise Event prefilled with eventName and the input from the response.' },
+      recoverUpdate: { title: 'The input was updated but the rewind failed', body: 'Event #27 now carries the new input. Rewind the instance to run the failed steps with it.', band: true, confirm: 'Rewind', cls: 'primary', cancel: 'Close', hint: 'The existing Rewind action; nothing else is needed.' }
+    };
+    const d = defs[kind]; d.kind = kind;
+    this.setState({ dlg: d });
+  }
+  confirm() {
+    const p = this.props, s = this.state, d = s.dlg;
+    const toast = (k, m) => p.onToast && p.onToast(k, m);
+    const done = (m) => { this.setState({ dlg: null }); toast('ok', m); p.onRefresh && p.onRefresh(); };
+    if (d.kind === 'update' || d.kind === 'replay' || d.kind === 'restart') {
+      if (s.outcome === '409') { this.setState({ dlg: null }); toast('error', 'The list was refreshed. History changed since you read it: event #27 is now #29. Review the inputs and try again.'); return; }
+      if (s.outcome === '413') { this.setState({ dlg: null }); toast('error', 'Input is larger than 60 KB. Shorten it and try again.'); return; }
+      if (s.outcome === '500') { this.openDlg(d.kind === 'update' ? 'recoverUpdate' : d.kind === 'replay' ? 'recoverReplay' : 'recoverRestart'); return; }
+      if (d.kind === 'update') { done('Rewound with the updated input. Details, history and inputs reloaded.'); this.setState({ inputText: null }); return; }
+      if (d.kind === 'replay') { done('Replayed from #27, 14 history rows removed. PaymentApproved raised again.'); this.setState({ inputText: null }); return; }
+      done('Restarted in place. New ExecutionId c9a2; history is short again.'); return;
+    }
+    if (d.kind === 'recoverRestart') { done('Start New Instance opened, prefilled with ' + p.instanceId + ' and the input above.'); return; }
+    if (d.kind === 'recoverReplay') { this.setState({ dlg: null }); this.openDlg('raise'); return; }
+    if (d.kind === 'recoverUpdate') { this.setState({ dlg: null }); this.openDlg('rewind'); return; }
+    if (d.kind === 'suspend') { this.setState({ suspended: !s.suspended }); done((s.suspended ? 'Resumed ' : 'Suspended ') + p.instanceId); return; }
+    if (d.kind === 'purge') { this.setState({ dlg: null }); toast('ok', 'Purged ' + p.instanceId); p.onNavigate && p.onNavigate('instances'); return; }
+    done(d.confirm + ' sent for ' + p.instanceId);
+  }
+  renderVals() {
+    const p = this.props, s = this.state, inst = this.inst();
+    const tab = s.tab || p.tab || 'timeline';
+    const status = s.suspended ? 'Suspended' : inst.status;
+    const readOnly = !!p.readOnly, dangerous = !!p.dangerous;
+    const current = this.currentInput();
+    const edited = current !== this.STORED;
+    const bytes = current.length * 2, over = bytes > 61440;
+    const sizeLabel = bytes >= 1024 ? (bytes / 1024).toFixed(1) + ' KB' : bytes + ' B';
+    const dlg = s.dlg || {};
+    const setTab = (t) => () => this.setState({ tab: t });
+    const nav = (r, params) => () => p.onNavigate && p.onNavigate(r, params);
+    const toast = (k, m) => p.onToast && p.onToast(k, m);
+    const lanes = this.LANES.map(l => ({
+      key: l.key, label: l.label, bars: l.bars.map(b => Object.assign({ text: '' }, b)), now: !!l.now,
+      hasLbl: !!l.lbl, lbl: l.lbl || '', lblLeft: l.lbl ? l.bars[0].left + l.bars[0].width + 0.6 : 0,
+      hl: s.hover === l.key ? 'hl' : '', enter: () => this.setState({ hover: l.key })
+    }));
+    const history = this.HISTORY.map(h => ({
+      n: h.n, t: h.t, type: h.type, name: h.name, dur: h.dur || '', sched: h.sched || '', st: h.st || '', input: !!h.input, res: h.res || '', hasRes: !!h.res,
+      hl: s.hover === h.key ? 'hl' : '', enter: () => this.setState({ hover: h.key }),
+      goInput: (e) => { e.stopPropagation(); this.setState({ tab: 'inputs' }); },
+      openRes: (e) => { e.stopPropagation(); let text = h.res; try { text = JSON.stringify(JSON.parse(h.res), null, 2); } catch (err) {} this.setState({ json: { title: h.type + ' · ' + (h.name || '#' + h.n), sub: '#' + h.n + ' · ' + h.t, text } }); }
+    }));
+    const cx = (i) => 170 + 160 * i;
+    const messages = this.MESSAGES.map(m => {
+      if (m.self) return { t: m.t, cls: 'back', left: cx(0) - 60, width: 60, label: m.label };
+      const l = Math.min(cx(m.a), cx(m.b)), w = Math.abs(cx(m.b) - cx(m.a));
+      return { t: m.t, cls: m.cls || '', left: l, width: w, label: m.label };
+    });
+    return {
+      id: p.instanceId, name: inst.name, status, stCls: 'st-' + status.toLowerCase(), duration: inst.duration, created: inst.created, updatedAgo: inst.updatedAgo, parent: inst.parent,
+      readOnly, dangerous, notDangerous: !dangerous,
+      goInstances: nav('instances'), openChild: nav('instance', { instanceId: 'order-2026-09-04-000913:0' }), refresh: () => p.onRefresh && p.onRefresh(),
+      suspendLabel: s.suspended ? 'Resume' : 'Suspend',
+      rewindDisabled: readOnly || (status !== 'Failed'), rewindTitle: status === 'Failed' ? 'Re-run the failed steps' : 'Rewind is available for failed instances',
+      openSuspend: () => this.openDlg('suspend'), openRaise: () => this.openDlg('raise'), openCustom: () => this.openDlg('custom'), openRestart: () => this.openDlg('restartPlain'),
+      openRewind: () => this.openDlg('rewind'), openTerminate: () => this.openDlg('terminate'), openPurge: () => this.openDlg('purge'),
+      tab, tabSummary: tab === 'summary', tabTimeline: tab === 'timeline', tabHistory: tab === 'history', tabInputs: tab === 'inputs', tabSequence: tab === 'sequence', tabGraph: tab === 'graph', tabRaw: tab === 'raw', tabCustom: tab === 'custom',
+      setTabSummary: setTab('summary'), setTabTimeline: setTab('timeline'), setTabHistory: setTab('history'), setTabInputs: setTab('inputs'), setTabSequence: setTab('sequence'), setTabGraph: setTab('graph'), setTabRaw: setTab('raw'), setTabCustom: setTab('custom'),
+      tabSummaryGo: () => this.setState({ tab: window.innerWidth <= 1100 ? 'summary' : tab }),
+      lanes, history, leave: () => { if (s.hover) this.setState({ hover: null }); },
+      messages,
+      inputText: current, setInputText: (e) => this.setState({ inputText: e.target.value }), resetInput: () => this.setState({ inputText: null }),
+      edited, notEdited: !edited, edCls: readOnly ? 'ro' : '', editorReadOnly: readOnly,
+      pct: Math.min(100, Math.round(bytes / 61440 * 100)), sizeLabel, meterCls: over ? 'over' : '',
+      updateDisabled: readOnly || over, updateWhy: readOnly ? 'Read-only mode' : over ? 'Input is larger than 60 KB' : 'Replaces this input and re-runs only the failed steps.',
+      replayDisabled: readOnly || over || !dangerous, replayWhy: readOnly ? 'Read-only mode' : !dangerous ? 'Dangerous operations are disabled for this deployment (DFM_DANGEROUS_OPERATIONS_ENABLED)' : over ? 'Input is larger than 60 KB' : 'Deletes history after this event and runs everything after it again.',
+      openUpdate: () => this.openDlg('update'), openReplay: () => this.openDlg('replay'),
+      outcome: s.outcome, setOutcome: (e) => this.setState({ outcome: e.target.value }),
+      dlgOpen: !!s.dlg, dlg: Object.assign({ cancel: 'Cancel', confirmDisabled: false }, dlg, { confirmDisabled: dlg.terminateCheck ? !s.terminateFirst : false }),
+      closeDlg: () => this.setState({ dlg: null }), stop: (e) => e.stopPropagation(), confirmDlg: () => this.confirm(),
+      secondaryDlg: () => { if (navigator.clipboard) navigator.clipboard.writeText(current).catch(() => {}); toast('ok', 'Copied the input to the clipboard'); },
+      terminateFirst: s.terminateFirst, terminateFirstCls: s.terminateFirst ? 'on' : '', toggleTerminateFirst: () => this.setState({ terminateFirst: !s.terminateFirst }),
+      newIdOn: s.newIdOn, newIdCls: s.newIdOn ? 'on' : '', toggleNewId: () => this.setState({ newIdOn: !s.newIdOn }),
+      jsonOpen: !!s.json, json: s.json || {}, closeJson: () => this.setState({ json: null }),
+      copyJsonDlg: () => { if (navigator.clipboard && s.json) navigator.clipboard.writeText(s.json.text).catch(() => {}); this.setState({ json: null }); toast('ok', 'Copied to the clipboard'); },
+      openInputJson: () => this.setState({ json: { title: 'Input', sub: 'ExecutionStarted #1 · 0.2 KB inline', text: '{\n  "orderId": "A-1043",\n  "customerId": 88214,\n  "items": [\n    { "sku": "SKU-4471", "qty": 2 }\n  ]\n}' } }),
+      copyRaw: () => toast('ok', 'Copied the instance status JSON'), copyDiagram: () => toast('ok', 'Copied the sequence diagram source'), saveSvg: () => toast('ok', 'Saved ' + p.instanceId + '.svg'),
+      openAzGraph: () => toast('ok', 'Opens az-func-as-a-graph in a new window (host OpenInNewWindow)')
+    };
+  }
+}
+</script>
+</body>
+</html>

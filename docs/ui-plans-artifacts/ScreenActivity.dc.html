@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/activity — src/routes/Activity.svelte. Gated by capabilities.audit.
+     Data: GET /audit?from&to&operation → rows { at, user, operation, instanceId, outcome, message }, written by the middleware for every Write and Dangerous call. -->
+<section class="page" data-screen-label="Activity">
+  <div class="ptitle">
+    <h1 class="display">Activity</h1>
+    <div class="sel"><select class="input" aria-label="Time range" style="height:32px;width:auto" value="{{ range }}" onChange="{{ changeRange }}"><option>Last 15 minutes</option><option>Last hour</option><option>Last 24 hours</option><option>Last 7 days</option><option>Last 30 days</option></select></div>
+    <div class="sel"><select class="input" aria-label="Operation" style="height:32px;width:auto" value="{{ op }}" onChange="{{ setOp }}"><option>All operations</option><option>Terminate</option><option>Rewind</option><option>Replay</option><option>Update input and rewind</option><option>Restart in place</option><option>Raise event</option><option>Purge</option><option>Purge history</option></select></div>
+    <span class="meta" style="margin-left:auto">{{ count }} entries · 61 today</span>
+  </div>
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div class="empty"><h2 class="display">No activity recorded</h2><p>Auditing is off for this hub. Set DFM_AUDIT_ENABLED=true on the backend; every Write and Dangerous call is then written to the {hub}DfmAudit table and shows up here.</p></div>
+  </sc-if>
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th class="spine"></th><th class="sort desc">time</th><th>user</th><th>operation</th><th>instance</th><th>outcome</th><th>details</th></tr></thead>
+        <tbody>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+            <tr data-st="{{ r.st }}">
+              <td class="spine"></td>
+              <td class="mono" data-label="time">{{ r.at }}</td>
+              <td data-label="user">{{ r.user }}</td>
+              <td data-label="operation"><span style="font-weight:700">{{ r.op }}</span><sc-if value="{{ r.dangerous }}" hint-placeholder-val="{{ false }}"><span class="tag" style="cursor:default">dangerous</span></sc-if></td>
+              <td class="mono" data-label="instance"><sc-if value="{{ r.hasId }}" hint-placeholder-val="{{ true }}"><button class="link mono" onClick="{{ r.open }}">{{ r.id }}</button></sc-if><sc-if value="{{ r.noId }}" hint-placeholder-val="{{ false }}"><span class="muted">—</span></sc-if></td>
+              <td data-label="outcome"><span class="chip sm {{ r.outCls }}">{{ r.outcome }}</span></td>
+              <td class="trunc" data-label="details" title="{{ r.details }}">{{ r.details }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <div class="tfoot"><span class="meta">PartitionKey yyyyMMdd · RowKey reverse ticks · newest first</span><button class="btn" onClick="{{ loadMore }}">Load more</button></div>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  ROWS = [
+    { at: '2026-09-04 14:02:31', user: 'chandra', op: 'Replay', dangerous: true, id: 'order-2026-09-04-000913', outcome: 'ok', details: 'from #27 · 14 history rows removed · PaymentApproved raised again' },
+    { at: '2026-09-04 13:58:02', user: 'ops-bot', op: 'Terminate', id: 'nightly-reconcile-20260903', outcome: 'ok', details: 'reason: operator' },
+    { at: '2026-09-04 13:51:40', user: 'chandra', op: 'Update input and rewind', id: 'order-2026-09-04-000911', outcome: '409', details: 'History changed since you read it: event #27 is now #29' },
+    { at: '2026-09-04 12:10:20', user: 'priya', op: 'Raise event', id: 'order-2026-09-04-000899', outcome: 'ok', details: 'PaymentApproved · 0.1 KB' },
+    { at: '2026-09-04 11:02:31', user: 'ops-bot', op: 'Restart in place', dangerous: true, id: 'order-2026-09-04-000880', outcome: 'ok', details: 'purged and restarted with the initial input · new ExecutionId 3b1c' },
+    { at: '2026-09-04 09:40:11', user: 'chandra', op: 'Purge', id: 'order-2026-09-03-004102', outcome: 'ok', details: 'instance, 44 history rows, 2 blobs' },
+    { at: '2026-09-04 02:42:13', user: 'scheduler', op: 'Purge history', id: '', outcome: 'ok', details: 'Completed and Terminated before 2026-08-05 · 1,284 instances' },
+    { at: '2026-09-03 23:12:08', user: 'priya', op: 'Rewind', id: 'order-2026-09-03-004411', outcome: 'failed', details: '403 · instance is Suspended, resume it first' }
+  ];
+  state = { op: 'All operations' };
+  renderVals() {
+    const p = this.props, s = this.state;
+    const range = p.range || 'Last 24 hours';
+    const visible = this.ROWS.filter(r => s.op === 'All operations' || r.op === s.op);
+    const rows = visible.map(r => ({
+      at: r.at, user: r.user, op: r.op, dangerous: !!r.dangerous, id: r.id, hasId: !!r.id, noId: !r.id, outcome: r.outcome, details: r.details,
+      outCls: r.outcome === 'ok' ? 'st-completed' : 'st-failed', st: r.outcome === 'ok' ? 'Completed' : 'Failed',
+      open: () => p.onNavigate && p.onNavigate('instance', { instanceId: r.id })
+    }));
+    return {
+      range, changeRange: (e) => p.onRange && p.onRange(e.target.value), op: s.op, setOp: (e) => this.setState({ op: e.target.value }),
+      count: visible.length, isEmpty: !!p.empty || visible.length === 0, hasRows: !p.empty && visible.length > 0, rows,
+      loadMore: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

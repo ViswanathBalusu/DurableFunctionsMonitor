@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/storage — src/routes/Storage.svelte. Azure Storage provider only (capabilities.storageHealth).
+     Data: GET /storage → taskHub { partitionCount, createdAt }, queues[] { name, approximateMessageCount }, partitions[] { name, owner, ownedSince, isDraining }, largeMessages { container, exists }. -->
+<section class="page" data-screen-label="Storage">
+  <div class="ptitle">
+    <h1 class="display">Storage</h1>
+    <span class="chip sm">Azure Storage</span>
+    <span class="mono muted">dfmstorage001 · DurableFunctionsHub</span>
+    <div class="row" style="margin-left:auto;gap:10px"><span class="fine muted">refreshed 9 s ago</span><button class="btn primary" onClick="{{ refresh }}">Refresh</button></div>
+  </div>
+  <p style="max-width:80ch">Queue depth is the backlog your workers have not picked up yet; partition ownership shows which worker is draining which control queue. Both come straight from the storage account, not from the Durable Task Framework.</p>
+  <div class="two storage">
+    <div class="panel">
+      <div class="panel-h"><h2>Task hub</h2><span class="fine muted" style="margin-left:auto">taskhub.json</span></div>
+      <dl class="kv">
+        <dt>name</dt><dd class="mono">DurableFunctionsHub</dd>
+        <dt>partitions</dt><dd class="mono">4</dd>
+        <dt>created</dt><dd class="mono">2025-11-12 09:40:03</dd>
+        <dt>instances</dt><dd class="mono">12,408 rows</dd>
+        <dt>history</dt><dd class="mono">1,204,118 rows</dd>
+        <dt>large messages</dt><dd><span class="mono">durablefunctionshub-largemessages</span> <span class="chip st-completed sm" style="margin-left:6px">exists</span></dd>
+        <dt>blobs</dt><dd class="mono">1,032 · 211 MB</dd>
+      </dl>
+      <div class="panel-h" style="margin-top:16px"><h2>Tables</h2></div>
+      <dl class="kv">
+        <dt>Instances</dt><dd class="mono">DurableFunctionsHubInstances</dd>
+        <dt>History</dt><dd class="mono">DurableFunctionsHubHistory</dd>
+        <dt>Partitions</dt><dd class="mono">DurableFunctionsHubPartitions</dd>
+        <dt>Audit</dt><dd class="mono">DurableFunctionsHubDfmAudit</dd>
+      </dl>
+    </div>
+    <div class="stack" style="gap:16px">
+      <div class="tbl-wrap keep">
+        <table class="tbl">
+          <thead><tr><th>queue</th><th>approximate messages</th><th>what it means</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">durablefunctionshub-workitems</td><td class="mono"><span class="chip st-running">1,240</span></td><td>Activities waiting for a worker. Above the 1,000 threshold: scale out or check for a stuck worker.</td></tr>
+            <tr><td class="mono">durablefunctionshub-control-00</td><td class="mono">12</td><td>Orchestrator messages for partition 00.</td></tr>
+            <tr><td class="mono">durablefunctionshub-control-01</td><td class="mono">0</td><td>Idle.</td></tr>
+            <tr><td class="mono">durablefunctionshub-control-02</td><td class="mono">3</td><td>Orchestrator messages for partition 02.</td></tr>
+            <tr><td class="mono">durablefunctionshub-control-03</td><td class="mono">0</td><td>Idle.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tbl-wrap keep">
+        <table class="tbl">
+          <thead><tr><th>partition</th><th>owner</th><th>owned since</th><th>draining</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">control-00</td><td class="mono">worker-7f3a</td><td class="mono">2026-09-04 06:00:02</td><td><span class="chip sm">no</span></td></tr>
+            <tr><td class="mono">control-01</td><td class="mono">worker-7f3a</td><td class="mono">2026-09-04 06:00:02</td><td><span class="chip sm">no</span></td></tr>
+            <tr><td class="mono">control-02</td><td class="mono">worker-c21e</td><td class="mono">2026-09-04 13:58:40</td><td><span class="chip st-suspended sm">yes → worker-7f3a</span></td></tr>
+            <tr><td class="mono">control-03</td><td class="mono">worker-c21e</td><td class="mono">2026-09-04 13:58:40</td><td><span class="chip sm">no</span></td></tr>
+          </tbody>
+        </table>
+        <div class="tfoot"><span class="meta">Ownership from the DurableFunctionsHubPartitions table; lease blobs are the fallback on older hubs.</span><button class="btn ghost sm" onClick="{{ goOverview }}">Backlog on Overview</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { refresh: () => p.onRefresh && p.onRefresh(), goOverview: () => p.onNavigate && p.onNavigate('overview') };
+  }
+}
+</script>
+</body>
+</html>

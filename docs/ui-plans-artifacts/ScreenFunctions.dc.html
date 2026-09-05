@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/functions — src/routes/Functions.svelte (+ lib/graph/FunctionGraph.svelte on @xyflow/svelte with elkjs layout)
+     Data: GET /stats (byName table and node counters), GET /function-map (graph, gated by IsFunctionGraphAvailable). DfmViewMode=1 renders this page alone. -->
+<section class="page" data-screen-label="Functions">
+  <div class="ptitle">
+    <h1 class="display">Functions</h1>
+    <div class="sel"><select class="input" aria-label="Time range" style="height:32px;width:auto" value="{{ range }}" onChange="{{ changeRange }}"><option>Last 15 minutes</option><option>Last hour</option><option>Last 24 hours</option><option>Last 7 days</option><option>Last 30 days</option></select></div>
+    <div class="seg sm" role="group" aria-label="Layout" style="margin-left:auto"><button aria-pressed="{{ viewTable }}" onClick="{{ setTable }}">Table</button><button aria-pressed="{{ viewBoth }}" onClick="{{ setBoth }}">Both</button><button aria-pressed="{{ viewGraph }}" onClick="{{ setGraph }}">Graph</button></div>
+  </div>
+  <div class="two {{ gridCls }}">
+    <sc-if value="{{ showTable }}" hint-placeholder-val="{{ true }}">
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th class="spine"></th><th>orchestrator</th><th class="sort desc">started</th><th>completed</th><th>failed</th><th>rate</th><th>p50</th><th>p95</th><th>last failure</th></tr></thead>
+          <tbody>
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+              <tr class="{{ r.hl }}" data-clickable="true" onClick="{{ r.select }}">
+                <td class="spine" style="background:var(--node-orchestrator)"></td>
+                <td data-label="orchestrator"><button class="link mono" onClick="{{ r.open }}">{{ r.name }}</button></td>
+                <td class="mono" data-label="started">{{ r.started }}</td>
+                <td class="mono" data-label="completed">{{ r.completed }}</td>
+                <td class="mono" data-label="failed">{{ r.failed }}</td>
+                <td class="mono" data-label="rate">{{ r.rate }}</td>
+                <td class="mono" data-label="p50">{{ r.p50 }}</td>
+                <td class="mono" data-label="p95">{{ r.p95 }}</td>
+                <td class="mono" data-label="last failure">{{ r.last }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <div class="tfoot"><span class="meta">Activity-level numbers need history scans, so they appear only for instances loaded in Instances.</span><span class="fine muted">scanned 12,408 · full</span></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showGraph }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div class="graph" style="height:520px">
+          <div class="gcanvas" style="width:780px;height:640px">
+            <svg aria-hidden="true">
+              <sc-for list="{{ edges }}" as="e" hint-placeholder-count="10"><polyline class="{{ e.cls }}" points="{{ e.points }}"></polyline><rect class="{{ e.cls }}" x="{{ e.ax }}" y="{{ e.ay }}" width="8" height="8"></rect></sc-for>
+            </svg>
+            <sc-for list="{{ nodes }}" as="n" hint-placeholder-count="12">
+              <button class="node n-{{ n.kind }} {{ n.sel }}" style="left:{{ n.x }}px;top:{{ n.y }}px" onClick="{{ n.click }}" title="Click to filter the table · double-click opens the code in VS Code (GotoFunctionCode)">
+                <div class="band"></div>
+                <div class="body"><div class="kind">{{ n.kindLabel }}</div><div class="name">{{ n.name }}</div>
+                  <sc-if value="{{ n.hasMetrics }}" hint-placeholder-val="{{ false }}"><div class="metrics"><span class="mini st-completed">{{ n.completed }}</span><span class="mini st-running">{{ n.running }}</span><span class="mini st-failed">{{ n.failed }}</span></div></sc-if>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+          <div class="gctl"><button aria-label="Zoom in">+</button><button aria-label="Zoom out">−</button><button aria-label="Fit view">▢</button></div>
+          <div class="minimap" aria-hidden="true"><i style="left:6px;top:10px;width:22px;height:60px"></i><i style="left:44px;top:14px;width:28px;height:52px"></i><i style="left:86px;top:4px;width:26px;height:72px"></i></div>
+        </div>
+        <div class="row" style="justify-content:space-between;margin-top:10px">
+          <div class="legend"><span><i style="background:var(--node-http)"></i>HTTP</span><span><i style="background:var(--node-timer)"></i>timer</span><span><i style="background:var(--node-queue)"></i>queue / Service Bus</span><span><i style="background:var(--node-orchestrator)"></i>orchestrator</span><span><i style="background:var(--node-activity)"></i>activity</span><span><i style="background:var(--node-suborchestrator)"></i>sub-orchestrator</span><span><i style="background:var(--node-entity)"></i>entity</span></div>
+          <div class="row" style="gap:8px"><button class="btn ghost sm" onClick="{{ saveSvg }}">Save as SVG</button><button class="btn ghost sm" onClick="{{ openAz }}">az-func-as-a-graph</button></div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  ROWS = [
+    { name: 'ProcessOrderOrchestrator', started: '1,102', completed: '1,088', failed: '8', rate: '0.7 %', p50: '4.1 s', p95: '22 s', last: '13:51:19' },
+    { name: 'ReconcileLedgerOrchestrator', started: '24', completed: '23', failed: '1', rate: '4.2 %', p50: '41 min', p95: '58 min', last: '02:42:13' },
+    { name: 'OnboardTenantOrchestrator', started: '7', completed: '7', failed: '0', rate: '0 %', p50: '2.3 min', p95: '5.1 min', last: '—' },
+    { name: 'NotifyCustomer', started: '1,096', completed: '1,094', failed: '0', rate: '0 %', p50: '1.2 s', p95: '4.8 s', last: '—' }
+  ];
+  NODES = [
+    { id: 'StartOrder', kind: 'http', kindLabel: 'HTTP trigger', x: 24, y: 120 },
+    { id: 'NightlyReconcile', kind: 'timer', kindLabel: 'Timer trigger', x: 24, y: 400 },
+    { id: 'OnPaymentSettled', kind: 'queue', kindLabel: 'Service Bus trigger', x: 24, y: 500 },
+    { id: 'ProcessOrderOrchestrator', kind: 'orchestrator', kindLabel: 'Orchestrator', x: 290, y: 108, completed: '1088', running: '14', failed: '8' },
+    { id: 'ReconcileLedgerOrchestrator', kind: 'orchestrator', kindLabel: 'Orchestrator', x: 290, y: 430, completed: '23', running: '0', failed: '1' },
+    { id: 'ReserveInventory', kind: 'activity', kindLabel: 'Activity', x: 560, y: 12 },
+    { id: 'ChargePayment', kind: 'activity', kindLabel: 'Activity', x: 560, y: 100 },
+    { id: 'SendConfirmation', kind: 'activity', kindLabel: 'Activity', x: 560, y: 188 },
+    { id: 'NotifyCustomer', kind: 'suborchestrator', kindLabel: 'Sub-orchestrator', x: 560, y: 276, completed: '1094', running: '2', failed: '0' },
+    { id: 'Counter', kind: 'entity', kindLabel: 'Entity', x: 560, y: 380 },
+    { id: 'ExportReport', kind: 'activity', kindLabel: 'Activity', x: 560, y: 468 },
+    { id: 'ArchiveBlob', kind: 'other', kindLabel: 'Activity · blob output', x: 560, y: 556 }
+  ];
+  EDGES = [['StartOrder', 'ProcessOrderOrchestrator'], ['OnPaymentSettled', 'ProcessOrderOrchestrator'], ['ProcessOrderOrchestrator', 'ReserveInventory'], ['ProcessOrderOrchestrator', 'ChargePayment'], ['ProcessOrderOrchestrator', 'SendConfirmation'], ['ProcessOrderOrchestrator', 'NotifyCustomer'], ['ProcessOrderOrchestrator', 'Counter'], ['NightlyReconcile', 'ReconcileLedgerOrchestrator'], ['ReconcileLedgerOrchestrator', 'ExportReport'], ['ReconcileLedgerOrchestrator', 'ArchiveBlob']];
+  state = { view: 'both', selected: 'ProcessOrderOrchestrator' };
+  height(n) { return n.completed ? 92 : 66; }
+  renderVals() {
+    const p = this.props, s = this.state;
+    const range = p.range || 'Last 24 hours';
+    const byId = {}; this.NODES.forEach(n => byId[n.id] = n);
+    const related = new Set([s.selected]);
+    this.EDGES.forEach(([a, b]) => { if (a === s.selected) related.add(b); if (b === s.selected) related.add(a); });
+    const edges = this.EDGES.map(([a, b]) => {
+      const A = byId[a], B = byId[b];
+      const x1 = A.x + 190, y1 = A.y + this.height(A) / 2, x2 = B.x, y2 = B.y + this.height(B) / 2, xm = Math.round((x1 + x2) / 2);
+      const active = a === s.selected || b === s.selected;
+      return { points: x1 + ',' + y1 + ' ' + xm + ',' + y1 + ' ' + xm + ',' + y2 + ' ' + (x2 - 2) + ',' + y2, ax: x2 - 6, ay: y2 - 4, cls: active ? 'active' : '' };
+    });
+    const nodes = this.NODES.map(n => ({
+      name: n.id, kind: n.kind, kindLabel: n.kindLabel, x: n.x, y: n.y, hasMetrics: !!n.completed, completed: n.completed || '', running: n.running || '', failed: n.failed || '',
+      sel: n.id === s.selected ? 'sel' : '', click: () => this.setState({ selected: n.id })
+    }));
+    const rows = this.ROWS.map(r => ({
+      name: r.name, started: r.started, completed: r.completed, failed: r.failed, rate: r.rate, p50: r.p50, p95: r.p95, last: r.last,
+      hl: related.has(r.name) && s.selected !== null ? (r.name === s.selected ? 'hl' : '') : '',
+      select: () => this.setState({ selected: r.name }),
+      open: (e) => { e.stopPropagation(); p.onNavigate && p.onNavigate('instances', { name: r.name }); }
+    }));
+    return {
+      range, changeRange: (e) => p.onRange && p.onRange(e.target.value),
+      viewTable: s.view === 'table', viewBoth: s.view === 'both', viewGraph: s.view === 'graph',
+      setTable: () => this.setState({ view: 'table' }), setBoth: () => this.setState({ view: 'both' }), setGraph: () => this.setState({ view: 'graph' }),
+      showTable: s.view !== 'graph', showGraph: s.view !== 'table', gridCls: s.view === 'both' ? '' : 'single',
+      rows, nodes, edges,
+      saveSvg: () => p.onToast && p.onToast('ok', 'Saved DurableFunctionsHub-functions.svg'),
+      openAz: () => p.onToast && p.onToast('ok', 'Opens az-func-as-a-graph in a new window')
+    };
+  }
+}
+</script>
+</body>
+</html>

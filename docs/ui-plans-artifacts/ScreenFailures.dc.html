@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/failures — src/routes/Failures.svelte (+ lib/failures/{FailureGroup,FailureRow}.svelte)
+     Data: GET /failures?from&to → groups { name, signature, count, lastSeenAt, sampleIds[] } with instances { id, createdTime, durationMs, reason }. Group bulk actions go through POST /orchestrations/batch. -->
+<section class="page" data-screen-label="Failures">
+  <div class="ptitle">
+    <h1 class="display">Failures</h1>
+    <div class="sel"><select class="input" aria-label="Time range" style="height:32px;width:auto" value="{{ range }}" onChange="{{ changeRange }}"><option>Last 15 minutes</option><option>Last hour</option><option>Last 24 hours</option><option>Last 7 days</option><option>Last 30 days</option></select></div>
+    <span class="meta"><span class="chip st-failed sm">9</span> failed in 3 groups</span>
+    <span class="fine muted" style="margin-left:auto">scanned 12,408 · full · signatures normalise numbers, GUIDs and quoted values to *</span>
+  </div>
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div class="empty"><h2 class="display">No failures</h2><p>Nothing failed in the {{ rangeLower }}. Widen the range to look further back.</p></div>
+  </sc-if>
+  <sc-if value="{{ hasData }}" hint-placeholder-val="{{ true }}">
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+      <div class="group" aria-expanded="{{ g.open }}">
+        <button class="ghead" onClick="{{ g.toggle }}" aria-expanded="{{ g.open }}">
+          <span class="tri" aria-hidden="true"></span>
+          <span>{{ g.name }}</span>
+          <span class="mono muted grow" style="font-weight:400">{{ g.signature }}</span>
+          <span class="chip st-failed sm">{{ g.count }}</span>
+          <span class="fine muted">last {{ g.last }}</span>
+        </button>
+        <sc-if value="{{ g.open }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+            <div class="frow">
+              <span class="spine" aria-hidden="true"></span>
+              <button class="link mono" style="text-align:left;padding:8px 0" onClick="{{ r.open }}">{{ r.id }}</button>
+              <span class="mono t">{{ r.created }}</span>
+              <span class="mono d">{{ r.duration }}</span>
+              <button class="link mono muted reason" style="text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none" title="{{ r.reason }}" onClick="{{ r.peek }}">{{ r.reason }}</button>
+              <span class="acts">
+                <button class="btn sm" onClick="{{ r.rewind }}" disabled="{{ readOnly }}">Rewind</button>
+                <button class="btn sm" onClick="{{ r.update }}" disabled="{{ readOnly }}">Update input</button>
+                <button class="btn sm danger" onClick="{{ r.restart }}" disabled="{{ dangerDisabled }}" title="{{ dangerTitle }}">Restart in place</button>
+                <button class="btn sm destructive" onClick="{{ r.purge }}" disabled="{{ readOnly }}">Purge</button>
+              </span>
+            </div>
+          </sc-for>
+          <div class="gfoot">
+            <button class="btn" onClick="{{ g.rewindAll }}" disabled="{{ readOnly }}">{{ g.rewindLabel }}</button>
+            <button class="btn destructive" onClick="{{ g.purgeAll }}" disabled="{{ readOnly }}">{{ g.purgeLabel }}</button>
+            <span class="meta" style="margin-left:auto">Update input, Replay and Restart in place open the instance because they need the payload in front of you.</span>
+          </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeDlg }}">
+      <div class="dialog" role="dialog" aria-modal="true" onClick="{{ stop }}">
+        <div class="warn"></div>
+        <div class="body">
+          <h3 class="display">{{ dlg.title }}</h3>
+          <p>{{ dlg.body }}</p>
+          <div class="ed ro" style="min-height:0"><pre>{{ dlg.ids }}</pre></div>
+          <sc-if value="{{ dlg.reason }}" hint-placeholder-val="{{ false }}"><div class="field"><label>Reason (optional)</label><input class="input" placeholder="Written to the audit log"></div></sc-if>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ closeDlg }}">Cancel</button><button class="btn {{ dlg.cls }}" onClick="{{ confirmDlg }}">{{ dlg.confirm }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  GROUPS = [
+    { name: 'ProcessOrderOrchestrator', signature: 'InventoryUnavailable: SKU-*', count: 6, last: '13:51:19', rows: [
+      ['order-2026-09-04-000911', '13:51:02', '17 s', 'InventoryUnavailable: SKU-4471 has 0 units in warehouse-07'],
+      ['order-2026-09-04-000907', '13:40:11', '15 s', 'InventoryUnavailable: SKU-2210 has 0 units in warehouse-07'],
+      ['order-2026-09-04-000902', '13:22:48', '16 s', 'InventoryUnavailable: SKU-4471 has 0 units in warehouse-12'],
+      ['order-2026-09-04-000897', '12:58:30', '18 s', 'InventoryUnavailable: SKU-8804 has 0 units in warehouse-07'],
+      ['order-2026-09-04-000890', '12:31:07', '14 s', 'InventoryUnavailable: SKU-4471 has 0 units in warehouse-07'],
+      ['order-2026-09-04-000884', '12:12:55', '17 s', 'InventoryUnavailable: SKU-1190 has 0 units in warehouse-03']
+    ] },
+    { name: 'ProcessOrderOrchestrator', signature: 'Timeout: ChargePayment did not complete within * s', count: 2, last: '12:10:04', rows: [
+      ['order-2026-09-04-000878', '12:09:40', '24 s', 'Timeout: ChargePayment did not complete within 20 s'],
+      ['order-2026-09-04-000861', '10:44:12', '24 s', 'Timeout: ChargePayment did not complete within 20 s']
+    ] },
+    { name: 'ReconcileLedgerOrchestrator', signature: 'Ledger checksum mismatch for account *', count: 1, last: '02:42:13', rows: [
+      ['nightly-reconcile-20260903', '02:00:00', '42 min', 'Ledger checksum mismatch for account "4471-EU": expected 8f3a…, got 91c0…']
+    ] }
+  ];
+  state = { open: { 0: true }, dlg: null };
+  dialog(kind, ids, reason) {
+    const n = ids.length, many = n > 1;
+    const d = kind === 'rewind'
+      ? { title: 'Rewind ' + (many ? n + ' instances' : ids[0]), body: 'Re-runs only the failed steps' + (many ? ' of each instance' : '') + '. Completed steps keep their results.', confirm: 'Rewind' + (many ? ' all ' + n : ''), cls: 'primary', reason: true, kind }
+      : { title: 'Purge ' + (many ? n + ' instances' : ids[0]), body: 'Removes ' + (many ? 'these instances' : 'the instance') + ', the history and the large-message blobs. This cannot be undone.', confirm: 'Purge' + (many ? ' all ' + n : ' instance'), cls: 'destructive', kind };
+    d.ids = ids.slice(0, 10).join('\n') + (n > 10 ? '\n… and ' + (n - 10) + ' more' : ''); d.n = n;
+    this.setState({ dlg: d });
+  }
+  renderVals() {
+    const p = this.props, s = this.state;
+    const range = p.range || 'Last 24 hours';
+    const readOnly = !!p.readOnly, dangerous = !!p.dangerous;
+    const nav = (r, params) => p.onNavigate && p.onNavigate(r, params);
+    const groups = this.GROUPS.map((g, i) => {
+      const open = !!s.open[i];
+      const ids = g.rows.map(r => r[0]);
+      return {
+        name: g.name, signature: g.signature, count: g.count, last: g.last, open,
+        toggle: () => { const next = Object.assign({}, s.open); next[i] = !open; this.setState({ open: next }); },
+        rewindLabel: 'Rewind all ' + g.count, purgeLabel: 'Purge all ' + g.count,
+        rewindAll: () => this.dialog('rewind', ids), purgeAll: () => this.dialog('purge', ids),
+        rows: g.rows.map(([id, created, duration, reason]) => ({
+          id, created, duration, reason,
+          open: () => nav('instance', { instanceId: id }),
+          peek: () => p.onPeek && p.onPeek({ id, name: g.name, status: 'Failed', created: '2026-09-04 ' + created, updated: '2026-09-04 ' + g.last, duration, custom: '{"error":"' + reason.split(':')[0] + '"}' }),
+          rewind: () => this.dialog('rewind', [id]), purge: () => this.dialog('purge', [id]),
+          update: () => nav('instance', { instanceId: id, tab: 'inputs' }), restart: () => nav('instance', { instanceId: id, tab: 'inputs' })
+        }))
+      };
+    });
+    return {
+      range, rangeLower: range.toLowerCase(), changeRange: (e) => p.onRange && p.onRange(e.target.value),
+      isEmpty: !!p.empty, hasData: !p.empty, readOnly,
+      dangerDisabled: readOnly || !dangerous, dangerTitle: dangerous ? 'Purge and restart with the initial input' : 'Dangerous operations are disabled for this deployment (DFM_DANGEROUS_OPERATIONS_ENABLED)',
+      groups,
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }), stop: (e) => e.stopPropagation(),
+      confirmDlg: () => { const d = s.dlg; this.setState({ dlg: null }); p.onToast && p.onToast('ok', d.confirm + ' · ' + d.n + ' ok, 0 failed'); }
+    };
+  }
+}
+</script>
+</body>
+</html>

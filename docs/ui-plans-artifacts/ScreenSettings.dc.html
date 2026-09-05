@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/settings — src/routes/Settings.svelte (+ the existing dialogs: PurgeHistoryDialog, CleanEntityStorageDialog, ConnectionParamsDialog, DeleteTaskHubDialog)
+     Data: GET /about (connection, permissions, capabilities), POST /purge-history, /clean-entity-storage, /delete-task-hub, GET /manage-connection. Appearance writes dfm.theme / dfm.mode / dfm.density through ITypedLocalStorage (mode-watcher). -->
+<section class="page" data-screen-label="Settings">
+  <div class="ptitle"><h1 class="display">Settings</h1><span class="meta">{{ hub }} · {{ account }}</span></div>
+  <div class="two">
+    <div class="panel">
+      <div class="panel-h"><h2>Connection</h2><span class="fine muted" style="margin-left:auto">GET /about</span></div>
+      <dl class="kv">
+        <dt>account</dt><dd class="mono">{{ account }}</dd>
+        <dt>task hub</dt><dd class="mono">{{ hub }}</dd>
+        <dt>backend</dt><dd class="mono">6.6.0 (isolated)</dd>
+        <dt>provider</dt><dd><span class="chip sm">Azure Storage</span></dd>
+        <dt>permissions</dt><dd class="row" style="gap:6px"><span class="chip sm">ReadWrite</span><sc-if value="{{ dangerous }}" hint-placeholder-val="{{ true }}"><span class="dbadge sm">DangerousOperations</span></sc-if></dd>
+        <dt>host</dt><dd>standalone · dfm-orders-prod.azurewebsites.net</dd>
+      </dl>
+      <div class="row" style="margin-top:14px"><button class="btn" onClick="{{ openConn }}">Manage connection</button><button class="btn ghost" onClick="{{ openAbout }}">View /about JSON</button></div>
+    </div>
+    <div class="panel">
+      <div class="panel-h"><h2>Hub administration</h2><span class="fine muted" style="margin-left:auto">ReadWrite only</span></div>
+      <div class="stack">
+        <div class="row" style="justify-content:space-between;border:2px solid var(--muted);padding:10px 12px"><div><div style="font-weight:700">Purge instance history</div><div class="meta">By created time and runtime status. Cannot be undone.</div></div><button class="btn destructive" onClick="{{ openPurge }}" disabled="{{ readOnly }}">Purge…</button></div>
+        <div class="row" style="justify-content:space-between;border:2px solid var(--muted);padding:10px 12px"><div><div style="font-weight:700">Clean entity storage</div><div class="meta">Removes empty entities and orphaned locks.</div></div><button class="btn destructive" onClick="{{ openClean }}" disabled="{{ readOnly }}">Clean…</button></div>
+        <div class="row" style="justify-content:space-between;border:2px solid var(--muted);padding:10px 12px"><div><div style="font-weight:700">Delete task hub</div><div class="meta">Drops every table, queue and blob of {{ hub }}.</div></div><button class="btn destructive" onClick="{{ openDelete }}" disabled="{{ readOnly }}">Delete…</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="two wide-left">
+    <div class="panel">
+      <div class="panel-h"><h2>Appearance</h2><span class="fine muted" style="margin-left:auto">dfm.theme · dfm.mode · dfm.density</span></div>
+      <div class="meta" style="margin-bottom:6px">Theme</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px">
+        <sc-for list="{{ themes }}" as="t" hint-placeholder-count="5">
+          <button class="ttile {{ t.cls }}" style="border-color:var(--ink);height:48px" role="radio" aria-checked="{{ t.active }}" onClick="{{ t.pick }}"><span class="sw" aria-hidden="true"><i style="background:{{ t.paper }}"></i><i style="background:{{ t.ink }}"></i><i style="background:{{ t.primary }}"></i><i style="background:{{ t.dark }}"></i></span><span>{{ t.label }}</span><span class="meta" style="margin-left:auto;font-weight:400">{{ t.metrics }}</span></button>
+        </sc-for>
+      </div>
+      <div class="stack" style="margin-top:16px;gap:8px">
+        <button class="check" style="justify-content:space-between;width:100%;min-height:36px" role="switch" aria-checked="{{ dark }}" onClick="{{ toggleDark }}"><span>Dark mode<span class="meta" style="margin-left:8px">paper becomes the line; shadows change color per theme</span></span><span class="switch {{ darkCls }}" aria-hidden="true"></span></button>
+        <button class="check" style="justify-content:space-between;width:100%;min-height:36px" role="switch" aria-checked="{{ comfortable }}" onClick="{{ toggleDensity }}"><span>Comfortable density<span class="meta" style="margin-left:8px">rows 44 px, controls 40 px</span></span><span class="switch {{ comfortableCls }}" aria-hidden="true"></span></button>
+        <div class="row" style="justify-content:space-between;min-height:36px"><span>Show time as</span><div class="seg sm" role="group" aria-label="Show time as"><button aria-pressed="{{ utc }}" onClick="{{ setUtc }}">UTC</button><button aria-pressed="{{ local }}" onClick="{{ setLocal }}">Local</button></div></div>
+      </div>
+      <div class="meta" style="margin:16px 0 6px">Needs attention thresholds</div>
+      <div class="row">
+        <div class="field"><label>Running longer than</label><input class="input mono" style="width:120px" defaultValue="1 h"></div>
+        <div class="field"><label>Pending older than</label><input class="input mono" style="width:120px" defaultValue="10 min"></div>
+        <div class="field"><label>Queue deeper than</label><input class="input mono" style="width:120px" defaultValue="1,000"></div>
+        <button class="btn" style="align-self:flex-end" onClick="{{ saveThresholds }}">Save</button>
+      </div>
+    </div>
+    <div class="stack" style="gap:16px">
+      <div class="panel">
+        <div class="panel-h"><h2>Feature flags</h2><span class="fine muted" style="margin-left:auto">from /about · toggles here only drive the mockup</span></div>
+        <div class="stack" style="gap:8px">
+          <button class="check" style="justify-content:space-between;width:100%;min-height:36px" role="switch" aria-checked="{{ readOnly }}" onClick="{{ toggleReadOnly }}"><span>Read-only mode<span class="meta" style="margin-left:8px">no ReadWrite permission</span></span><span class="switch {{ readOnlyCls }}" aria-hidden="true"></span></button>
+          <button class="check" style="justify-content:space-between;width:100%;min-height:36px" role="switch" aria-checked="{{ dangerous }}" onClick="{{ toggleDangerous }}"><span>Dangerous operations<span class="meta" style="margin-left:8px">DFM_DANGEROUS_OPERATIONS_ENABLED</span></span><span class="switch {{ dangerousCls }}" aria-hidden="true"></span></button>
+        </div>
+        <dl class="kv" style="margin-top:14px">
+          <dt>storageSupports</dt><dd class="row" style="gap:6px"><span class="chip sm st-completed">updateInput</span><span class="chip sm st-completed">truncateHistory</span></dd>
+          <dt>capabilities</dt><dd class="row" style="gap:6px"><span class="chip sm">stats</span><span class="chip sm">children</span><span class="chip sm">spans</span><span class="chip sm">failures</span><span class="chip sm">batch</span><span class="chip sm">storageHealth</span><span class="chip sm">audit</span></dd>
+          <dt>function graph</dt><dd><span class="chip sm st-completed">available</span></dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h2>Templates</h2></div>
+        <dl class="kv">
+          <dt>function map</dt><dd class="mono">function-map.json · 12 functions</dd>
+          <dt>Liquid tabs</dt><dd class="mono">OrderSummary.liquid · LedgerReport.liquid</dd>
+          <dt>custom meta</dt><dd class="mono">durable-functions-monitor-meta · CSP default</dd>
+        </dl>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h2>Mockup states</h2><span class="fine muted" style="margin-left:auto">not part of the product</span></div>
+        <div class="stack" style="gap:8px">
+          <button class="check" style="justify-content:space-between;width:100%;min-height:36px" role="switch" aria-checked="{{ partial }}" onClick="{{ togglePartial }}"><span>Partial results banner</span><span class="switch {{ partialCls }}" aria-hidden="true"></span></button>
+          <button class="check" style="justify-content:space-between;width:100%;min-height:36px" role="switch" aria-checked="{{ empty }}" onClick="{{ toggleEmpty }}"><span>Empty hub (empty states)</span><span class="switch {{ emptyCls }}" aria-hidden="true"></span></button>
+          <div class="row"><button class="btn sm" onClick="{{ showError }}">Show error toast</button><button class="btn sm" onClick="{{ showLoading }}">Show loading bar</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ dlgOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeDlg }}">
+      <div class="dialog" role="dialog" aria-modal="true" onClick="{{ stop }}">
+        <sc-if value="{{ dlg.band }}" hint-placeholder-val="{{ false }}"><div class="warn"></div></sc-if>
+        <div class="body">
+          <h3 class="display">{{ dlg.title }}</h3>
+          <p>{{ dlg.body }}</p>
+          <sc-if value="{{ dlg.purge }}" hint-placeholder-val="{{ false }}">
+            <div class="row"><div class="field"><label>Created from</label><input class="input mono" style="width:190px" defaultValue="2026-06-01 00:00"></div><div class="field"><label>Created till</label><input class="input mono" style="width:190px" defaultValue="2026-08-05 00:00"></div></div>
+            <div class="row"><sc-for list="{{ purgeStatuses }}" as="st" hint-placeholder-count="4"><button class="check" role="checkbox" aria-checked="{{ st.on }}" onClick="{{ st.toggle }}"><span class="box {{ st.cls }}" aria-hidden="true"></span><span class="chip sm {{ st.stCls }}">{{ st.label }}</span></button></sc-for></div>
+            <div class="row"><button class="check" role="checkbox" aria-checked="{{ purgeEntities }}" onClick="{{ togglePurgeEntities }}"><span class="box {{ purgeEntitiesCls }}" aria-hidden="true"></span>Include durable entities</button></div>
+            <p class="meta">{{ purgeCount }} instances match. The count comes from the same $filter the list uses.</p>
+          </sc-if>
+          <sc-if value="{{ dlg.clean }}" hint-placeholder-val="{{ false }}"><p class="meta">Same dialog as on the Entities page.</p></sc-if>
+          <sc-if value="{{ dlg.del }}" hint-placeholder-val="{{ false }}"><div class="field"><label>Type the task hub name to confirm</label><input class="input mono" placeholder="{{ hub }}" value="{{ delText }}" onChange="{{ setDelText }}"></div></sc-if>
+          <sc-if value="{{ dlg.conn }}" hint-placeholder-val="{{ false }}">
+            <div class="field"><label>Storage connection string</label><input class="input mono" defaultValue="DefaultEndpointsProtocol=https;AccountName=dfmstorage001;AccountKey=••••••••••••" readOnly="{{ true }}"></div>
+            <div class="field"><label>Task hub name</label><input class="input mono" defaultValue="DurableFunctionsHub"></div>
+            <p class="meta">Editable only when DFM_CONNECTION_STRING_EDITABLE is set on the backend.</p>
+          </sc-if>
+          <sc-if value="{{ dlg.about }}" hint-placeholder-val="{{ false }}"><div class="brutal-flat" style="overflow:hidden"><div class="jse-bar"><span class="on">tree</span><span>text</span><span style="margin-left:auto">copy</span></div><pre class="json">{{ aboutJson }}</pre></div></sc-if>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ closeDlg }}">{{ dlg.cancel }}</button><sc-if value="{{ dlg.confirm }}" hint-placeholder-val="{{ false }}"><button class="btn {{ dlg.cls }}" onClick="{{ confirmDlg }}" disabled="{{ confirmDisabled }}">{{ dlg.confirm }}</button></sc-if></div>
+      </div>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  THEMES = [
+    { key: 'poster', label: 'Poster', metrics: '0 px · 2 px · 4 px', paper: '#F8F6F1', ink: '#000000', primary: '#FFD400', dark: '#1B1930' },
+    { key: 'riso', label: 'Riso', metrics: '2 px · 2 px · 4 px', paper: '#F2EEE6', ink: '#231F20', primary: '#FF48B0', dark: '#10203A' },
+    { key: 'memphis', label: 'Memphis', metrics: '10 px · 3 px · 5 px', paper: '#F6F3FA', ink: '#000000', primary: '#FF9ECF', dark: '#2A1F3D' },
+    { key: 'blueprint', label: 'Blueprint', metrics: '0 px · 2 px · 4 px', paper: '#EEF2FF', ink: '#1636E0', primary: '#FF6A00', dark: '#08205F' },
+    { key: 'hazard', label: 'Hazard', metrics: '0 px · 3 px · 4 px', paper: '#F4F4F1', ink: '#000000', primary: '#FFC800', dark: '#23262C' }
+  ];
+  state = { dlg: null, purgeSt: { Completed: true, Terminated: true, Failed: false, Canceled: true }, purgeEntities: false, delText: '' };
+  renderVals() {
+    const p = this.props, s = this.state;
+    const hub = p.hub || 'DurableFunctionsHub', account = p.account || 'dfmstorage001';
+    const dlg = s.dlg || {};
+    const on = Object.keys(s.purgeSt).filter(k => s.purgeSt[k]).length;
+    const purgeCount = (on * 412 + (s.purgeEntities ? 48 : 0)).toLocaleString('en-US');
+    const toast = (k, m) => p.onToast && p.onToast(k, m);
+    return {
+      hub, account, readOnly: !!p.readOnly, dangerous: !!p.dangerous,
+      themes: this.THEMES.map(t => ({ key: t.key, label: t.label, metrics: t.metrics, paper: t.paper, ink: t.ink, primary: t.primary, dark: t.dark, active: t.key === p.theme, cls: t.key === p.theme ? 'active' : '', pick: () => p.onTheme && p.onTheme(t.key) })),
+      dark: !!p.dark, darkCls: p.dark ? 'on' : '', toggleDark: () => p.onDark && p.onDark(!p.dark),
+      comfortable: p.density === 'comfortable', comfortableCls: p.density === 'comfortable' ? 'on' : '', toggleDensity: () => p.onDensity && p.onDensity(p.density === 'comfortable' ? 'compact' : 'comfortable'),
+      utc: !!p.utc, local: !p.utc, setUtc: () => p.onUtc && p.onUtc(true), setLocal: () => p.onUtc && p.onUtc(false),
+      readOnlyCls: p.readOnly ? 'on' : '', toggleReadOnly: () => p.onReadOnly && p.onReadOnly(!p.readOnly),
+      dangerousCls: p.dangerous ? 'on' : '', toggleDangerous: () => p.onDangerous && p.onDangerous(!p.dangerous),
+      partial: !!p.partial, partialCls: p.partial ? 'on' : '', togglePartial: () => p.onPartial && p.onPartial(!p.partial),
+      empty: !!p.empty, emptyCls: p.empty ? 'on' : '', toggleEmpty: () => p.onEmpty && p.onEmpty(!p.empty),
+      showError: () => toast('error', 'Could not connect to the task hub. Check the storage connection string and try again.', true),
+      showLoading: () => p.onRefresh && p.onRefresh(),
+      saveThresholds: () => toast('ok', 'Saved thresholds for Needs attention'),
+      openPurge: () => this.setState({ dlg: { kind: 'purge', title: 'Purge instance history', body: 'Removes history for every instance matching the filter. This cannot be undone.', band: true, purge: true, confirm: 'Purge', cls: 'destructive', cancel: 'Cancel' } }),
+      openClean: () => this.setState({ dlg: { kind: 'clean', title: 'Clean entity storage', body: 'Scans the Instances table for entities that hold no state or an orphaned lock and removes them.', band: true, clean: true, confirm: 'Clean entity storage', cls: 'destructive', cancel: 'Cancel' } }),
+      openDelete: () => this.setState({ dlg: { kind: 'delete', title: 'Delete task hub ' + hub, body: 'Drops the Instances, History and Partitions tables, all control and work-item queues and the large-message container. Running orchestrations are lost.', band: true, del: true, confirm: 'Delete task hub', cls: 'destructive', cancel: 'Cancel' }, delText: '' }),
+      openConn: () => this.setState({ dlg: { kind: 'conn', title: 'Connection settings', body: 'The storage connection this backend uses. Keys are never sent to the browser.', conn: true, confirm: 'Save', cls: 'primary', cancel: 'Cancel' } }),
+      openAbout: () => this.setState({ dlg: { kind: 'about', title: '/about', body: '', about: true, cancel: 'Close' } }),
+      aboutJson: JSON.stringify({ accountName: account, hubName: hub, version: '6.6.0 (isolated)', provider: 'AzureStorage', permissions: ['DurableFunctionsMonitor.ReadWrite'].concat(p.dangerous ? ['DurableFunctionsMonitor.DangerousOperations'] : []), readOnly: !!p.readOnly, dangerousOperations: !!p.dangerous, capabilities: { updateInput: true, truncateHistory: true, storageHealth: true, audit: true, stats: true, children: true, batch: true } }, null, 2),
+      dlgOpen: !!s.dlg, dlg: Object.assign({ cancel: 'Cancel' }, dlg), closeDlg: () => this.setState({ dlg: null }), stop: (e) => e.stopPropagation(),
+      confirmDisabled: dlg.kind === 'delete' ? s.delText.trim() !== hub : false,
+      confirmDlg: () => {
+        const d = s.dlg; this.setState({ dlg: null });
+        if (d.kind === 'purge') { toast('ok', 'Purged ' + purgeCount + ' instances'); p.onRefresh && p.onRefresh(); }
+        else if (d.kind === 'clean') toast('ok', 'Cleaned entity storage: 7 empty entities removed, 0 locks released');
+        else if (d.kind === 'delete') { toast('ok', 'Deleted task hub ' + hub); p.onNavigate && p.onNavigate('login'); }
+        else toast('ok', 'Connection settings saved');
+      },
+      purgeStatuses: ['Completed', 'Terminated', 'Failed', 'Canceled'].map(st => ({ label: st, on: !!s.purgeSt[st], cls: s.purgeSt[st] ? 'on' : '', stCls: 'st-' + st.toLowerCase(), toggle: () => { const next = Object.assign({}, s.purgeSt); next[st] = !next[st]; this.setState({ purgeSt: next }); } })),
+      purgeEntities: s.purgeEntities, purgeEntitiesCls: s.purgeEntities ? 'on' : '', togglePurgeEntities: () => this.setState({ purgeEntities: !s.purgeEntities }),
+      purgeCount, delText: s.delText, setDelText: (e) => this.setState({ delText: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Login and hub picker — src/routes/Login.svelte (LoginState: GET ../easyauth-config → msal redirect → GET ../task-hub-names). Standalone and Docker hosts only; the VS Code webview skips this screen. -->
+<section class="login" data-screen-label="Login">
+  <div style="width:min(560px,100%);display:grid;gap:24px">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="logo" style="width:56px;height:56px;box-shadow:var(--shadow-brutal)" aria-hidden="true"></div>
+      <div><h1 class="display" style="font-size:32px">Durable Functions Monitor</h1><p class="meta" style="margin-top:4px">6.6.0 (isolated) · dfm-orders-prod.azurewebsites.net</p></div>
+    </div>
+    <sc-if value="{{ signedOut }}" hint-placeholder-val="{{ false }}">
+      <div class="card" style="padding:20px;display:grid;gap:14px">
+        <h2 style="font-size:20px;font-weight:700">Sign in</h2>
+        <p style="max-width:60ch">This deployment uses Easy Auth. Sign in with your work account to list the task hubs you can see.</p>
+        <div class="row"><button class="btn primary" onClick="{{ signIn }}">Sign in with Microsoft</button><button class="btn ghost" onClick="{{ useNonce }}">Use a connection string instead</button></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ true }}">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:var(--border-width) solid var(--ink);flex-wrap:wrap">
+          <h2 style="font-size:16px;font-weight:700">Task hubs</h2>
+          <span class="meta">signed in as chandra@contoso.com</span>
+          <span class="chip sm" style="margin-left:auto"><span class="mono" style="font-size:11px">dfmstorage001</span></span>
+        </div>
+        <sc-for list="{{ hubs }}" as="h" hint-placeholder-count="3">
+          <button class="hubrow" onClick="{{ h.pick }}">
+            <span class="swq" style="background:var(--primary);width:16px;height:16px" aria-hidden="true"></span>
+            <span class="mono" style="font-weight:600;font-size:15px">{{ h.name }}</span>
+            <span class="meta grow">{{ h.meta }}</span>
+            <span class="chip sm {{ h.badgeCls }}">{{ h.badge }}</span>
+            <span class="tri" aria-hidden="true"></span>
+          </button>
+        </sc-for>
+        <div style="display:flex;gap:10px;padding:12px 16px;border-top:var(--border-width) solid var(--ink);flex-wrap:wrap;align-items:center">
+          <span class="meta grow">Hubs come from GET ../task-hub-names for this storage account.</span>
+          <button class="btn ghost" onClick="{{ signOut }}">Sign out</button>
+        </div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ connOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="card" style="padding:20px;display:grid;gap:12px">
+        <h2 style="font-size:16px;font-weight:700">Connection string</h2>
+        <div class="field"><label>Storage connection string</label><input class="input mono" placeholder="DefaultEndpointsProtocol=https;AccountName=…" value="{{ conn }}" onChange="{{ setConn }}"></div>
+        <div class="field"><label>Task hub name</label><input class="input mono" value="{{ hubName }}" onChange="{{ setHubName }}"></div>
+        <div class="row" style="justify-content:flex-end"><button class="btn" onClick="{{ closeConn }}">Cancel</button><button class="btn primary" onClick="{{ connect }}" disabled="{{ connDisabled }}">Connect</button></div>
+      </div>
+    </sc-if>
+    <p class="meta" style="text-align:center">Read-only deployments show a Read only badge after sign in. Dangerous operations need DFM_DANGEROUS_OPERATIONS_ENABLED=true on the backend.</p>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { signedIn: true, connOpen: false, conn: '', hubName: 'DurableFunctionsHub' };
+  HUBS = [
+    { name: 'DurableFunctionsHub', meta: '12,408 instances · 4 partitions · 9 failed today', badge: 'ReadWrite', badgeCls: '' },
+    { name: 'OrdersHub', meta: '3,102 instances · 4 partitions', badge: 'ReadWrite', badgeCls: '' },
+    { name: 'LedgerHub', meta: '188 instances · 1 partition', badge: 'Read only', badgeCls: 'st-terminated' }
+  ];
+  renderVals() {
+    const p = this.props, s = this.state;
+    return {
+      signedIn: s.signedIn && !s.connOpen, signedOut: !s.signedIn && !s.connOpen, connOpen: s.connOpen,
+      signIn: () => this.setState({ signedIn: true }),
+      signOut: () => this.setState({ signedIn: false }),
+      useNonce: () => this.setState({ connOpen: true }),
+      closeConn: () => this.setState({ connOpen: false }),
+      conn: s.conn, setConn: (e) => this.setState({ conn: e.target.value }),
+      hubName: s.hubName, setHubName: (e) => this.setState({ hubName: e.target.value }),
+      connDisabled: !s.conn.trim() || !s.hubName.trim(),
+      connect: () => { this.setState({ connOpen: false, signedIn: true }); p.onEnter && p.onEnter(s.hubName.trim()); },
+      hubs: this.HUBS.map(h => ({ name: h.name, meta: h.meta, badge: h.badge, badgeCls: h.badgeCls, pick: () => p.onEnter && p.onEnter(h.name) }))
+    };
+  }
+}
+</script>
+</body>
+</html>

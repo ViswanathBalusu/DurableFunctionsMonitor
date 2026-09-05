@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/instances — src/routes/Instances.svelte (+ lib/instances/{FilterChips,FilterRail,InstancesTable,BulkActionBar,StartNewInstanceDialog,LongJsonDialog}.svelte)
+     Data: GET /orchestrations?$filter&$orderby&$top&$skip (chips serialise to the URL), GET /id-suggestions, POST /orchestrations (start), POST /orchestrations/batch (bulk bar). -->
+<section class="page" data-screen-label="Instances">
+  <div class="ptitle">
+    <h1 class="display">Instances</h1>
+    <span class="meta">{{ matchLabel }}</span>
+    <div class="row" style="margin-left:auto;gap:10px">
+      <div class="anchor">
+        <button class="btn" onClick="{{ toggleSaved }}" aria-haspopup="menu" aria-expanded="{{ savedOpen }}">Saved views <span class="tri down" aria-hidden="true"></span></button>
+        <sc-if value="{{ savedOpen }}" hint-placeholder-val="{{ false }}"><div class="pop right" role="menu" style="min-width:260px"><button class="mi" role="menuitem" onClick="{{ viewFailedOrders }}">Failed orders today</button><button class="mi" role="menuitem" onClick="{{ viewStuck }}">Running longer than 1 h</button><button class="mi" role="menuitem" onClick="{{ viewAll }}">Everything in range</button><div class="sep"></div><button class="mi" role="menuitem" onClick="{{ saveView }}">Save current view…</button></div></sc-if>
+      </div>
+      <button class="btn primary" onClick="{{ openStart }}" disabled="{{ readOnly }}">Start new instance</button>
+    </div>
+  </div>
+  <div class="chips2" aria-label="Filters">
+    <sc-for list="{{ statusChips }}" as="c" hint-placeholder-count="0"><span class="fchip">{{ c.label }}<button class="x" aria-label="Remove filter" onClick="{{ c.remove }}">×</button></span></sc-for>
+    <div class="anchor">
+      <button class="fchip add" onClick="{{ toggleAddStatus }}" aria-haspopup="true" aria-expanded="{{ addStatusOpen }}">+ status</button>
+      <sc-if value="{{ addStatusOpen }}" hint-placeholder-val="{{ false }}">
+        <div class="pop" style="padding:10px;min-width:230px">
+          <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="8"><button class="check" style="height:30px;width:100%" onClick="{{ o.toggle }}" role="menuitemcheckbox" aria-checked="{{ o.on }}"><span class="box {{ o.cls }}" aria-hidden="true"></span><span class="chip sm {{ o.stCls }}">{{ o.label }}</span></button></sc-for>
+          <div class="row" style="justify-content:flex-end;margin-top:8px"><button class="btn primary sm" onClick="{{ toggleAddStatus }}">Apply</button></div>
+        </div>
+      </sc-if>
+    </div>
+    <span class="vsep" aria-hidden="true"></span>
+    <sc-for list="{{ nameChips }}" as="c" hint-placeholder-count="0"><span class="fchip"><span class="mono" style="font-weight:600">{{ c.label }}</span><button class="x" aria-label="Remove filter" onClick="{{ c.remove }}">×</button></span></sc-for>
+    <div class="anchor">
+      <button class="fchip add" onClick="{{ toggleAddName }}" aria-haspopup="true" aria-expanded="{{ addNameOpen }}">+ orchestrator</button>
+      <sc-if value="{{ addNameOpen }}" hint-placeholder-val="{{ false }}">
+        <div class="pop" style="min-width:280px"><div class="meta" style="padding:6px 10px">stats.byName</div><sc-for list="{{ nameOptions }}" as="o" hint-placeholder-count="4"><button class="mi" onClick="{{ o.toggle }}"><span class="box {{ o.cls }}" aria-hidden="true"></span><span class="mono" style="font-weight:600">{{ o.label }}</span><span class="meta" style="margin-left:auto">{{ o.count }}</span></button></sc-for></div>
+      </sc-if>
+    </div>
+    <span class="vsep" aria-hidden="true"></span>
+    <div class="sel"><select class="fchip" aria-label="Time range" value="{{ range }}" onChange="{{ changeRange }}"><option>Last 15 minutes</option><option>Last hour</option><option>Last 24 hours</option><option>Last 7 days</option><option>Last 30 days</option></select></div>
+    <sc-if value="{{ hasFree }}" hint-placeholder-val="{{ false }}"><span class="vsep" aria-hidden="true"></span><span class="fchip"><span class="mono" style="font-weight:600">{{ freeLabel }}</span><button class="x" aria-label="Remove filter" onClick="{{ clearFree }}">×</button></span></sc-if>
+    <span class="vsep" aria-hidden="true"></span>
+    <button class="fchip {{ entitiesChipCls }}" onClick="{{ toggleEntities }}" aria-pressed="{{ includeEntities }}">{{ entitiesLabel }}</button>
+    <sc-if value="{{ hasAnyFilter }}" hint-placeholder-val="{{ false }}"><button class="btn ghost sm" onClick="{{ viewAll }}">Clear all</button></sc-if>
+  </div>
+  <div class="row" style="align-items:flex-end">
+    <div class="field"><label>Filtered column</label><div class="sel"><select class="input" style="width:180px" value="{{ column }}" onChange="{{ setColumn }}"><option>instanceId</option><option>name</option><option>runtimeStatus</option><option>createdTime</option><option>lastUpdatedTime</option><option>lastEvent</option><option>customStatus</option><option>input</option><option>output</option></select></div></div>
+    <div class="field"><label>Filter operator</label><div class="sel"><select class="input" style="width:160px" value="{{ op }}" onChange="{{ setOp }}"><option>Equals</option><option>Not Equals</option><option>Starts With</option><option>Not Starts With</option><option>Contains</option><option>Not Contains</option><option>In</option><option>Not In</option></select></div></div>
+    <div class="field grow" style="max-width:280px"><label>Filter value</label><input class="input mono" value="{{ value }}" placeholder="order-2026-" onChange="{{ setValue }}" onKeyDown="{{ valueKey }}"></div>
+    <button class="btn" onClick="{{ apply }}">Apply</button>
+    <button class="btn primary" onClick="{{ refresh }}">Refresh</button>
+    <div class="row grow" style="justify-content:flex-end;gap:8px">
+      <span class="meta">Density and columns in the table menu</span>
+    </div>
+  </div>
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div class="empty"><h2 class="display">No orchestrations</h2><p>Nothing matches these filters in the {{ rangeLower }}. Remove a chip, widen the time range or start a new instance.</p><div class="row" style="justify-content:center;margin-top:20px"><button class="btn" onClick="{{ viewAll }}">Clear filters</button><button class="btn primary" onClick="{{ openStart }}" disabled="{{ readOnly }}">Start new instance</button></div></div>
+  </sc-if>
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+    <div>
+      <div class="tabs" role="tablist" aria-label="View">
+        <button class="tab" role="tab" aria-selected="{{ viewTable }}" onClick="{{ setViewTable }}">Table</button>
+        <button class="tab" role="tab" aria-selected="{{ viewTimeline }}" onClick="{{ setViewTimeline }}">Timeline</button>
+        <button class="tab" role="tab" aria-selected="{{ viewHistogram }}" onClick="{{ setViewHistogram }}">Histogram</button>
+        <span class="grow"></span>
+        <span class="meta" style="align-self:center;padding:0 4px 4px">{{ shownLabel }}</span>
+      </div>
+      <sc-if value="{{ viewTable }}" hint-placeholder-val="{{ true }}">
+        <div class="tbl-wrap" style="border-top:0;border-radius:0 0 var(--radius) var(--radius)">
+          <table class="tbl">
+            <thead><tr><th class="sel-cell"><button class="box {{ allCls }}" aria-label="Select all" onClick="{{ toggleAll }}"></button></th><th class="spine"></th><th>instanceId</th><th>name</th><th class="sort desc">createdTime</th><th>lastUpdatedTime</th><th>runtimeStatus</th><th>duration</th><th>customStatus</th></tr></thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                <tr data-st="{{ r.status }}" data-clickable="true" aria-selected="{{ r.selected }}" onClick="{{ r.peek }}">
+                  <td class="sel-cell nolabel"><button class="box {{ r.boxCls }}" aria-label="Select row" aria-pressed="{{ r.selected }}" onClick="{{ r.toggle }}"></button></td>
+                  <td class="spine"></td>
+                  <td class="mono" data-label="instanceId"><button class="link mono" onClick="{{ r.open }}">{{ r.id }}</button></td>
+                  <td data-label="name">{{ r.name }}<sc-if value="{{ r.isEntity }}" hint-placeholder-val="{{ false }}"><span class="chip kind-entity sm" style="margin-left:6px">entity</span></sc-if></td>
+                  <td class="mono" data-label="createdTime">{{ r.created }}</td>
+                  <td class="mono" data-label="lastUpdatedTime">{{ r.updated }}</td>
+                  <td data-label="runtimeStatus"><span class="chip {{ r.stCls }}">{{ r.status }}</span></td>
+                  <td class="mono" data-label="duration">{{ r.duration }}</td>
+                  <td class="mono trunc" data-label="customStatus"><sc-if value="{{ r.hasCustom }}" hint-placeholder-val="{{ false }}"><button class="link mono" onClick="{{ r.openJson }}">{{ r.custom }}</button></sc-if></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <div class="tfoot"><span class="meta">Showing {{ shownCount }} of {{ matchCount }} · 3 columns hidden · <button class="link" onClick="{{ unhide }}">show all</button></span><button class="btn" onClick="{{ loadMore }}">Load more</button></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ viewTimeline }}" hint-placeholder-val="{{ false }}">
+        <div class="swim" style="border-top:0;border-radius:0 0 var(--radius) var(--radius)"><div class="swim-in">
+          <div class="axis"><span class="meta">instance</span><span class="ticks"><span>Sep 3 23:50</span><span>Sep 4 02:00</span><span>06:00</span><span>09:00</span><span>12:00</span><span>14:03</span></span></div>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+            <div class="lane"><span class="lbl" title="{{ r.id }}">{{ r.id }}</span><div class="track"><div class="bar {{ r.stCls }}" style="left:{{ r.left }}%;width:{{ r.width }}%" title="{{ r.duration }}">{{ r.barText }}</div><span class="blbl" style="left:{{ r.lblLeft }}%">{{ r.lbl }}</span></div></div>
+          </sc-for>
+          <div class="lane" style="height:auto;border:0;padding-top:6px"><span></span><div style="position:relative;height:0"><div class="now" style="left:98%;top:-14px;bottom:-4px"></div></div></div>
+        </div></div>
+        <div class="row" style="justify-content:space-between;margin-top:10px"><div class="legend"><span><i class="st-completed"></i>Completed</span><span><i class="st-running"></i>Running</span><span><i class="st-failed"></i>Failed</span><span><i class="st-pending"></i>Pending</span><span><i class="st-terminated"></i>Terminated</span><span><i class="st-suspended"></i>Suspended</span><span><i class="st-continued"></i>ContinuedAsNew</span></div><button class="btn ghost sm" onClick="{{ saveSvg }}">Save as SVG</button></div>
+      </sc-if>
+      <sc-if value="{{ viewHistogram }}" hint-placeholder-val="{{ false }}">
+        <div class="brutal-flat" style="background:var(--card);border-top:0;padding:0 0 12px;border-radius:0 0 var(--radius) var(--radius)">
+          <div class="hist" aria-label="Instances per hour by orchestrator">
+            <div class="col"><div class="seg-b" style="height:40px;background:var(--chart-1)"></div><div class="seg-b" style="height:18px;background:var(--chart-2)"></div></div>
+            <div class="col"><div class="seg-b" style="height:64px;background:var(--chart-1)"></div><div class="seg-b" style="height:22px;background:var(--chart-2)"></div><div class="seg-b" style="height:10px;background:var(--chart-3)"></div></div>
+            <div class="col"><div class="seg-b" style="height:88px;background:var(--chart-1)"></div><div class="seg-b" style="height:12px;background:var(--chart-2)"></div></div>
+            <div class="col"><div class="seg-b" style="height:120px;background:var(--chart-1)"></div><div class="seg-b" style="height:14px;background:var(--chart-3)"></div></div>
+            <div class="col"><div class="seg-b" style="height:70px;background:var(--chart-1)"></div><div class="seg-b" style="height:30px;background:var(--chart-2)"></div><div class="seg-b" style="height:16px;background:var(--chart-3)"></div></div>
+            <div class="col"><div class="seg-b" style="height:52px;background:var(--chart-1)"></div><div class="seg-b" style="height:8px;background:var(--chart-2)"></div></div>
+            <div class="col"><div class="seg-b" style="height:96px;background:var(--chart-1)"></div><div class="seg-b" style="height:26px;background:var(--chart-2)"></div><div class="seg-b" style="height:20px;background:var(--chart-3)"></div><div class="seg-b" style="height:6px;background:var(--chart-4)"></div></div>
+            <div class="col"><div class="seg-b" style="height:36px;background:var(--chart-1)"></div></div>
+            <div class="col"><div class="seg-b" style="height:58px;background:var(--chart-1)"></div><div class="seg-b" style="height:12px;background:var(--chart-2)"></div></div>
+            <div class="col"><div class="seg-b" style="height:74px;background:var(--chart-1)"></div><div class="seg-b" style="height:10px;background:var(--chart-3)"></div></div>
+            <div class="brush" style="left:33%;width:34%" aria-hidden="true"></div>
+          </div>
+          <div class="legend" style="padding:10px 12px 0"><span><i style="background:var(--chart-1)"></i>ProcessOrderOrchestrator</span><span><i style="background:var(--chart-2)"></i>ReconcileLedgerOrchestrator</span><span><i style="background:var(--chart-3)"></i>NotifyCustomer</span><span><i style="background:var(--chart-4)"></i>OnboardTenantOrchestrator</span><span class="meta" style="margin-left:auto">brush narrows the time filter</span></div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ true }}">
+    <div class="bulk" role="toolbar" aria-label="Bulk actions">
+      <span class="cnt">{{ selectedCount }} selected</span>
+      <button class="btn" onClick="{{ bulkTerminate }}" disabled="{{ readOnly }}">Terminate</button>
+      <button class="btn" onClick="{{ bulkSuspend }}" disabled="{{ readOnly }}">Suspend</button>
+      <button class="btn" onClick="{{ bulkResume }}" disabled="{{ readOnly }}">Resume</button>
+      <button class="btn" onClick="{{ bulkRewind }}" disabled="{{ readOnly }}">Rewind</button>
+      <button class="btn" onClick="{{ bulkRaise }}" disabled="{{ readOnly }}">Raise event</button>
+      <button class="btn destructive" onClick="{{ bulkPurge }}" disabled="{{ readOnly }}">Purge</button>
+      <button class="btn ghost" style="height:32px;padding:0 8px" onClick="{{ clearSelection }}" aria-label="Clear selection">×</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeDlg }}">
+      <div class="dialog" role="dialog" aria-modal="true" onClick="{{ stop }}">
+        <sc-if value="{{ dlg.band }}" hint-placeholder-val="{{ false }}"><div class="warn"></div></sc-if>
+        <div class="body">
+          <h3 class="display">{{ dlg.title }}</h3>
+          <p>{{ dlg.body }}</p>
+          <div class="ed ro" style="min-height:0"><pre>{{ dlg.idsText }}</pre></div>
+          <sc-if value="{{ dlg.event }}" hint-placeholder-val="{{ false }}">
+            <div class="field"><label>Event name</label><input class="input mono" defaultValue="PaymentApproved"></div>
+            <div class="field"><label>Event data (JSON)</label><div class="ed" style="min-height:0"><textarea rows="3" defaultValue="{ &quot;approved&quot;: true, &quot;approver&quot;: &quot;ops@contoso.com&quot; }"></textarea></div></div>
+          </sc-if>
+          <sc-if value="{{ dlg.reason }}" hint-placeholder-val="{{ false }}"><div class="field"><label>Reason (optional)</label><input class="input" placeholder="Shown in the audit log and in the instance output"></div></sc-if>
+          <p class="meta">POST /orchestrations/batch · runs with bounded parallelism · the result lists ok and failed ids.</p>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ closeDlg }}">Cancel</button><button class="btn {{ dlg.cls }}" onClick="{{ confirmDlg }}">{{ dlg.confirm }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ startOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeStart }}">
+      <div class="dialog" role="dialog" aria-modal="true" aria-label="Start new instance" onClick="{{ stop }}">
+        <div class="body">
+          <h3 class="display">Start new instance</h3>
+          <div class="field"><label>Orchestrator</label><div class="sel"><select class="input mono" defaultValue="ProcessOrderOrchestrator"><option>ProcessOrderOrchestrator</option><option>ReconcileLedgerOrchestrator</option><option>OnboardTenantOrchestrator</option></select></div></div>
+          <div class="field"><label>Instance id</label><input class="input mono" placeholder="Leave empty for a generated GUID" value="{{ newId }}" onChange="{{ setNewId }}"></div>
+          <div class="field"><label>Input (JSON)</label><div class="ed"><textarea rows="6" defaultValue="{&#10;  &quot;orderId&quot;: &quot;A-1044&quot;,&#10;  &quot;customerId&quot;: 88214,&#10;  &quot;items&quot;: [ { &quot;sku&quot;: &quot;SKU-4471&quot;, &quot;qty&quot;: 1 } ]&#10;}"></textarea><div class="foot"><span>text mode · JSON valid</span><span class="meter" style="margin-left:auto"><i style="--pct:2%"></i>0.9 KB of 60 KB</span></div></div></div>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ closeStart }}">Cancel</button><button class="btn primary" onClick="{{ startInstance }}">Start</button></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ jsonOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeJson }}">
+      <div class="dialog" role="dialog" aria-modal="true" aria-label="customStatus" onClick="{{ stop }}">
+        <div class="body">
+          <h3 class="display">customStatus</h3>
+          <p class="mono muted">{{ jsonId }}</p>
+          <div class="brutal-flat" style="overflow:hidden"><div class="jse-bar"><span class="on">tree</span><span>text</span><span>table</span><span style="margin-left:auto">search</span></div><pre class="json">{{ jsonText }}</pre></div>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ copyJson }}">Copy to clipboard</button><button class="btn primary" onClick="{{ closeJson }}">Close</button></div>
+      </div>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  ROWS = [
+    { id: 'order-2026-09-04-000913', name: 'ProcessOrderOrchestrator', created: '2026-09-04 14:02:11', updated: '2026-09-04 14:02:58', status: 'Running', duration: '47 s', custom: '{"step":"ChargePayment","attempt":2}', left: 97, width: 2 },
+    { id: 'order-2026-09-04-000912', name: 'ProcessOrderOrchestrator', created: '2026-09-04 13:58:40', updated: '2026-09-04 13:59:05', status: 'Completed', duration: '25 s', custom: '', left: 96.5, width: 1.2 },
+    { id: 'order-2026-09-04-000911', name: 'ProcessOrderOrchestrator', created: '2026-09-04 13:51:02', updated: '2026-09-04 13:51:19', status: 'Failed', duration: '17 s', custom: '{"error":"InventoryUnavailable","sku":"SKU-4471"}', left: 95.8, width: 1 },
+    { id: 'order-2026-09-04-000907', name: 'ProcessOrderOrchestrator', created: '2026-09-04 13:40:11', updated: '2026-09-04 13:40:26', status: 'Failed', duration: '15 s', custom: '{"error":"InventoryUnavailable","sku":"SKU-2210"}', left: 94.6, width: 1 },
+    { id: 'order-2026-09-04-000899', name: 'ProcessOrderOrchestrator', created: '2026-09-04 12:10:04', updated: '2026-09-04 12:10:04', status: 'Pending', duration: '—', custom: '', left: 84.5, width: 0.8 },
+    { id: 'order-2026-09-04-000880', name: 'ProcessOrderOrchestrator', created: '2026-09-04 11:02:00', updated: '2026-09-04 11:02:31', status: 'ContinuedAsNew', duration: '31 s', custom: '', left: 77, width: 1 },
+    { id: '8f3a1b2c-4d5e-6f70-8192-a3b4c5d6e7f8', name: 'OnboardTenantOrchestrator', created: '2026-09-04 09:12:40', updated: '2026-09-04 09:15:01', status: 'Completed', duration: '2.3 min', custom: '{"tenant":"contoso","step":"done"}', left: 64.5, width: 2.4 },
+    { id: 'nightly-reconcile-20260903', name: 'ReconcileLedgerOrchestrator', created: '2026-09-03 02:00:00', updated: '2026-09-03 02:42:13', status: 'Terminated', duration: '42 min', custom: '{"reason":"operator"}', left: 15, width: 8 },
+    { id: 'order-2026-09-03-004411', name: 'ProcessOrderOrchestrator', created: '2026-09-03 23:58:10', updated: '2026-09-04 00:00:02', status: 'Suspended', duration: '14 h', custom: '{"step":"ChargePayment","attempt":3}', left: 1, width: 97 }
+  ];
+  ENTITY_ROWS = [
+    { id: '@counter@warehouse-07', name: 'Counter', created: '2026-09-01 08:00:00', updated: '2026-09-04 14:01:47', status: 'Pending', duration: '—', custom: '', kind: 'DurableEntity', state: '{ "value": 1284 }', left: 0, width: 98 },
+    { id: '@counter@warehouse-12', name: 'Counter', created: '2026-09-01 08:00:00', updated: '2026-09-04 13:20:09', status: 'Pending', duration: '—', custom: '', kind: 'DurableEntity', state: '{ "value": 312 }', left: 0, width: 92 }
+  ];
+  STATUSES = ['Running', 'Pending', 'Completed', 'Failed', 'Terminated', 'Canceled', 'ContinuedAsNew', 'Suspended'];
+  NAMES = [['ProcessOrderOrchestrator', '1,102'], ['ReconcileLedgerOrchestrator', '24'], ['OnboardTenantOrchestrator', '7'], ['NotifyCustomer', '1,096']];
+  state = { view: 'table', selected: { 'order-2026-09-04-000913': true, 'order-2026-09-04-000911': true }, statuses: [], names: [], column: 'instanceId', op: 'Starts With', value: '', applied: '', includeEntities: false, savedOpen: false, addStatusOpen: false, addNameOpen: false, startOpen: false, dlg: null, json: null, newId: '', extra: 0 };
+
+  componentDidMount() {
+    const p = this.props, st = {};
+    if (p.initialStatus) st.statuses = [p.initialStatus];
+    if (p.initialName) st.names = [p.initialName];
+    if (p.startNew) st.startOpen = true;
+    if (Object.keys(st).length) this.setState(st);
+    this._doc = (e) => { if (!(this.state.savedOpen || this.state.addStatusOpen || this.state.addNameOpen)) return; if (e.target.closest && e.target.closest('.anchor')) return; this.setState({ savedOpen: false, addStatusOpen: false, addNameOpen: false }); };
+    document.addEventListener('mousedown', this._doc);
+  }
+  componentWillUnmount() { document.removeEventListener('mousedown', this._doc); }
+  componentDidUpdate(prev) {
+    const p = this.props;
+    if (prev.initialStatus !== p.initialStatus && p.initialStatus) this.setState({ statuses: [p.initialStatus] });
+    if (prev.initialName !== p.initialName && p.initialName) this.setState({ names: [p.initialName] });
+    if (!prev.startNew && p.startNew) this.setState({ startOpen: true });
+  }
+  matches(r) {
+    const s = this.state, q = s.applied.trim().toLowerCase();
+    if (s.statuses.length && !s.statuses.includes(r.status)) return false;
+    if (s.names.length && !s.names.includes(r.name)) return false;
+    if (!q) return true;
+    const field = s.column === 'name' ? r.name : s.column === 'runtimeStatus' ? r.status : s.column === 'customStatus' ? r.custom : r.id;
+    const v = String(field || '').toLowerCase();
+    switch (s.op) {
+      case 'Equals': return v === q; case 'Not Equals': return v !== q;
+      case 'Starts With': return v.startsWith(q); case 'Not Starts With': return !v.startsWith(q);
+      case 'Contains': return v.includes(q); case 'Not Contains': return !v.includes(q);
+      case 'In': return q.split(',').map(x => x.trim()).includes(v); case 'Not In': return !q.split(',').map(x => x.trim()).includes(v);
+      default: return true;
+    }
+  }
+  bulk(kind) {
+    const ids = Object.keys(this.state.selected).filter(k => this.state.selected[k]);
+    const n = ids.length;
+    const defs = {
+      terminate: { title: 'Terminate ' + n + ' instances', body: 'Stops these instances where they are. Running activities finish but their results are ignored. This cannot be undone.', confirm: 'Terminate ' + n + ' instances', cls: 'destructive', band: true, reason: true },
+      suspend: { title: 'Suspend ' + n + ' instances', body: 'Pauses these instances. Timers and external events are held until you resume.', confirm: 'Suspend ' + n, cls: 'primary', band: false, reason: true },
+      resume: { title: 'Resume ' + n + ' instances', body: 'Resumes suspended instances. Instances that are not suspended are reported as skipped.', confirm: 'Resume ' + n, cls: 'primary', band: false },
+      rewind: { title: 'Rewind ' + n + ' instances', body: 'Re-runs only the failed steps of each failed instance. Completed steps keep their results. Instances that are not failed are skipped.', confirm: 'Rewind ' + n, cls: 'primary', band: true, reason: true },
+      raise: { title: 'Raise event on ' + n + ' instances', body: 'Sends the same event with the same payload to every selected instance.', confirm: 'Raise event', cls: 'primary', band: false, event: true },
+      purge: { title: 'Purge ' + n + ' instances', body: 'Removes the instances, their history and their large-message blobs. This cannot be undone.', confirm: 'Purge ' + n + ' instances', cls: 'destructive', band: true }
+    };
+    const d = defs[kind];
+    d.kind = kind; d.ids = ids; d.idsText = ids.slice(0, 10).join('\n') + (n > 10 ? '\n… and ' + (n - 10) + ' more' : '');
+    this.setState({ dlg: d });
+  }
+  renderVals() {
+    const p = this.props, s = this.state;
+    const range = p.range || 'Last 24 hours';
+    const all = s.includeEntities ? this.ROWS.concat(this.ENTITY_ROWS) : this.ROWS;
+    const visible = all.filter(r => this.matches(r));
+    const rows = visible.map(r => {
+      const sel = !!s.selected[r.id];
+      const narrow = r.width < 6;
+      return Object.assign({}, r, {
+        selected: sel, boxCls: sel ? 'on' : '', stCls: 'st-' + r.status.toLowerCase(), isEntity: r.kind === 'DurableEntity', hasCustom: !!r.custom,
+        barText: narrow ? '' : r.duration, lbl: narrow ? r.duration : '', lblLeft: Math.min(r.left + r.width + 0.6, 99),
+        toggle: (e) => { e.stopPropagation(); const next = Object.assign({}, s.selected); next[r.id] = !next[r.id]; this.setState({ selected: next }); },
+        open: (e) => { e.stopPropagation(); p.onNavigate && p.onNavigate('instance', { instanceId: r.id }); },
+        openJson: (e) => { e.stopPropagation(); this.setState({ json: r }); },
+        peek: () => p.onPeek && p.onPeek(r)
+      });
+    });
+    const selectedCount = visible.filter(r => s.selected[r.id]).length;
+    const allOn = visible.length > 0 && selectedCount === visible.length;
+    const hasFree = !!s.applied.trim();
+    const hasAnyFilter = hasFree || s.statuses.length > 0 || s.names.length > 0;
+    const matchCount = hasAnyFilter ? (visible.length + s.extra).toLocaleString('en-US') : '1,284';
+    const isEmpty = !!p.empty || visible.length === 0;
+    const dlg = s.dlg || {};
+    return {
+      readOnly: !!p.readOnly, range, rangeLower: range.toLowerCase(), changeRange: (e) => p.onRange && p.onRange(e.target.value),
+      matchLabel: matchCount + ' match · ' + range.toLowerCase(),
+      savedOpen: s.savedOpen, toggleSaved: () => this.setState({ savedOpen: !s.savedOpen, addStatusOpen: false, addNameOpen: false }),
+      viewFailedOrders: () => this.setState({ savedOpen: false, statuses: ['Failed'], names: ['ProcessOrderOrchestrator'], column: 'instanceId', op: 'Starts With', value: 'order-2026-09-04', applied: 'order-2026-09-04' }),
+      viewStuck: () => this.setState({ savedOpen: false, statuses: ['Running', 'Suspended'], names: [], value: '', applied: '' }),
+      viewAll: () => this.setState({ savedOpen: false, statuses: [], names: [], value: '', applied: '' }),
+      saveView: () => { this.setState({ savedOpen: false }); p.onToast && p.onToast('ok', 'Saved view "' + (s.statuses.join(', ') || 'Everything') + ' · ' + range + '" to this browser'); },
+      openStart: () => this.setState({ startOpen: true }), closeStart: () => this.setState({ startOpen: false }), startOpen: s.startOpen,
+      newId: s.newId, setNewId: (e) => this.setState({ newId: e.target.value }),
+      startInstance: () => { this.setState({ startOpen: false, newId: '' }); p.onToast && p.onToast('ok', 'Started ' + (s.newId.trim() || 'order-2026-09-04-000914') + ' · ProcessOrderOrchestrator'); p.onRefresh && p.onRefresh(); },
+      statusChips: s.statuses.map(st => ({ label: st, remove: () => this.setState({ statuses: s.statuses.filter(x => x !== st) }) })),
+      addStatusOpen: s.addStatusOpen, toggleAddStatus: () => this.setState({ addStatusOpen: !s.addStatusOpen, addNameOpen: false, savedOpen: false }),
+      statusOptions: this.STATUSES.map(st => { const on = s.statuses.includes(st); return { label: st, on, cls: on ? 'on' : '', stCls: 'st-' + st.toLowerCase(), toggle: () => this.setState({ statuses: on ? s.statuses.filter(x => x !== st) : s.statuses.concat([st]) }) }; }),
+      nameChips: s.names.map(n => ({ label: n, remove: () => this.setState({ names: s.names.filter(x => x !== n) }) })),
+      addNameOpen: s.addNameOpen, toggleAddName: () => this.setState({ addNameOpen: !s.addNameOpen, addStatusOpen: false, savedOpen: false }),
+      nameOptions: this.NAMES.map(([n, c]) => { const on = s.names.includes(n); return { label: n, count: c, cls: on ? 'on' : '', toggle: () => this.setState({ names: on ? s.names.filter(x => x !== n) : s.names.concat([n]), addNameOpen: false }) }; }),
+      hasFree, freeLabel: s.column + ' ' + s.op.toLowerCase() + ' ' + s.applied, clearFree: () => this.setState({ value: '', applied: '' }),
+      includeEntities: s.includeEntities, entitiesLabel: s.includeEntities ? 'Entities included ×' : '+ include entities', entitiesChipCls: s.includeEntities ? '' : 'add',
+      toggleEntities: () => this.setState({ includeEntities: !s.includeEntities }),
+      hasAnyFilter,
+      column: s.column, setColumn: (e) => this.setState({ column: e.target.value }), op: s.op, setOp: (e) => this.setState({ op: e.target.value }),
+      value: s.value, setValue: (e) => this.setState({ value: e.target.value }), valueKey: (e) => { if (e.key === 'Enter') this.setState({ applied: s.value }); },
+      apply: () => this.setState({ applied: s.value }), refresh: () => p.onRefresh && p.onRefresh(),
+      isEmpty, hasRows: !isEmpty,
+      viewTable: s.view === 'table', viewTimeline: s.view === 'timeline', viewHistogram: s.view === 'histogram',
+      setViewTable: () => this.setState({ view: 'table' }), setViewTimeline: () => this.setState({ view: 'timeline' }), setViewHistogram: () => this.setState({ view: 'histogram' }),
+      shownLabel: visible.length + ' loaded · sorted by createdTime desc',
+      rows, allCls: allOn ? 'on' : '', toggleAll: () => { const next = {}; if (!allOn) visible.forEach(r => next[r.id] = true); this.setState({ selected: next }); },
+      shownCount: visible.length, matchCount, unhide: () => p.onToast && p.onToast('ok', 'Showing parentInstanceId, lastEvent, input and output again'),
+      loadMore: () => { this.setState({ extra: s.extra + 50 }); p.onRefresh && p.onRefresh(); },
+      saveSvg: () => p.onToast && p.onToast('ok', 'Saved instances-gantt.svg'),
+      hasSelection: selectedCount > 0, selectedCount,
+      bulkTerminate: () => this.bulk('terminate'), bulkSuspend: () => this.bulk('suspend'), bulkResume: () => this.bulk('resume'), bulkRewind: () => this.bulk('rewind'), bulkRaise: () => this.bulk('raise'), bulkPurge: () => this.bulk('purge'),
+      clearSelection: () => this.setState({ selected: {} }),
+      dlgOpen: !!s.dlg, dlg, closeDlg: () => this.setState({ dlg: null }), stop: (e) => e.stopPropagation(),
+      confirmDlg: () => { const d = s.dlg; this.setState({ dlg: null, selected: {} }); p.onToast && p.onToast('ok', d.confirm + ' · ' + d.ids.length + ' ok, 0 failed'); p.onRefresh && p.onRefresh(); },
+      jsonOpen: !!s.json, jsonId: s.json ? s.json.id : '', jsonText: s.json ? JSON.stringify(JSON.parse(s.json.custom), null, 2) : '', closeJson: () => this.setState({ json: null }),
+      copyJson: () => { if (navigator.clipboard && s.json) navigator.clipboard.writeText(s.json.custom).catch(() => {}); this.setState({ json: null }); p.onToast && p.onToast('ok', 'Copied customStatus to the clipboard'); }
+    };
+  }
+}
+</script>
+</body>
+</html>

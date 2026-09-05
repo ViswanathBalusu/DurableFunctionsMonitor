@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="dfm-tokens.css">
+<link rel="stylesheet" href="dfm-ui.css">
+</helmet>
+<!-- Route /{connName-hubName}/entities — src/routes/Entities.svelte
+     Data: GET /orchestrations with the entity filter (+ optional GET /entities with parsed state); POST orchestrations('{id}')/raise-event as Signal, /purge; POST /clean-entity-storage. -->
+<section class="page" data-screen-label="Entities">
+  <div class="ptitle">
+    <h1 class="display">Entities</h1>
+    <span class="meta">212 durable entities · 3 entity names</span>
+    <button class="btn destructive" style="margin-left:auto" onClick="{{ openClean }}" disabled="{{ readOnly }}">Clean entity storage</button>
+  </div>
+  <div class="chips2" aria-label="Filters">
+    <sc-if value="{{ hasNameFilter }}" hint-placeholder-val="{{ true }}"><span class="fchip"><span class="mono" style="font-weight:600">{{ nameFilter }}</span><button class="x" aria-label="Remove filter" onClick="{{ clearName }}">×</button></span></sc-if>
+    <div class="anchor">
+      <button class="fchip add" onClick="{{ toggleAddName }}" aria-expanded="{{ addNameOpen }}">+ entity name</button>
+      <sc-if value="{{ addNameOpen }}" hint-placeholder-val="{{ false }}"><div class="pop" style="min-width:240px"><sc-for list="{{ nameOptions }}" as="o" hint-placeholder-count="3"><button class="mi" onClick="{{ o.pick }}"><span class="mono" style="font-weight:600">{{ o.name }}</span><span class="meta" style="margin-left:auto">{{ o.count }}</span></button></sc-for></div></sc-if>
+    </div>
+    <span class="vsep" aria-hidden="true"></span>
+    <span class="fchip"><span class="meta" style="font-weight:600">key starts with</span><input class="input mono" style="height:22px;border:0;background:transparent;width:150px;padding:0" value="{{ keyPrefix }}" onChange="{{ setKeyPrefix }}" aria-label="Key starts with" placeholder="@counter@"></span>
+    <span class="vsep" aria-hidden="true"></span>
+    <div class="sel"><select class="fchip" aria-label="Updated in" defaultValue="Updated in the last 7 days"><option>Updated in the last hour</option><option>Updated in the last 24 hours</option><option>Updated in the last 7 days</option><option>Any time</option></select></div>
+  </div>
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div class="empty"><h2 class="display">No entities</h2><p>No durable entity matches these filters. Clear the name chip or the key prefix.</p></div>
+  </sc-if>
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th class="spine"></th><th>entity name</th><th>key</th><th>state</th><th class="sort desc">lastUpdatedTime</th><th>status</th><th style="text-align:right">actions</th></tr></thead>
+        <tbody>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+            <tr data-st="{{ r.status }}" data-clickable="true" onClick="{{ r.peek }}">
+              <td class="spine"></td>
+              <td data-label="entity name"><span style="font-weight:700">{{ r.name }}</span><span class="chip kind-entity sm" style="margin-left:6px">entity</span></td>
+              <td class="mono" data-label="key"><button class="link mono" onClick="{{ r.open }}">{{ r.key }}</button></td>
+              <td class="mono trunc" data-label="state"><button class="link mono" onClick="{{ r.openState }}">{{ r.state }}</button></td>
+              <td class="mono" data-label="lastUpdatedTime">{{ r.updated }}</td>
+              <td data-label="status"><span class="chip {{ r.stCls }}">{{ r.status }}</span></td>
+              <td data-label="actions" style="text-align:right"><span class="row" style="justify-content:flex-end;gap:8px;display:inline-flex"><button class="btn sm" onClick="{{ r.signal }}" disabled="{{ readOnly }}">Signal</button><button class="btn sm destructive" onClick="{{ r.purge }}" disabled="{{ readOnly }}">Purge</button></span></td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <div class="tfoot"><span class="meta">Showing {{ shown }} of 212 · state is the first line of the entity row, full state in the peek panel</span><button class="btn" onClick="{{ loadMore }}">Load more</button></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ dlgOpen }}" hint-placeholder-val="{{ false }}">
+    <div class="overlay" onClick="{{ closeDlg }}">
+      <div class="dialog" role="dialog" aria-modal="true" onClick="{{ stop }}">
+        <sc-if value="{{ dlg.band }}" hint-placeholder-val="{{ false }}"><div class="warn"></div></sc-if>
+        <div class="body">
+          <h3 class="display">{{ dlg.title }}</h3>
+          <p>{{ dlg.body }}</p>
+          <sc-if value="{{ dlg.signal }}" hint-placeholder-val="{{ false }}">
+            <div class="field"><label>Signal name</label><input class="input mono" defaultValue="add"></div>
+            <div class="field"><label>Signal data (JSON)</label><div class="ed" style="min-height:0"><textarea rows="3" defaultValue="{ &quot;amount&quot;: 5 }"></textarea></div></div>
+          </sc-if>
+          <sc-if value="{{ dlg.clean }}" hint-placeholder-val="{{ false }}">
+            <button class="check" onClick="{{ toggleEmpty }}" role="checkbox" aria-checked="{{ removeEmpty }}"><span class="box {{ removeEmptyCls }}" aria-hidden="true"></span>Remove empty entities (no state)</button>
+            <button class="check" onClick="{{ toggleLocks }}" role="checkbox" aria-checked="{{ releaseLocks }}"><span class="box {{ releaseLocksCls }}" aria-hidden="true"></span>Release orphaned locks</button>
+            <p class="meta">POST /clean-entity-storage · the response says how many entities and locks were touched.</p>
+          </sc-if>
+        </div>
+        <div class="foot"><button class="btn" onClick="{{ closeDlg }}">Cancel</button><button class="btn {{ dlg.cls }}" onClick="{{ confirmDlg }}">{{ dlg.confirm }}</button></div>
+      </div>
+    </div>
+  </sc-if>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  ROWS = [
+    { name: 'Counter', key: '@counter@warehouse-07', state: '{"value":1284}', full: '{\n  "value": 1284,\n  "lastSku": "SKU-4471"\n}', updated: '2026-09-04 14:01:47', status: 'Pending' },
+    { name: 'Counter', key: '@counter@warehouse-12', state: '{"value":312}', full: '{\n  "value": 312,\n  "lastSku": "SKU-2210"\n}', updated: '2026-09-04 13:20:09', status: 'Pending' },
+    { name: 'Counter', key: '@counter@warehouse-03', state: '{"value":0}', full: '{\n  "value": 0\n}', updated: '2026-09-02 07:12:33', status: 'Pending' },
+    { name: 'CartAggregate', key: '@cartaggregate@user-88214', state: '{"items":3,"total":129.5}', full: '{\n  "items": 3,\n  "total": 129.5,\n  "currency": "USD"\n}', updated: '2026-09-04 14:02:24', status: 'Running' },
+    { name: 'TenantLock', key: '@tenantlock@contoso', state: '{"locked":true,"owner":"8f3a1b2c-4d5e-…"}', full: '{\n  "locked": true,\n  "owner": "8f3a1b2c-4d5e-6f70-8192-a3b4c5d6e7f8",\n  "since": "2026-09-04T09:12:41Z"\n}', updated: '2026-09-04 09:12:41', status: 'Pending' }
+  ];
+  state = { nameFilter: '', keyPrefix: '', addNameOpen: false, dlg: null, removeEmpty: true, releaseLocks: false };
+  renderVals() {
+    const p = this.props, s = this.state;
+    const readOnly = !!p.readOnly;
+    const prefix = s.keyPrefix.trim().toLowerCase();
+    const visible = this.ROWS.filter(r => (!s.nameFilter || r.name === s.nameFilter) && (!prefix || r.key.toLowerCase().startsWith(prefix)));
+    const peekOf = (r) => ({ id: r.key, name: r.name, status: r.status, created: '2026-09-01 08:00:00', updated: r.updated, duration: '—', custom: '', kind: 'DurableEntity', state: r.full, history: 'entity envelope · 1 row' });
+    const rows = visible.map(r => Object.assign({}, r, {
+      stCls: 'st-' + r.status.toLowerCase(),
+      peek: () => p.onPeek && p.onPeek(peekOf(r)),
+      open: (e) => { e.stopPropagation(); p.onPeek && p.onPeek(peekOf(r)); },
+      openState: (e) => { e.stopPropagation(); p.onPeek && p.onPeek(peekOf(r)); },
+      signal: (e) => { e.stopPropagation(); this.setState({ dlg: { kind: 'signal', title: 'Send signal to ' + r.key, body: 'Raises an operation on the entity. The entity function decides what the signal name means.', signal: true, confirm: 'Send signal', cls: 'primary' } }); },
+      purge: (e) => { e.stopPropagation(); this.setState({ dlg: { kind: 'purge', title: 'Purge ' + r.key, body: 'Removes the entity row and its history. The next signal recreates it with empty state.', band: true, confirm: 'Purge entity', cls: 'destructive' } }); }
+    }));
+    const names = ['Counter', 'CartAggregate', 'TenantLock'].map(n => ({ name: n, count: this.ROWS.filter(r => r.name === n).length + (n === 'Counter' ? 204 : 0), pick: () => this.setState({ nameFilter: n, addNameOpen: false }) }));
+    return {
+      readOnly, hasNameFilter: !!s.nameFilter, nameFilter: s.nameFilter, clearName: () => this.setState({ nameFilter: '' }),
+      addNameOpen: s.addNameOpen, toggleAddName: () => this.setState({ addNameOpen: !s.addNameOpen }), nameOptions: names,
+      keyPrefix: s.keyPrefix, setKeyPrefix: (e) => this.setState({ keyPrefix: e.target.value }),
+      isEmpty: !!p.empty || visible.length === 0, hasRows: !p.empty && visible.length > 0, rows, shown: visible.length,
+      loadMore: () => p.onToast && p.onToast('ok', 'Loaded 50 more entities'),
+      openClean: () => this.setState({ dlg: { kind: 'clean', title: 'Clean entity storage', body: 'Scans the Instances table for entities that hold no state or an orphaned lock and removes them. Running orchestrations are not touched.', band: true, clean: true, confirm: 'Clean entity storage', cls: 'destructive' } }),
+      dlgOpen: !!s.dlg, dlg: s.dlg || {}, closeDlg: () => this.setState({ dlg: null }), stop: (e) => e.stopPropagation(),
+      removeEmpty: s.removeEmpty, removeEmptyCls: s.removeEmpty ? 'on' : '', toggleEmpty: () => this.setState({ removeEmpty: !s.removeEmpty }),
+      releaseLocks: s.releaseLocks, releaseLocksCls: s.releaseLocks ? 'on' : '', toggleLocks: () => this.setState({ releaseLocks: !s.releaseLocks }),
+      confirmDlg: () => { const d = s.dlg; this.setState({ dlg: null }); p.onToast && p.onToast('ok', d.kind === 'clean' ? 'Cleaned entity storage: 7 empty entities removed, 0 locks released' : d.confirm + ' · ok'); }
+    };
+  }
+}
+</script>
+</body>
+</html>
