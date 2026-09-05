@@ -17,8 +17,10 @@ import { AppState } from './app.svelte';
 import { InstanceState, clearFunctionMapCache, customTab } from './instance.svelte';
 import { HISTORY_PAGE_SIZE } from './instance-history.svelte';
 import { Prefs } from './prefs.svelte';
+import { children as childrenFixture } from '../../../tests/unit/fixtures/children';
 import { childDetails, details as detailsFixture } from '../../../tests/unit/fixtures/details';
 import { history as historyFixture, historyEvent } from '../../../tests/unit/fixtures/history';
+import { spansResponse } from '../../../tests/unit/fixtures/spans';
 
 const INSTANCE_ID = 'order-2026-09-04-000913';
 
@@ -54,6 +56,8 @@ interface Calls {
   restarts: boolean[];
   purges: number;
   functionMaps: number;
+  spans: number;
+  children: number;
 }
 
 function makeInstance(
@@ -79,6 +83,8 @@ function makeInstance(
     restarts: [],
     purges: 0,
     functionMaps: 0,
+    spans: 0,
+    children: 0,
   };
 
   const fail = options.fail ?? (() => null);
@@ -129,6 +135,18 @@ function makeInstance(
     purge: async () => {
       raise('purge');
       calls.purges += 1;
+    },
+    spans: async () => {
+      raise('spans');
+      calls.spans += 1;
+
+      return spansResponse();
+    },
+    children: async () => {
+      raise('children');
+      calls.children += 1;
+
+      return childrenFixture();
     },
   } as unknown as Endpoints;
 
@@ -402,6 +420,43 @@ describe('InstanceState: refreshing', () => {
     await instance.refreshAll();
 
     expect(hookRuns).toBe(1);
+  });
+
+  it('reloads the spans with the rest of the workspace, and only where there are any', async () => {
+    const without = makeInstance();
+
+    await without.instance.refreshAll();
+
+    expect(without.calls.spans).toBe(0);
+    expect(without.calls.children).toBe(0);
+
+    const { instance, calls } = makeInstance({ capabilities: { spans: true, children: true } });
+
+    await instance.refreshAll();
+
+    expect(calls.spans).toBe(1);
+    expect(calls.children).toBe(1);
+    expect(instance.spans.historyRows).toBe(31);
+    expect(instance.spans.childrenCount).toBe(2);
+  });
+
+  it('ticks the spans too: a running timeline that never moves is a picture of the past', async () => {
+    vi.useFakeTimers();
+
+    const { app, instance, calls } = makeInstance({ capabilities: { spans: true, children: true } });
+
+    app.prefs.setAutoRefresh('instance', 5);
+    instance.startAutoRefresh();
+
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(calls.spans).toBe(1);
+
+    instance.stopAutoRefresh();
+
+    await vi.advanceTimersByTimeAsync(20_000);
+
+    expect(calls.spans).toBe(1);
   });
 
   it('ticks on the interval in the preferences, and never over a request in flight', async () => {

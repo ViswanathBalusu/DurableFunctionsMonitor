@@ -99,7 +99,7 @@
   The tab bodies are filled in by the tasks that own them (E5-S3-T2 onwards).
 -->
 <Page data-screen-label="Instance workspace">
-  <InstanceHeader {instance}>
+  <InstanceHeader {instance} childCount={instance.spans.childrenCount} historyRows={instance.spans.historyRows}>
     {#snippet actions()}
       <InstanceActions {instance} />
     {/snippet}

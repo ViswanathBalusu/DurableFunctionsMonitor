@@ -11,6 +11,7 @@ import type { FunctionMapResponse, OrchestrationDetails, RuntimeStatus } from '$
 import { ACTION_VERBS, actionToast, type ActionKind } from '$lib/instance/actions.svelte';
 import type { AppState } from './app.svelte';
 import { InstanceHistoryState } from './instance-history.svelte';
+import { InstanceSpansState } from './instance-spans.svelte';
 
 /** A tab of the workspace. Custom Liquid tabs are `custom:<template name>` (contracts §4). */
 export type WorkspaceTab = 'summary' | 'timeline' | 'history' | 'inputs' | 'sequence' | 'graph' | 'raw' | string;
@@ -93,6 +94,9 @@ export class InstanceState {
   readonly instanceId: string;
   readonly history: InstanceHistoryState;
 
+  /** `/spans` and `/children` (E8): the Timeline tab, the Summary column and the header's counts. */
+  readonly spans: InstanceSpansState;
+
   readonly #app: AppState;
 
   /** What `refreshAll()` reloads besides the details and the history: inputs, spans, children. */
@@ -105,6 +109,7 @@ export class InstanceState {
     this.#app = options.app;
     this.instanceId = options.instanceId;
     this.history = new InstanceHistoryState({ app: options.app, instanceId: options.instanceId });
+    this.spans = new InstanceSpansState({ app: options.app, instanceId: options.instanceId });
   }
 
   get app(): AppState {
@@ -288,9 +293,14 @@ export class InstanceState {
     }
   }
 
-  /** Everything the workspace shows: the details, the first page of history, and every hook. */
+  /** Everything the workspace shows: the details, the first page of history, the spans, the hooks. */
   async refreshAll(): Promise<void> {
-    await Promise.all([this.loadDetails(), this.history.load(true), ...this.#hooks.map((hook) => hook())]);
+    await Promise.all([
+      this.loadDetails(),
+      this.history.load(true),
+      this.spans.load(),
+      ...this.#hooks.map((hook) => hook()),
+    ]);
   }
 
   /** Starts (or restarts) the timer for the interval in the preferences; 0 turns it off. */
@@ -311,13 +321,17 @@ export class InstanceState {
     }
   }
 
-  /** One auto-refresh tick: the details and the first page of history, never over a request in flight. */
+  /**
+   * One auto-refresh tick: the details, the first page of history and the spans, never over a
+   * request already in flight. The spans are what makes a running timeline move, so a tick that
+   * left them alone would tick a clock over a picture of the past.
+   */
   async tick(): Promise<void> {
-    if (this.loading || this.busy || this.history.loading) {
+    if (this.loading || this.busy || this.history.loading || this.spans.loading) {
       return;
     }
 
-    await Promise.all([this.loadDetails(), this.history.load(true)]);
+    await Promise.all([this.loadDetails(), this.history.load(true), this.spans.load()]);
   }
 
   // ---------------------------------------------------------------- actions

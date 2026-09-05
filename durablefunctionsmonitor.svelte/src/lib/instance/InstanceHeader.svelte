@@ -19,9 +19,14 @@
      * drawn at all: "children: 0" and "we have not looked" are not the same thing.
      */
     childCount?: number | null;
+    /**
+     * How many rows the whole history has, as `/spans` counted them (E8). Until something has, the
+     * header says how many the History tab has loaded - which is a page, and says so with a `+`.
+     */
+    historyRows?: number | null;
   }
 
-  let { instance, actions, childCount = null }: Props = $props();
+  let { instance, actions, childCount = null, historyRows = null }: Props = $props();
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -48,8 +53,12 @@
     return () => clearInterval(timer);
   });
 
-  /** `31 rows`, `200+ rows` while there are more pages to load. */
-  const historyLabel = $derived(`${instance.history.rows.length}${instance.history.hasMore ? '+' : ''} rows`);
+  /** `31 rows` once the provider has counted them, `200+ rows` while a page is all there is. */
+  const historyLabel = $derived(
+    historyRows === null
+      ? `${instance.history.rows.length}${instance.history.hasMore ? '+' : ''} rows`
+      : `${historyRows} rows`,
+  );
 
   function goInstances(event: MouseEvent): void {
     if (!isRouterClick(event)) {

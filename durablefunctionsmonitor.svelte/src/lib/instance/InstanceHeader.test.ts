@@ -152,6 +152,18 @@ describe('InstanceHeader', () => {
     await waitFor(() => expect(hmeta()).toContain(`history ${historyFixture.length}+ rows`));
   });
 
+  it('counts the whole history once /spans has counted it', async () => {
+    const { instance } = mount({ history: historyFixture, props: { historyRows: 31 } });
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    // The page the tab loaded is no longer the answer, so neither is its `+`
+    instance.history.hasMore = true;
+    await waitFor(() => expect(hmeta()).toContain('history 31 rows'));
+
+    expect(hmeta()).not.toContain('+ rows');
+  });
+
   it('shows the children only once something has counted them', async () => {
     const { unmount } = mount();
 
