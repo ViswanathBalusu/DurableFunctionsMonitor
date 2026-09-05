@@ -1,2 +1,8 @@
+/* Cascade order matters (E1-S1-T1). dfm-tokens.css imports Tailwind, so both DFM stylesheets that
+   follow win over preflight at equal specificity - which is what lets dfm-ui.css state
+   `button { border: 0; background: none }` and have it stick. The Svelte Flow base stylesheet comes
+   before them, so the `.svelte-flow` bridge in the tokens file and in dfm-ext.css overrides it. */
 @import './styles/dfm-tokens.css';
+@import '@xyflow/svelte/dist/style.css';
 @import './styles/dfm-ui.css';
+@import './styles/dfm-ext.css';
