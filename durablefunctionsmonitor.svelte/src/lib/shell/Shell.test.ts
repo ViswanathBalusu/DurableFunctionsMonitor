@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { FailuresQuery } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
 import ShellHarness from '../../../tests/unit/harnesses/ShellHarness.svelte';
+import { failures as failuresFixture } from '../../../tests/unit/fixtures/failures';
 
 describe('Shell', () => {
   it('renders the two-column frame with the content area', () => {
@@ -123,7 +124,7 @@ describe('Shell failures badge', () => {
           failures: async (query: FailuresQuery) => {
             queries.push(query);
 
-            return { totalFailed: 9 } as never;
+            return failuresFixture();
           },
         },
       },
@@ -155,12 +156,12 @@ describe('Shell failures badge', () => {
   it('leaves the call to the Failures screen while that screen is on', async () => {
     const { app, queries } = shellWith('/DurableFunctionsHub/failures');
 
-    // The screen loads the same endpoint and sets the count itself; asking twice helps nobody
     await waitFor(() => expect(app.router.current.name).toBe('failures'));
-    expect(queries).toEqual([]);
 
-    app.failuresCount = 4;
-    await waitFor(() => expect(document.querySelector('.snav .cnt')).toHaveTextContent('4'));
+    // The screen on show loads the same endpoint and sets the count from it; asking twice for the
+    // same answer would only mean two of everything in the network tab
+    await waitFor(() => expect(document.querySelector('.snav .cnt')).toHaveTextContent('9'));
+    expect(queries).toHaveLength(1);
   });
 
   it('shows no badge on a backend without the endpoint', async () => {

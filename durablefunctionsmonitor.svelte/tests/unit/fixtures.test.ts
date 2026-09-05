@@ -85,9 +85,13 @@ describe('fixtures', () => {
   it('group the failures the Failures mockup shows, largest first', () => {
     const groups = failures().groups;
 
-    expect(groups.map((group) => group.count)).toEqual([12, 5, 1]);
-    expect(groups[0].signature).toBe('InventoryUnavailable');
+    expect(groups.map((group) => group.count)).toEqual([6, 2, 1]);
+    expect(groups[0].signature).toBe('InventoryUnavailable: SKU-* is out of stock');
     expect(groups[0].instances[0].instanceId).toBe(failedDetails().instanceId);
+
+    // B3: a group counts every instance that failed and carries the newest fifty of them
+    expect(groups.map((group) => group.instances.length)).toEqual(groups.map((group) => group.count));
+    expect(failures().totalFailed).toBe(groups.reduce((total, group) => total + group.count, 0));
   });
 
   it('add up the stats bins to something the totals can hold', () => {

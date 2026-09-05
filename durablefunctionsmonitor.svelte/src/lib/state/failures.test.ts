@@ -63,15 +63,17 @@ describe('Failures', () => {
     // The default range, resolved against the clock the screen was given
     expect(queries).toEqual([{ from: '2026-09-03T14:00:00.000Z', to: '2026-09-04T14:00:00.000Z' }]);
 
+    // The whole reason with its numbers replaced, which is what B3 groups by
     expect(failures.groups.map((group) => group.signature)).toEqual([
-      'InventoryUnavailable',
-      'TimeoutException',
-      'LedgerOutOfBalance',
+      'InventoryUnavailable: SKU-* is out of stock',
+      'TimeoutException: payment gateway did not answer within * s',
+      'LedgerOutOfBalance: * entries could not be matched',
     ]);
 
-    expect(failures.totalFailed).toBe(18);
-    expect(failures.summary).toBe('18 failed in 3 groups');
-    expect(failures.scannedLabel).toBe('scanned 1,229 · full');
+    expect(failures.groups.map((group) => group.count)).toEqual([6, 2, 1]);
+    expect(failures.totalFailed).toBe(9);
+    expect(failures.summary).toBe('9 failed in 3 groups');
+    expect(failures.scannedLabel).toBe('scanned 12,408 · full');
     expect(failures.partial).toBe(false);
     expect(failures.isEmpty).toBe(false);
     expect(failures.loading).toBe(false);
@@ -89,12 +91,12 @@ describe('Failures', () => {
 
   it('counts one group as one group', async () => {
     const { failures } = makeFailures({
-      answer: async () => failuresFixture({ groups: [failureGroup()], totalFailed: 12 }),
+      answer: async () => failuresFixture({ groups: [failureGroup()], totalFailed: 6 }),
     });
 
     await failures.load();
 
-    expect(failures.summary).toBe('12 failed in 1 group');
+    expect(failures.summary).toBe('6 failed in 1 group');
   });
 
   it('knows the difference between not loaded and nothing failed', async () => {
@@ -124,26 +126,28 @@ describe('Failures', () => {
 
     await failures.load();
 
+    const [inventory, timeout] = failuresFixture().groups.map((group) => group.key);
+
     // ScreenFailures.dc.html L96: the biggest group is the one worth looking at first
-    expect([...failures.open]).toEqual(['ProcessOrderOrchestrator|InventoryUnavailable']);
-    expect(failures.isOpen('ProcessOrderOrchestrator|TimeoutException')).toBe(false);
+    expect([...failures.open]).toEqual([inventory]);
+    expect(failures.isOpen(timeout)).toBe(false);
 
-    failures.toggle('ProcessOrderOrchestrator|TimeoutException');
-    failures.toggle('ProcessOrderOrchestrator|InventoryUnavailable');
+    failures.toggle(timeout);
+    failures.toggle(inventory);
 
-    expect([...failures.open]).toEqual(['ProcessOrderOrchestrator|TimeoutException']);
+    expect([...failures.open]).toEqual([timeout]);
 
     // A reload keeps what the user opened rather than opening the first one over them again
     await failures.load();
 
-    expect([...failures.open]).toEqual(['ProcessOrderOrchestrator|TimeoutException']);
+    expect([...failures.open]).toEqual([timeout]);
   });
 
   it('does not re-open a group the user closed, even when that leaves nothing open', async () => {
     const { failures } = makeFailures();
 
     await failures.load();
-    failures.toggle('ProcessOrderOrchestrator|InventoryUnavailable');
+    failures.toggle(failuresFixture().groups[0].key);
 
     expect([...failures.open]).toEqual([]);
 
@@ -155,17 +159,18 @@ describe('Failures', () => {
   it('drops a group that is no longer in the range', async () => {
     let groups = failuresFixture().groups;
     const { failures } = makeFailures({ answer: async () => failuresFixture({ groups }) });
+    const ledger = groups[2].key;
 
     await failures.load();
-    failures.toggle('ReconcileLedgerOrchestrator|LedgerOutOfBalance');
+    failures.toggle(ledger);
 
-    expect(failures.isOpen('ReconcileLedgerOrchestrator|LedgerOutOfBalance')).toBe(true);
+    expect(failures.isOpen(ledger)).toBe(true);
 
     groups = groups.slice(0, 1);
     await failures.load();
 
     // The group that is gone is gone; the one still there stays open
-    expect([...failures.open]).toEqual(['ProcessOrderOrchestrator|InventoryUnavailable']);
+    expect([...failures.open]).toEqual([groups[0].key]);
   });
 
   it('keeps the answer of the last load when two are in flight', async () => {
@@ -231,7 +236,7 @@ describe('Failures', () => {
 
     await failures.load();
 
-    expect(app.failuresCount).toBe(18);
+    expect(app.failuresCount).toBe(9);
   });
 
   it('reloads on the interval in the preferences, and stops when it is told to', async () => {
