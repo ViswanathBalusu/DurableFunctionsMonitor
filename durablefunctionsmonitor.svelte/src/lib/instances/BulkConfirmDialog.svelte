@@ -1,11 +1,13 @@
 <script lang="ts">
+  import { getContext } from 'svelte';
   import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
   import Field from '$lib/components/Field.svelte';
   import IdsPreview from '$lib/components/IdsPreview.svelte';
   import ReasonField from '$lib/components/ReasonField.svelte';
   import TextInput from '$lib/components/TextInput.svelte';
   import JsonEditor from '$lib/components/json/JsonEditor.svelte';
-  import { BULK_FANOUT_NOTE, bulkDef, type BulkAction, type BulkPayload } from './bulk-defs';
+  import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
+  import { bulkDef, bulkNote, type BulkAction, type BulkPayload } from './bulk-defs';
 
   interface Props {
     /** Bindable. */
@@ -20,6 +22,8 @@
   }
 
   let { open = $bindable(false), action, ids, busy = false, onConfirm, onCancel }: Props = $props();
+
+  const app = getContext<AppState>(APP_CONTEXT_KEY);
 
   const def = $derived(bulkDef(action, ids.length));
 
@@ -63,7 +67,7 @@
   confirmLabel={def.confirm}
   confirmVariant={def.variant}
   confirmDisabled={!canConfirm}
-  hint={BULK_FANOUT_NOTE}
+  hint={bulkNote(app.capabilities.batch)}
   {busy}
   onConfirm={() => onConfirm(payload())}
   {onCancel}

@@ -26,8 +26,17 @@ export interface BulkDef {
   event?: boolean;
 }
 
-/** The line under the controls; E9 swaps it for the batch endpoint's own wording. */
+/** The line under the controls on a backend that has no batch endpoint to run this through. */
 export const BULK_FANOUT_NOTE = 'Runs one request per instance · the result lists ok and failed ids.';
+
+/** ...and on one that has (ScreenInstances.dc.html L154). */
+export const BULK_BATCH_NOTE =
+  'POST /orchestrations/batch · runs with bounded parallelism · the result lists ok and failed ids.';
+
+/** How the action about to be confirmed will actually reach the backend. */
+export function bulkNote(batch: boolean): string {
+  return batch ? BULK_BATCH_NOTE : BULK_FANOUT_NOTE;
+}
 
 export function bulkDef(action: BulkAction, n: number): BulkDef {
   switch (action) {

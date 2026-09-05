@@ -3,15 +3,17 @@
 
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
+import type { Capabilities } from '$lib/api/types';
 import ScreenHarness from '../../../tests/unit/harnesses/ScreenHarness.svelte';
 import Instances from '../../routes/Instances.svelte';
 import { instances as fixtures } from '../../../tests/unit/fixtures/instances';
-import { bulkDef } from './bulk-defs';
+import { BULK_BATCH_NOTE, BULK_FANOUT_NOTE, bulkDef } from './bulk-defs';
 
-function mount() {
+function mount(capabilities: Partial<Capabilities> = {}) {
   return render(ScreenHarness, {
     props: {
       screen: Instances,
+      capabilities,
       endpoints: { listOrchestrations: async () => fixtures },
     },
   });
@@ -22,8 +24,8 @@ function rows(): HTMLElement[] {
 }
 
 /** Selects `count` rows and opens one bulk confirm from the bar. */
-async function open(action: string, count = 2): Promise<void> {
-  mount();
+async function open(action: string, count = 2, capabilities: Partial<Capabilities> = {}): Promise<void> {
+  mount(capabilities);
 
   await waitFor(() => expect(rows()).toHaveLength(fixtures.length));
 
@@ -72,8 +74,15 @@ describe('BulkConfirmDialog', () => {
     expect(screen.getByLabelText('Reason (optional)')).toBeInTheDocument();
     expect(screen.queryByLabelText('Event name')).toBeNull();
 
-    expect(dialog().textContent).toContain('Runs one request per instance');
+    expect(dialog().textContent).toContain(BULK_FANOUT_NOTE);
     expect(screen.getByRole('button', { name: 'Terminate 2 instances' })).toHaveClass('destructive');
+  });
+
+  it('says it will go through the batch endpoint where the backend has one', async () => {
+    await open('Terminate', 2, { batch: true });
+
+    // ScreenInstances.dc.html L154 - the same dialog, telling the truth about how it will run
+    expect(dialog().querySelector('.meta')?.textContent).toBe(BULK_BATCH_NOTE);
   });
 
   it('asks for the event and its payload, and will not send a nameless one', async () => {

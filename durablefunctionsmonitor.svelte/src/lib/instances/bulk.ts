@@ -15,6 +15,13 @@ import type { BulkPayload } from './bulk-defs';
 /** How many requests are in flight at once when the fan-out runs (React's own limit). */
 export const BULK_CONCURRENCY = 8;
 
+/**
+ * How many ids go into one `/orchestrations/batch` request. The endpoint runs them with bounded
+ * parallelism of its own, so this is about the request rather than about the work: a body of ten
+ * thousand ids is one timeout away from telling the user nothing at all about any of them.
+ */
+export const BATCH_CHUNK = 200;
+
 export interface BulkRequest {
   action: BatchAction;
   ids: string[];
@@ -25,9 +32,7 @@ export async function runBulk(app: AppState, request: BulkRequest): Promise<Batc
   const started = Date.now();
 
   if (app.capabilities.batch) {
-    return app.track(() =>
-      app.endpoints.batch({ action: request.action, instanceIds: request.ids, payload: request.payload }),
-    );
+    return await runBatched(app, request);
   }
 
   const results = await app.track(() =>
@@ -43,6 +48,53 @@ export async function runBulk(app: AppState, request: BulkRequest): Promise<Batc
     failedCount: results.length - okCount,
     elapsedMs: Date.now() - started,
   };
+}
+
+/**
+ * The batch endpoint, two hundred ids at a time and one chunk after another - the chunks are not run
+ * together, because the point of the endpoint is that the backend decides how much of this hub to
+ * hit at once. The chunks' results are concatenated in the order the ids came in, so the caller sees
+ * one answer whether it was one request or five.
+ */
+async function runBatched(app: AppState, request: BulkRequest): Promise<BatchResponse> {
+  const results: BatchResultItem[] = [];
+  let okCount = 0;
+  let failedCount = 0;
+  let elapsedMs = 0;
+
+  for (let from = 0; from < request.ids.length; from += BATCH_CHUNK) {
+    const instanceIds = request.ids.slice(from, from + BATCH_CHUNK);
+
+    try {
+      const response = await app.track(() =>
+        app.endpoints.batch({ action: request.action, instanceIds, payload: request.payload }),
+      );
+
+      results.push(...response.results);
+      okCount += response.okCount;
+      failedCount += response.failedCount;
+      elapsedMs += response.elapsedMs;
+    } catch (error) {
+      // Nothing has happened yet: the caller's own error is a better report than 200 failed ids
+      if (from === 0) {
+        throw error;
+      }
+
+      // ...but once some ids have run, the result list is the only way to say which did not
+      for (const instanceId of instanceIds) {
+        results.push({
+          instanceId,
+          ok: false,
+          status: error instanceof BackendError ? error.status : 0,
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      failedCount += instanceIds.length;
+    }
+  }
+
+  return { action: request.action, results, okCount, failedCount, elapsedMs };
 }
 
 /** `Terminate 3 instances · 2 ok, 1 failed` - a success while nothing failed, an error otherwise. */

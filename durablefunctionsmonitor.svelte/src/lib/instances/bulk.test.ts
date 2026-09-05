@@ -10,7 +10,9 @@ import { host } from '$lib/host.svelte';
 import { Router } from '$lib/router.svelte';
 import { AppState } from '$lib/state/app.svelte';
 import { Prefs } from '$lib/state/prefs.svelte';
-import { BULK_CONCURRENCY, bulkToast, runBulk } from './bulk';
+import { BackendError } from '$lib/api/client';
+import { BATCH_CHUNK, BULK_CONCURRENCY, bulkToast, runBulk } from './bulk';
+import { BULK_BATCH_NOTE, BULK_FANOUT_NOTE, bulkNote } from './bulk-defs';
 
 function makeApp(endpoints: Partial<Endpoints>, capabilities: Partial<Capabilities> = {}) {
   window.history.replaceState({}, '', '/DurableFunctionsHub/instances');
@@ -133,6 +135,105 @@ describe('runBulk', () => {
     expect(batch).toHaveBeenCalledWith({ action: 'suspend', instanceIds: ['a', 'b'], payload: { reason: 'why' } });
     expect(postAction).not.toHaveBeenCalled();
     expect(response.okCount).toBe(2);
+  });
+
+  it('cuts a long selection into requests the endpoint can answer, and merges what they say', async () => {
+    const sizes: number[] = [];
+    let inFlight = 0;
+    let overlapped = false;
+
+    const batch = vi.fn(async (request: BatchRequest) => {
+      sizes.push(request.instanceIds.length);
+      overlapped ||= inFlight > 0;
+      inFlight += 1;
+
+      await Promise.resolve();
+
+      inFlight -= 1;
+
+      return {
+        action: request.action,
+        // The last id of each chunk is refused, so the merged counts have both halves in them
+        results: request.instanceIds.map((instanceId, index) => ({
+          instanceId,
+          ok: index < request.instanceIds.length - 1,
+          status: index < request.instanceIds.length - 1 ? 200 : 409,
+        })),
+        okCount: request.instanceIds.length - 1,
+        failedCount: 1,
+        elapsedMs: 10,
+      };
+    });
+
+    const app = makeApp({ batch }, { batch: true });
+
+    const ids = Array.from({ length: 250 }, (_, index) => `id-${index}`);
+    const response = await runBulk(app, { action: 'purge', ids });
+
+    expect(sizes).toEqual([BATCH_CHUNK, 50]);
+    expect(batch.mock.calls[1][0].instanceIds[0]).toBe('id-200');
+
+    // One chunk at a time: the backend decides how much of the hub to hit at once, not this
+    expect(overlapped).toBe(false);
+
+    expect(response.okCount).toBe(248);
+    expect(response.failedCount).toBe(2);
+    expect(response.elapsedMs).toBe(20);
+    expect(response.results.map((result) => result.instanceId)).toEqual(ids);
+
+    bulkToast(app, 'Purge 250 instances', response);
+    expect(app.toast.current?.message).toBe('Purge 250 instances · 248 ok, 2 failed');
+  });
+
+  it('throws when the first request fails, because nothing has happened yet', async () => {
+    const batch = vi.fn(async () => {
+      throw new BackendError(500, '500 Internal Server Error');
+    });
+
+    const app = makeApp({ batch }, { batch: true });
+
+    await expect(runBulk(app, { action: 'purge', ids: ['a', 'b'] })).rejects.toThrow('500 Internal Server Error');
+  });
+
+  it('reports the ids of a later request that failed, because the ones before it ran', async () => {
+    const batch = vi.fn(async (request: BatchRequest) => {
+      if (request.instanceIds[0] !== 'id-0') {
+        throw new BackendError(503, '503 Service Unavailable');
+      }
+
+      return {
+        action: request.action,
+        results: request.instanceIds.map((instanceId) => ({ instanceId, ok: true, status: 200 })),
+        okCount: request.instanceIds.length,
+        failedCount: 0,
+        elapsedMs: 8,
+      };
+    });
+
+    const app = makeApp({ batch }, { batch: true });
+
+    const ids = Array.from({ length: 250 }, (_, index) => `id-${index}`);
+    const response = await runBulk(app, { action: 'purge', ids });
+
+    expect(response.okCount).toBe(200);
+    expect(response.failedCount).toBe(50);
+    expect(response.results).toHaveLength(250);
+    expect(response.results[249]).toEqual({
+      instanceId: 'id-249',
+      ok: false,
+      status: 503,
+      message: '503 Service Unavailable',
+    });
+  });
+});
+
+describe('bulkNote', () => {
+  it('says how the action will actually reach the backend', () => {
+    expect(bulkNote(true)).toBe(BULK_BATCH_NOTE);
+    expect(bulkNote(true)).toBe(
+      'POST /orchestrations/batch · runs with bounded parallelism · the result lists ok and failed ids.',
+    );
+    expect(bulkNote(false)).toBe(BULK_FANOUT_NOTE);
   });
 });
 

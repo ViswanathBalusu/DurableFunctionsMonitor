@@ -51,7 +51,7 @@
   import IdsPreview from '$lib/components/IdsPreview.svelte';
   import ReasonField from '$lib/components/ReasonField.svelte';
   import { bulkToast, runBulk } from '$lib/instances/bulk';
-  import { BULK_FANOUT_NOTE } from '$lib/instances/bulk-defs';
+  import { bulkNote } from '$lib/instances/bulk-defs';
   import BulkResultDialog from '$lib/instances/BulkResultDialog.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
 
@@ -126,7 +126,7 @@
   band={def.band}
   confirmLabel={def.confirm}
   confirmVariant={def.variant}
-  hint={BULK_FANOUT_NOTE}
+  hint={bulkNote(app.capabilities.batch)}
   {busy}
   onConfirm={() => void run()}
 >
