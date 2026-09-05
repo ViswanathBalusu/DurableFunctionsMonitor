@@ -106,4 +106,9 @@ export function resetGlobals(): void {
 
 afterEach(() => {
   resetGlobals();
+
+  // localStorage is shared by every test in a file, and the view state and preferences both live in
+  // it: without this, one test's filters are the next test's starting point.
+  localStorage.clear();
+  sessionStorage.clear();
 });

@@ -3,6 +3,7 @@
   import Button from '$lib/components/Button.svelte';
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
+  import FilterChips from '$lib/instances/FilterChips.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Instances } from '$lib/state/instances.svelte';
 
@@ -63,8 +64,8 @@
 </script>
 
 <!--
-  ScreenInstances.dc.html L16-L27. The chips, the rail, the views and the dialogs are added by the
-  tasks that own them (E4-S2 to E4-S8); this is the frame they hang in.
+  ScreenInstances.dc.html L16-L53. The rail, the views and the dialogs are added by the tasks that
+  own them (E4-S2-T3 onwards); this is the frame they hang in.
 -->
 <Page data-screen-label="Instances">
   <PageTitle title="Instances">
@@ -83,6 +84,8 @@
       </Button>
     </div>
   </PageTitle>
+
+  <FilterChips {instances} />
 
   {#if instances.error}
     <p class="meta">{instances.error}</p>
