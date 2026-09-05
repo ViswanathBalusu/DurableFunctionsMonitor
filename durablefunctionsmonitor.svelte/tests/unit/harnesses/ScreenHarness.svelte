@@ -20,6 +20,7 @@
     readOnly = false,
     dangerous = false,
     about: aboutOverrides = {},
+    props = {},
   }: {
     /** The route component under test. */
     screen: Component;
@@ -32,6 +33,8 @@
     readOnly?: boolean;
     dangerous?: boolean;
     about?: Partial<About>;
+    /** Props for the component under test - a dialog needs `open`, a panel usually needs nothing. */
+    props?: Record<string, unknown>;
   } = $props();
 
   // Read once on purpose: the harness renders one URL per test
@@ -74,4 +77,4 @@
   }
 </script>
 
-<Screen />
+<Screen {...props} />
