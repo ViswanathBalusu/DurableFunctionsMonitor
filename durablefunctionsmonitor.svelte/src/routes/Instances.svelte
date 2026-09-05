@@ -5,6 +5,7 @@
   import PageTitle from '$lib/components/PageTitle.svelte';
   import FilterChips from '$lib/instances/FilterChips.svelte';
   import FilterRail from '$lib/instances/FilterRail.svelte';
+  import InstancesTable from '$lib/instances/InstancesTable.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Instances } from '$lib/state/instances.svelte';
 
@@ -89,6 +90,8 @@
   <FilterChips {instances} />
 
   <FilterRail {instances} />
+
+  <InstancesTable {instances} />
 
   {#if instances.error}
     <p class="meta">{instances.error}</p>
