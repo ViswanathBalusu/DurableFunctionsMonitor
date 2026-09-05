@@ -15,10 +15,12 @@
     ariaLabel: string;
     size?: 'md' | 'sm';
     class?: string;
+    /** Tooltip on the group - the time toggle explains what "Local" means here. */
+    title?: string;
     onchange?: (value: T) => void;
   }
 
-  let { options, value = $bindable(), ariaLabel, size = 'md', class: className, onchange }: Props = $props();
+  let { options, value = $bindable(), ariaLabel, size = 'md', class: className, title, onchange }: Props = $props();
 
   let buttons = $state<HTMLButtonElement[]>([]);
 
@@ -55,7 +57,7 @@
   }
 </script>
 
-<div class={cn('seg', size === 'sm' ? 'sm' : '', className)} role="group" aria-label={ariaLabel}>
+<div class={cn('seg', size === 'sm' ? 'sm' : '', className)} role="group" aria-label={ariaLabel} {title}>
   {#each options as option, index (option.value)}
     <button
       bind:this={buttons[index]}

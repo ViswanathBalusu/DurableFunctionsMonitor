@@ -74,7 +74,8 @@ describe('SideNav', () => {
     });
 
     for (const name of ['Failures', 'Functions', 'Storage', 'Activity']) {
-      expect(screen.getByRole('button', { name: new RegExp(name) })).toBeInTheDocument();
+      // Exact names: the hub switcher's button is called "DurableFunctionsHub"
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
     }
   });
 
@@ -117,7 +118,7 @@ describe('SideNav', () => {
       props: { path: '/DurableFunctionsHub', capabilities: { failures: true }, failuresCount: 9 },
     });
 
-    const badge = screen.getByRole('button', { name: /Failures/ }).querySelector('.cnt');
+    const badge = screen.getByRole('button', { name: 'Failures 9' }).querySelector('.cnt');
     expect(badge?.textContent).toBe('9');
     expect(badge).toHaveClass('st-failed');
   });

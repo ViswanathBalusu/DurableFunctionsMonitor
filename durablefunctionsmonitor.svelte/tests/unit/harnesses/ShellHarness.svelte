@@ -17,12 +17,18 @@
     navCollapsed = false,
     capabilities = {},
     failuresCount = 0,
+    readOnly = false,
+    dangerous = false,
+    hubNames = ['DurableFunctionsHub'],
   }: {
     path?: string;
     navCollapsed?: boolean;
     /** Whatever /about would have announced; the rest stay off. */
     capabilities?: Partial<Capabilities>;
     failuresCount?: number;
+    readOnly?: boolean;
+    dangerous?: boolean;
+    hubNames?: string[];
   } = $props();
 
   // Read once on purpose: the harness renders one URL per test, and the router reads location at
@@ -39,13 +45,20 @@
 
   const app = new AppState({
     client: {} as BackendClient,
-    endpoints: {} as Endpoints,
+    endpoints: { taskHubNames: async () => hubNames } as Endpoints,
     router: new Router({ mode: 'history', routePrefix: '' }),
     prefs,
   });
 
   // svelte-ignore state_referenced_locally
-  app.about = normalizeAbout({ capabilities: capabilities as Capabilities });
+  app.about = normalizeAbout({
+    accountName: 'mystorageaccount',
+    hubName: 'DurableFunctionsHub',
+    capabilities: capabilities as Capabilities,
+    readOnly,
+    dangerousOperations: dangerous,
+    permissions: readOnly ? [] : ['DurableFunctionsMonitor.ReadWrite'],
+  });
 
   setContext(APP_CONTEXT_KEY, app);
 

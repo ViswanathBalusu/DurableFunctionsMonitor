@@ -4,6 +4,7 @@
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import Outlet from './Outlet.svelte';
   import SideNav from './SideNav.svelte';
+  import TopBar from './TopBar.svelte';
 
   interface Props {
     /** The badge on the Failures nav item; E9 fills it from the failures screen state. */
@@ -27,6 +28,8 @@
   <SideNav {failuresCount} />
 
   <div class="main">
+    <TopBar />
+
     {#if app.busy}
       <ProgressBar inline />
     {/if}
