@@ -41,14 +41,14 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsFalse(capabilities.CleanEntityStorage);
             Assert.IsFalse(capabilities.DeleteTaskHub);
             Assert.IsTrue(capabilities.ConditionalGet);
-            Assert.IsFalse(capabilities.EpisodeMarkers);
+            Assert.IsTrue(capabilities.EpisodeMarkers); // B2-S1-T2 sets the Azure Storage default
         }
 
         [TestMethod]
         public void MsSqlLikeExtensionPointsReportNoHistoryEditingCapabilities()
         {
             // Arrange: mirrors durablefunctionsmonitor.dotnetisolated.mssql/ExtensionMethods.cs, which nulls
-            // out the history-editing routines and never sets any aggregation routine.
+            // out the history-editing routines and, apart from episode markers / row info (B2-S1-T2), sets no aggregation routine.
             var settings = new DfmSettings();
             var ext = new DfmExtensionPoints
             {
@@ -66,7 +66,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsFalse(capabilities.Failures);
             Assert.IsFalse(capabilities.Children);
             Assert.IsFalse(capabilities.StorageHealth);
-            Assert.IsFalse(capabilities.EpisodeMarkers);
+            Assert.IsTrue(capabilities.EpisodeMarkers); // MSSQL implements the routine (B2-S1-T2)
             Assert.IsFalse(capabilities.UpdateInput);
             Assert.IsFalse(capabilities.TruncateHistory);
 
@@ -88,6 +88,8 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 GetHistoryEventInputRoutine = null,
                 UpdateHistoryEventInputRoutine = null,
                 TruncateHistoryRoutine = null,
+                GetEpisodeMarkersRoutine = null,
+                GetInstanceRowInfoRoutine = null,
             };
 
             // Act
