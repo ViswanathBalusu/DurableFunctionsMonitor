@@ -1,1 +1,2 @@
-/* E0-S1-T3 adds the imports of ./styles/dfm-tokens.css and ./styles/dfm-ui.css here. */
+@import './styles/dfm-tokens.css';
+@import './styles/dfm-ui.css';
