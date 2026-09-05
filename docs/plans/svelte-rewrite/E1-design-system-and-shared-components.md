@@ -182,6 +182,18 @@ Accept:
 - [ ] Every `td` except `.spine` and `.sel-cell` has `data-label`.
 Test: as above.
 
+**Deviations, E1-S5-T1 (2026-09-05).** Two things in this task could not be done as written.
+`@tanstack/table-core` 9.2.4 is the v9 line: `constructTable`/`coreFeatures`/`createCoreRowModel`,
+with no Svelte adapter in the pinned set, and shadcn-svelte 1.6.1 has no `data-table` component to
+add - it is a documentation recipe, so E1-S1-T2 could not add `ui/data-table` either. The table this
+app needs is sorted and paged by the backend and renders its own cells, so table-core would have
+contributed a row model and nothing else; `DataTable` builds that model directly and keeps
+`columns.ts` (sort cycle, sort class, visible columns) as the pure part that is unit tested.
+Virtualisation is real, through the pinned `@tanstack/svelte-virtual`: above 200 rows only a window
+plus overscan is in the DOM, with spacer rows keeping the scrollbar honest. jsdom reports a
+zero-height viewport, so the virtualiser has no range to offer there; the component renders a first
+screenful in that case, which is also what a real browser gets before its first measurement.
+
 ### E1-S6 JSON
 
 #### E1-S6-T1 json.ts helpers
