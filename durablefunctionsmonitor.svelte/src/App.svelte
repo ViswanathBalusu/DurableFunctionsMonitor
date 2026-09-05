@@ -1,12 +1,8 @@
 <script lang="ts">
-  // E0 placeholder shell. It exists to prove the whole spine works in both hosts - host detection,
-  // router, backend client, /about, prefs and the five themes - and is replaced screen by screen from
-  // E2 onwards. Deliberately unstyled beyond the design tokens: E1 owns the look.
   import { onMount, setContext } from 'svelte';
-  import { formatJson } from '$lib/format/json';
-  import { themeNames } from '$lib/state/prefs.svelte';
   import { APP_CONTEXT_KEY, AppState } from '$lib/state/app.svelte';
-  import type { ThemeName } from '$lib/host.svelte';
+  import Shell from '$lib/shell/Shell.svelte';
+  import Functions from './routes/Functions.svelte';
 
   const app = new AppState();
 
@@ -19,46 +15,21 @@
   });
 
   const route = $derived(app.router.current);
+
+  /** The browser shows the hub picker when no hub is in the URL; the webview never does. */
   const isLogin = $derived(route.name === 'login' && app.host.kind === 'browser');
 
-  function setTheme(theme: ThemeName): void {
-    app.prefs.setTheme(theme);
-  }
-
-  function toggleMode(): void {
-    app.prefs.setMode(app.prefs.resolvedMode === 'dark' ? 'light' : 'dark');
-  }
+  /** DfmViewMode 1: the extension embeds the function graph alone, without the shell (contracts §3). */
+  const graphOnly = $derived(app.host.viewMode === 1);
 </script>
 
-<div id="dfm-app" style="padding: 16px; font-family: var(--font-sans, system-ui);">
-  {#if isLogin}
-    <!-- The hub picker and MSAL sign-in arrive in E2; nothing here can be loaded without a hub. -->
-    <h1>Login (E2)</h1>
-  {:else}
-    <h1>Durable Functions Monitor</h1>
-
-    <p>
-      host <strong>{app.host.kind}</strong> · route <strong>{route.name}</strong> · hub
-      <strong>{app.hub || '(none)'}</strong>
-      {#if route.name === 'instance'}
-        · instance <strong>{route.instanceId}</strong>
-      {/if}
-    </p>
-
-    <p>
-      {#each themeNames as theme (theme)}
-        <button type="button" onclick={() => setTheme(theme)} aria-pressed={app.prefs.theme === theme}>
-          {theme}
-        </button>
-      {/each}
-      <button type="button" onclick={toggleMode}>mode: {app.prefs.resolvedMode}</button>
-    </p>
-
-    {#if app.aboutError}
-      <p role="alert">/about failed: {app.aboutError}</p>
-    {/if}
-
-    <!-- Contracts §9: every JSON value is pretty-printed with two spaces and fully expanded. -->
-    <pre>{app.about ? formatJson(app.about) : 'loading /about…'}</pre>
-  {/if}
-</div>
+{#if isLogin}
+  <!-- E2-S7 replaces this with the hub picker and the MSAL sign-in. -->
+  <div class="page" style="padding:24px">
+    <h1 class="display">Login (E2)</h1>
+  </div>
+{:else if graphOnly}
+  <Functions />
+{:else}
+  <Shell />
+{/if}
