@@ -21,6 +21,9 @@
     dangerous = false,
     hubNames = ['DurableFunctionsHub'],
     suggestions = [],
+    userName = '',
+    onOpenPalette,
+    onSignOut,
   }: {
     path?: string;
     navCollapsed?: boolean;
@@ -31,6 +34,9 @@
     dangerous?: boolean;
     hubNames?: string[];
     suggestions?: string[];
+    userName?: string;
+    onOpenPalette?: () => void;
+    onSignOut?: () => void;
   } = $props();
 
   // Read once on purpose: the harness renders one URL per test, and the router reads location at
@@ -45,7 +51,9 @@
     removeItem: () => {},
   });
 
+  // svelte-ignore state_referenced_locally
   const app = new AppState({
+    host: { ...host, clientConfig: { ...host.clientConfig, userName } },
     client: {} as BackendClient,
     endpoints: {
       taskHubNames: async () => hubNames,
@@ -82,4 +90,4 @@
   }
 </script>
 
-<Shell bind:this={shell} {failuresCount} />
+<Shell bind:this={shell} {failuresCount} {onOpenPalette} {onSignOut} />

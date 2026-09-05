@@ -8,6 +8,17 @@
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import HubSwitcher from './HubSwitcher.svelte';
   import InstanceJump from './InstanceJump.svelte';
+  import ThemeMenu from './ThemeMenu.svelte';
+  import UserMenu from './UserMenu.svelte';
+
+  interface Props {
+    /** E2-S5 wires the palette; until then the button is simply absent. */
+    onOpenPalette?: () => void;
+    /** E2-S7 wires MSAL sign-out; inside VS Code there is nothing to sign out of. */
+    onSignOut?: () => void;
+  }
+
+  let { onOpenPalette, onSignOut }: Props = $props();
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -86,4 +97,14 @@
     class="hide-m"
     title={timeZoneLabel()}
   />
+
+  <ThemeMenu />
+
+  {#if onOpenPalette}
+    <button class="btn flat hide-m" type="button" title="Command palette" onclick={onOpenPalette}>
+      <span class="fine">Ctrl K</span>
+    </button>
+  {/if}
+
+  <UserMenu {onOpenPalette} {onSignOut} />
 </header>

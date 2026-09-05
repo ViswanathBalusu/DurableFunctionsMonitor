@@ -9,9 +9,12 @@
   interface Props {
     /** The badge on the Failures nav item; E9 fills it from the failures screen state. */
     failuresCount?: number;
+    /** E2-S5 passes the palette toggle; E2-S7 the sign-out. */
+    onOpenPalette?: () => void;
+    onSignOut?: () => void;
   }
 
-  let { failuresCount = 0 }: Props = $props();
+  let { failuresCount = 0, onOpenPalette, onSignOut }: Props = $props();
 
   let topBar = $state<TopBar | null>(null);
 
@@ -35,7 +38,7 @@
   <SideNav {failuresCount} />
 
   <div class="main">
-    <TopBar bind:this={topBar} />
+    <TopBar bind:this={topBar} {onOpenPalette} {onSignOut} />
 
     {#if app.busy}
       <ProgressBar inline />

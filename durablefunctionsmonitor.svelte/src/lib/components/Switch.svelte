@@ -18,6 +18,7 @@
     checked = $bindable(false),
     onchange,
     class: className,
+    style = 'justify-content:space-between;width:100%;min-height:36px',
     type = 'button',
     ...rest
   }: Props = $props();
@@ -29,15 +30,7 @@
 </script>
 
 <!-- ScreenSettings.dc.html L50-L51: a full-width row, label and hint on the left, the switch on the right. -->
-<button
-  {type}
-  class={cn('check', className)}
-  style="justify-content:space-between;width:100%;min-height:36px"
-  role="switch"
-  aria-checked={checked}
-  onclick={toggle}
-  {...rest}
->
+<button {type} class={cn('check', className)} {style} role="switch" aria-checked={checked} onclick={toggle} {...rest}>
   <span>
     {label}
     {#if hint}<span class="meta" style="margin-left:8px">{hint}</span>{/if}
