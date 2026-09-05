@@ -238,6 +238,16 @@ Accept:
 - [ ] Layout puts triggers in rank 0, orchestrators rank 1, activities rank 2 (x increases).
 Test: as above.
 
+**Deviation, E5-S6-T1 (2026-09-05).** An orchestrator is a *sub*-orchestrator when another
+orchestrator calls it, not merely when `isCalledBy` is non-empty: an HTTP or timer starter is in
+that list too, and starting an orchestration from a trigger does not make it a sub-orchestration.
+The mockup draws exactly this (Functions L83-L96) - ProcessOrderOrchestrator is started by two
+triggers and is still an orchestrator, while NotifyCustomer, called by it, is the sub-orchestrator.
+A trigger binding is the function's own kind rather than a node beside it (az-func-as-a-graph drew a
+separate trigger node because mermaid had nowhere else to put it); only input, output and other
+bindings become nodes. Self loops are laid out but not given to dagre, which would otherwise push
+the node into a rank of its own.
+
 #### E5-S6-T2 FunctionGraph (Svelte Flow)
 Files: `src/lib/graph/FunctionGraph.svelte`, `src/lib/graph/FunctionNode.svelte`, `src/lib/graph/graph-svg.ts`, `src/styles/dfm-ext.css` (edge and handle tweaks), tests
 Depends: E5-S6-T1, E1-S2-T2
