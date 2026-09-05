@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Hosting;
 using Microsoft.DurableTask.Client;
 using Microsoft.Data.SqlClient;
+using System.Data.Common;
 using Newtonsoft.Json.Linq;
 using System.Reflection;
 
@@ -73,10 +74,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 extPoints.UpdateHistoryEventInputRoutine = null;
                 extPoints.TruncateHistoryRoutine = null;
 
-                // The defaults for these two read the XXXHistory/XXXInstances tables of Azure Storage,
-                // which do not exist here, so both get their own SQL implementation.
+                // The defaults for these read the XXXHistory/XXXInstances tables of Azure Storage,
+                // which do not exist here, so each gets its own SQL implementation.
                 extPoints.GetEpisodeMarkersRoutine = GetEpisodeMarkers;
                 extPoints.GetInstanceRowInfoRoutine = GetInstanceRowInfo;
+                extPoints.GetStatsRoutine = GetStats;
             });
         }
 
@@ -286,6 +288,137 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Custom routine for producing the Task Hub statistics of the /stats endpoint.
+        ///
+        /// Reads the [schema].Instances rows created inside the requested range - InstanceID, Name,
+        /// RuntimeStatus, CreatedTime, LastUpdatedTime and CompletedTime only - with a TOP (cap + 1) bound,
+        /// then hands them to the shared <see cref="StatsAggregator"/>, so that MSSQL and Azure Storage
+        /// reach exactly the same numbers from the same rows. Grouping the counters in SQL (GROUP BY
+        /// RuntimeStatus / Name) is a later optimisation: the percentiles, the bins, the stuck/pending/
+        /// suspended sets and the entity split all need row-level data anyway, and within the cap this
+        /// query is exact.
+        /// </summary>
+        public static async Task<StatsResult> GetStats(DurableTaskClient durableClient, string connName, string hubName, StatsQuery query, CancellationToken cancellationToken)
+        {
+            ArgumentNullException.ThrowIfNull(query);
+
+            // The endpoint fills StatsQuery.Cap from DfmSettings; a custom caller might not
+            int cap = query.Cap > 0 ? query.Cap : DefaultStatsScanCap;
+
+            using (var conn = new SqlConnection(ConnString))
+            {
+                await conn.OpenAsync(cancellationToken);
+
+                using (var cmd = new SqlCommand(BuildStatsSql(SchemaName), conn))
+                {
+                    cmd.Parameters.AddWithValue("@TaskHub", hubName);
+
+                    // dt.Instances keeps UTC timestamps, so the range goes in as UTC and comes back as UTC
+                    cmd.Parameters.AddWithValue("@From", query.From.UtcDateTime);
+                    cmd.Parameters.AddWithValue("@To", query.To.UtcDateTime);
+
+                    // One row more than the cap, so that hitting the cap is detectable
+                    cmd.Parameters.AddWithValue("@Top", cap + 1);
+
+                    using (var reader = await cmd.ExecuteReaderAsync(cancellationToken))
+                    {
+                        var scan = await ReadStatsRowsAsync(reader, cap, cancellationToken);
+
+                        return StatsAggregator.Aggregate(scan.Rows, query, DateTimeOffset.UtcNow, scan.Truncated, cap);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// How many instance rows /stats scans when the caller did not set <see cref="StatsQuery.Cap"/>.
+        /// Mirrors the default of the DFM_STATS_CAP setting.
+        /// </summary>
+        private const int DefaultStatsScanCap = 50000;
+
+        // The /stats query. Deliberately unordered: TOP without ORDER BY lets SQL Server stop at the cap
+        // instead of sorting the whole matching set, and the aggregation does not depend on row order
+        // (when the cap does bite, the response says so via 'partial').
+        private static string BuildStatsSql(string schemaName)
+        {
+            return
+                $@"SELECT TOP (@Top)
+                    i.InstanceID as InstanceID,
+                    i.Name as Name,
+                    i.RuntimeStatus as RuntimeStatus,
+                    i.CreatedTime as CreatedTime,
+                    i.LastUpdatedTime as LastUpdatedTime,
+                    i.CompletedTime as CompletedTime
+                FROM
+                    [{schemaName}].Instances i
+                WHERE
+                    i.TaskHub = @TaskHub AND i.CreatedTime >= @From AND i.CreatedTime <= @To";
+        }
+
+        // Reads at most 'cap' rows; Truncated is true when the query returned more (the TOP (cap + 1) row)
+        private static async Task<(List<InstanceRowLite> Rows, bool Truncated)> ReadStatsRowsAsync(DbDataReader reader, int cap, CancellationToken cancellationToken)
+        {
+            var rows = new List<InstanceRowLite>();
+            bool truncated = false;
+
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                if (rows.Count >= cap)
+                {
+                    truncated = true;
+                    break;
+                }
+
+                rows.Add(ToInstanceRowLite(reader));
+            }
+
+            return (rows, truncated);
+        }
+
+        // Maps one row of the /stats query onto the aggregator's input record
+        private static InstanceRowLite ToInstanceRowLite(DbDataReader reader)
+        {
+            DateTimeOffset createdTime = ToUtcOrNull(reader["CreatedTime"]) ?? default;
+
+            return new InstanceRowLite
+            {
+                InstanceId = ToStringOrNull(reader["InstanceID"]),
+                Name = ToStringOrNull(reader["Name"]),
+                RuntimeStatus = ToStringOrNull(reader["RuntimeStatus"]),
+                CreatedTime = createdTime,
+
+                // A row is always written at least once, but an older schema might leave this empty
+                LastUpdatedTime = ToUtcOrNull(reader["LastUpdatedTime"]) ?? createdTime,
+
+                // NULL while the instance is still going
+                CompletedTime = ToUtcOrNull(reader["CompletedTime"])
+            };
+        }
+
+        private static string ToStringOrNull(object value)
+        {
+            return value is null || value is DBNull ? null : value.ToString();
+        }
+
+        // dt.Instances stores UTC in datetime2 columns, which come back as DateTimeKind.Unspecified.
+        // They have to be *labelled* UTC rather than converted (as GetInstanceHistory does for history
+        // timestamps): the /stats range parameters go in as UTC, so shifting the values by the local
+        // offset would push rows outside the very range they were selected by, and the bins would be wrong.
+        private static DateTimeOffset? ToUtcOrNull(object value)
+        {
+            if (value is null || value is DBNull)
+            {
+                return null;
+            }
+
+            var dateTime = (DateTime)value;
+
+            return new DateTimeOffset(dateTime.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(dateTime, DateTimeKind.Utc)
+                : dateTime.ToUniversalTime());
         }
 
         // Reads a column by name, tolerating both a missing column and a NULL value
