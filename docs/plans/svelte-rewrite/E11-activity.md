@@ -18,6 +18,24 @@ Accept:
 - [ ] Operation filter is sent verbatim; `All operations` sends none.
 Test: unit.
 
+**Deviation, E11-S1-T1 (2026-09-05).** Two corrections the backend forced.
+
+(1) **There is no `Batch` row to filter for.** The batch endpoint refines its own audit record to
+`Batch {action}` (`Functions/Batch.cs`, through `DfmAuditOperationContextValue`), and `/audit`
+matches the stored name exactly (`Operation eq {op}`, `Common/AuditStore.cs`). A `Batch` entry in the
+select would therefore always answer "nothing recorded". The list offers the eight real names
+instead - `Batch suspend`, `Batch resume`, `Batch purge`, `Batch rewind`, `Batch terminate`,
+`Batch raise-event`, `Batch set-custom-status`, `Batch restart` (`OrchestrationActionNames.All`).
+
+(2) **The audit fixture said `RaiseEvent`, `UpdateInputAndRewind`, `PurgeHistory`.** The middleware
+writes human-readable names with spaces (`Common/AuditOperations.cs`), which is what the filter has
+to send back, so the fixture now carries the real ones - and the `Replay` and `Restart in place` rows
+the next task's dangerous tag needs. `fixtures.test.ts` holds it to that list from now on.
+
+The count label carries the same `+` the other paged screens use (`100+ entries`) when the backend
+says there is another page: the number on screen is what was loaded, not what the range holds. The
+mockup's `· 61 today` is dropped - no endpoint counts a day, and the screen does not invent one.
+
 #### E11-S1-T2 Activity page
 Files: `src/routes/Activity.svelte`, `src/lib/activity/ActivityTable.svelte`, tests
 Depends: E11-S1-T1, E1-S5-T1

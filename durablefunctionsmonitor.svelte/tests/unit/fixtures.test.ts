@@ -5,6 +5,7 @@
 // things a type cannot: that they say what the mockups say, and that they stay self-consistent.
 
 import { describe, expect, it } from 'vitest';
+import { OPERATIONS } from '$lib/state/activity.svelte';
 import { about, capabilities, noCapabilities } from './fixtures/about';
 import { audit, auditDisabled } from './fixtures/audit';
 import { children } from './fixtures/children';
@@ -126,6 +127,27 @@ describe('fixtures', () => {
   it('audit both kinds of operation, and know when auditing is off', () => {
     expect(new Set(audit().rows.map((row) => row.kind))).toEqual(new Set(['Write', 'Dangerous']));
     expect(audit().rows.find((row) => row.outcome === 'failed')?.message).toBeTruthy();
+
+    // The names the middleware writes (Common/AuditOperations.cs), which the filter matches verbatim
+    expect(audit().rows.map((row) => row.operation)).toEqual([
+      'Terminate',
+      'Raise event',
+      'Replay',
+      'Update input and rewind',
+      'Restart in place',
+      'Purge history',
+    ]);
+
+    for (const row of audit().rows) {
+      expect(OPERATIONS).toContain(row.operation);
+    }
+
+    // The two the screen tags as dangerous, and one that is dangerous without being one of them
+    expect(
+      audit()
+        .rows.filter((row) => row.kind === 'Dangerous')
+        .map((row) => row.operation),
+    ).toEqual(['Replay', 'Update input and rewind', 'Restart in place']);
 
     expect(auditDisabled()).toMatchObject({ rows: [], enabled: false });
   });

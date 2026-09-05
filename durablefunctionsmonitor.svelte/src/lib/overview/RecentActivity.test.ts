@@ -37,7 +37,7 @@ function column(label: string): string[] {
 
 describe('activity lines', () => {
   it('says how many rows are on screen, and does not invent a total', () => {
-    expect(activityMeta(auditFixture().rows)).toBe('audit · last 4 in range');
+    expect(activityMeta(auditFixture().rows)).toBe('audit · last 6 in range');
     expect(activityMeta([])).toBe('audit · last 0 in range');
   });
 
@@ -57,13 +57,22 @@ describe('Recent activity', () => {
     mount();
 
     expect(screen.getByRole('heading', { name: 'Recent activity', level: 2 })).toBeInTheDocument();
-    expect(document.querySelector('.panel-h .fine.muted')?.textContent).toBe('audit · last 4 in range');
+    expect(document.querySelector('.panel-h .fine.muted')?.textContent).toBe('audit · last 6 in range');
 
     expect(document.querySelector('table.tbl thead')).toBeNull();
     expect(document.querySelector('.tbl-wrap')).toHaveClass('flat');
 
-    expect(column('time')).toEqual(['14:02:41', '13:58:02', '13:20:11', '02:44:00']);
-    expect(column('operation')).toEqual(['Terminate', 'RaiseEvent', 'UpdateInputAndRewind', 'PurgeHistory']);
+    expect(column('time')).toEqual(['14:02:41', '13:58:02', '13:41:22', '13:20:11', '11:02:31', '02:44:00']);
+
+    // The names the middleware writes, spaces and all (Common/AuditOperations.cs)
+    expect(column('operation')).toEqual([
+      'Terminate',
+      'Raise event',
+      'Replay',
+      'Update input and rewind',
+      'Restart in place',
+      'Purge history',
+    ]);
   });
 
   it('chips the outcome, in the colour of what happened', () => {
@@ -77,7 +86,9 @@ describe('Recent activity', () => {
     expect(chips).toEqual([
       ['ok', 'chip sm st-completed'],
       ['ok', 'chip sm st-completed'],
+      ['ok', 'chip sm st-completed'],
       ['409', 'chip sm st-failed'],
+      ['ok', 'chip sm st-completed'],
       ['ok', 'chip sm st-completed'],
     ]);
   });
@@ -85,7 +96,8 @@ describe('Recent activity', () => {
   it('opens the instance a row acted on, and says nothing where there is none', async () => {
     const rendered = mount();
 
-    expect(column('instance')[3]).toBe('—');
+    // The purge-history row is hub-wide: it acted on no instance at all
+    expect(column('instance')[5]).toBe('—');
 
     await screen.getByRole('button', { name: 'order-2026-09-04-000911' }).click();
 

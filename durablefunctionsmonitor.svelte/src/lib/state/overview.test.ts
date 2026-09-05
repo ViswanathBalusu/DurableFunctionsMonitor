@@ -156,7 +156,7 @@ describe('Overview: what it loaded', () => {
 
     expect(overview.stats?.totals.all).toBe(1_229);
     expect(overview.storage?.taskHub.name).toBe('DurableFunctionsHub');
-    expect(overview.activity).toHaveLength(4);
+    expect(overview.activity).toHaveLength(6);
     expect(overview.loading).toBe(false);
     expect(overview.loadedAt).toBe('2026-09-04T14:00:00.000Z');
   });
@@ -273,7 +273,7 @@ describe('Overview: when a part fails', () => {
     await overview.load();
 
     expect(overview.stats?.totals.all).toBe(1_229);
-    expect(overview.activity).toHaveLength(4);
+    expect(overview.activity).toHaveLength(6);
     expect(overview.storage).toBeNull();
     expect(overview.error).toBeNull();
     expect(app.toast.current?.message).toContain('Storage health failed');
