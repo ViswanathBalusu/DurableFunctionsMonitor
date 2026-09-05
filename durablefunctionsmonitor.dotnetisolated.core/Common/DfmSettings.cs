@@ -84,6 +84,14 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public bool DangerousOperationsEnabled { get; set; }
 
         /// <summary>
+        /// Turns on the audit trail: every Write and Dangerous operation performed through DfMon
+        /// is recorded (who, what, which instance, outcome) in a per-hub DfmAudit table, readable
+        /// via the /audit endpoint. Off by default.
+        /// Can also be enabled by setting DFM_AUDIT_ENABLED to 'true'.
+        /// </summary>
+        public bool AuditEnabled { get; set; }
+
+        /// <summary>
         /// Custom prefix for 'User-Agent' header for requests to Azure Storage.
         /// When specified, the final 'User-Agent' header will look like this: 
         /// "CustomUserAgentPrefix/{DfMon's Version}"
@@ -108,6 +116,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string dfmUserNameClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_USERNAME_CLAIM_NAME);
             string dfmRolesClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ROLES_CLAIM_NAME);
             string dfmDangerousOperationsEnabled = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_DANGEROUS_OPERATIONS_ENABLED);
+            string dfmAuditEnabled = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_AUDIT_ENABLED);
 
             // NOTE: an unset setting and a setting explicitly set to an empty string both mean
             // "no restriction" and must map to null. Up to .NET 9 an empty value could only ever
@@ -136,6 +145,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             // Only the literal 'true' (any casing) opts in. Unset, empty or anything else keeps dangerous operations off.
             this.DangerousOperationsEnabled = string.Equals(dfmDangerousOperationsEnabled?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
+
+            // Same "literal true, any casing" rule as DangerousOperationsEnabled: unset, empty or anything else keeps auditing off.
+            this.AuditEnabled = string.Equals(dfmAuditEnabled?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

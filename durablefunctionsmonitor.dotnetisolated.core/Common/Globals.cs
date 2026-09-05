@@ -43,6 +43,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string DFM_ALTERNATIVE_CONNECTION_STRING_PREFIX = "DFM_ALTERNATIVE_CONNECTION_STRING_";
         public const string DFM_INGRESS_ROUTE_PREFIX = "DFM_INGRESS_ROUTE_PREFIX";
         public const string DFM_DANGEROUS_OPERATIONS_ENABLED = "DFM_DANGEROUS_OPERATIONS_ENABLED";
+        public const string DFM_AUDIT_ENABLED = "DFM_AUDIT_ENABLED";
     }
 
     static class Globals
