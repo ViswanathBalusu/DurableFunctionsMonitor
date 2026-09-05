@@ -8,6 +8,7 @@
   import LiquidTab from '$lib/instance/LiquidTab.svelte';
   import RawTab from '$lib/instance/RawTab.svelte';
   import RecoveryDialog from '$lib/instance/RecoveryDialog.svelte';
+  import SummaryColumn from '$lib/instance/SummaryColumn.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
   import { outcomeAction, type Recovery } from '$lib/instance/input-outcomes';
   import StartNewInstanceDialog from '$lib/instances/StartNewInstanceDialog.svelte';
@@ -105,12 +106,11 @@
   <WorkspaceTabs {instance} inputsCount={inputs.loaded ? inputs.cards.length : null} />
 
   <div class="ws" data-tab={tab}>
-    <aside class="summary" aria-label="Summary">
-      <p class="meta">The summary column is built by E5-S8.</p>
-    </aside>
+    <SummaryColumn {instance} />
 
     <div class="tabbody" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
       {#if tab === 'summary'}
+        <!-- The Summary tab is the column to the left, which the CSS moves here below 1100px -->
         <p class="meta">The summary is the column beside this one on a wider screen.</p>
       {:else if tab === 'history'}
         <HistoryTab {instance} />
