@@ -6,7 +6,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const FROZEN = [
-  { test: (p) => /(^|[\\/])durablefunctionsmonitor\.react([\\/]|$)/.test(p), why: 'durablefunctionsmonitor.react is frozen; it is reference only until E12 deletes it.' },
   { test: (p) => /(^|[\\/])docs[\\/]ui-plans-artifacts([\\/]|$)/.test(p), why: 'docs/ui-plans-artifacts is the design source of truth and is read-only.' },
   { test: (p) => /(^|[\\/])DfmStatics([\\/]|$)/.test(p), why: 'DfmStatics is build output; run npm run build-and-copy instead of editing it.' },
   {

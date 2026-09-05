@@ -13,8 +13,6 @@
 durablefunctionsmonitor-vscodeext/backend
 durablefunctionsmonitor-vscodeext/custom-backends
 durablefunctionsmonitor-vscodeext/out
-durablefunctionsmonitor.react/node_modules
-
 # The UI is built inside the image (the `ui` stage of every Dockerfile), so neither its install nor
 # its output belongs in the context - and neither does any DfmStatics a working tree already holds.
 durablefunctionsmonitor.svelte/node_modules

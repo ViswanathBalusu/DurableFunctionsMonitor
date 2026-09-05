@@ -1,6 +1,6 @@
 # Durable Functions Monitor
 
-Monitoring UI for Azure Durable Functions. Backend: .NET 10 isolated Azure Functions (`durablefunctionsmonitor.dotnetisolated.core` + standalone host + MSSQL/Netherite packages). UI: being rewritten from React (`durablefunctionsmonitor.react`, frozen) to Svelte 5 (`durablefunctionsmonitor.svelte`) following the plan in `docs/plans/svelte-rewrite/`.
+Monitoring UI for Azure Durable Functions. Backend: .NET 10 isolated Azure Functions (`durablefunctionsmonitor.dotnetisolated.core` + standalone host + MSSQL/Netherite packages). UI: Svelte 5 (`durablefunctionsmonitor.svelte`), rewritten from the React app that was deleted in E12-S2-T1, following the plan in `docs/plans/svelte-rewrite/`.
 
 ## Working the rewrite
 
@@ -12,7 +12,7 @@ Monitoring UI for Azure Durable Functions. Backend: .NET 10 isolated Azure Funct
 
 ## Frozen paths (a hook refuses edits)
 
-`durablefunctionsmonitor.react/**` (reference only until E12 deletes it), `docs/ui-plans-artifacts/**` (design source), any `DfmStatics/**` (build output; produce it with `npm run build-and-copy`), `durablefunctionsmonitor.svelte/src/styles/dfm-ui.css` and `dfm-tokens.css` (verbatim copies; additions go to `dfm-ext.css`).
+`docs/ui-plans-artifacts/**` (design source), any `DfmStatics/**` (build output; produce it with `npm run build-and-copy`), `durablefunctionsmonitor.svelte/src/styles/dfm-ui.css` and `dfm-tokens.css` (verbatim copies; additions go to `dfm-ext.css`).
 
 ## Commands
 

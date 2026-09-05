@@ -7,32 +7,40 @@ pool:
   demands: npm
 
 steps:
-- task: Npm@1
-  displayName: 'npm install durablefunctionsmonitor.react'
+- task: NodeTool@0
+  displayName: 'use Node 22'
   inputs:
-    command: custom
-    workingDir: durablefunctionsmonitor.react
-    verbose: false
-    customCommand: 'install -legacy-peer-deps'
+    versionSpec: '22.x'
 
 - task: Npm@1
-  displayName: 'npm build durablefunctionsmonitor.react'
+  displayName: 'npm ci durablefunctionsmonitor.svelte'
   inputs:
     command: custom
-    workingDir: durablefunctionsmonitor.react
+    workingDir: durablefunctionsmonitor.svelte
+    verbose: false
+    customCommand: 'ci'
+
+- task: Npm@1
+  displayName: 'npm run build durablefunctionsmonitor.svelte'
+  inputs:
+    command: custom
+    workingDir: durablefunctionsmonitor.svelte
     verbose: false
     customCommand: 'run build'
+
+# The statics contract the backend and the VsCode extension both depend on (docs/plans/svelte-rewrite/00-shared-contracts.md)
+- script: node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build
+  displayName: 'verify the build output contract'
 
 - task: CopyFiles@2
   displayName: 'copy statics to durablefunctionsmonitor.dotnetisolated/DfmStatics'
   inputs:
-    SourceFolder: durablefunctionsmonitor.react/build
+    SourceFolder: durablefunctionsmonitor.svelte/build
     Contents: |
      static/**
      index.html
      favicon.png
      logo.svg
-     service-worker.js
      manifest.json
     TargetFolder: durablefunctionsmonitor.dotnetisolated/DfmStatics
     CleanTargetFolder: true

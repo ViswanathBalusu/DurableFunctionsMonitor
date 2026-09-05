@@ -1,5 +1,10 @@
 # Svelte rewrite: plan index
 
+**Executed.** `durablefunctionsmonitor.svelte` is the UI of this repo; `durablefunctionsmonitor.react`
+was deleted in E12-S2-T1 (2026-09-05) and lives on only in the history. This plan is kept as the
+record of what was built and why: every task carries the deviations the backend or the host forced,
+which is the part no commit message holds. `STATUS.md` is the board it was executed from.
+
 This folder is the execution plan for replacing `durablefunctionsmonitor.react` with `durablefunctionsmonitor.svelte`, built to match the clickable mockups in `docs/ui-plans-artifacts/` exactly, plus the backend endpoints those mockups read.
 
 It is written for agents that execute one task at a time. Every task names its files, what to do, how to verify it, and which mockup lines it reproduces. Read `00-shared-contracts.md` before any task; it holds every cross-cutting rule so tasks do not repeat them.
@@ -10,7 +15,7 @@ It is written for agents that execute one task at a time. Every task names its f
 2. `docs/ui-plans-artifacts/dfm-ui.css` and `dfm-tokens.css`: the component classes and tokens. They are copied into the app verbatim (see decision D2).
 3. `docs/ui-plans-artifacts/uploads/files/dfm-design-system.md`, `dfm-rewrite-plan.md`, `dfm-migration-plan.md`: rules and rationale.
 4. `docs/ui-plans-artifacts/handoff.md`: screen to endpoint map, keyboard map, responsive rules.
-5. The React app in `durablefunctionsmonitor.react/src`: reference for behaviour that the mockups do not spell out (filter clause syntax, paging, MSAL login, VS Code bridge). It is frozen; do not edit it.
+5. The React app in `durablefunctionsmonitor.react/src`: reference for behaviour that the mockups do not spell out (filter clause syntax, paging, MSAL login, VS Code bridge). It was frozen while the rewrite ran and deleted at the end of it (E12-S2-T1) - `git show 64a541c:durablefunctionsmonitor.react/src/...` still reaches it.
 
 When a mockup and a design document disagree, the mockup wins for visuals and copy, the design document wins for rules stated as "never" or "always".
 

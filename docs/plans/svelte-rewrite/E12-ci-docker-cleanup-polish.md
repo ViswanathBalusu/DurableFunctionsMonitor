@@ -46,6 +46,25 @@ Accept:
 - [ ] `dotnet build DurableFunctionsMonitor.slnx` and the workflows are green without the folder.
 Test: build.
 
+**Deviation, E12-S2-T1 (2026-09-05).** Three things the plan's file list does not name but the delete
+made necessary.
+
+(1) **`azure-pipelines.yml` built the React UI.** It now installs Node 22, runs `npm ci` and
+`npm run build` in `durablefunctionsmonitor.svelte`, checks the build contract and copies that output
+into `DfmStatics` (without `service-worker.js`, which the Svelte build does not emit).
+
+(2) **The committed `DfmStatics` was the React build.** With the React source gone it would have
+served a UI nobody can rebuild, so it is now the Svelte build - produced by `npm run build-and-copy`
+as the frozen-path rule requires. It is smaller than what it replaces (1.9 MB bundle and a 9.2 MB map
+against 4.7 MB and 17 MB), and the eight self-hosted woff2 of E12-S3-T1 come with it.
+
+(3) **The frozen-path guard and CLAUDE.md** named the React folder; a guard for a path that cannot
+exist is noise, so both lost that entry, as did the task-runner skill.
+
+`.gitignore` needed nothing: its comments are about the in-process backends, not about React. The
+repo-root `package-lock.json` is an empty stub (`"packages": {}`) that names the solution, not the
+React project, so it stays.
+
 ### E12-S3 Fonts, accessibility, motion, themes
 
 #### E12-S3-T1 Self-hosted fonts

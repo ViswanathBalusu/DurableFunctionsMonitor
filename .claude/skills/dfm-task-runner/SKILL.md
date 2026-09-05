@@ -25,7 +25,7 @@ You are executing exactly one task from `docs/plans/svelte-rewrite/`. The task i
 
 ## Rules
 
-- Never edit frozen paths (`durablefunctionsmonitor.react/`, `docs/ui-plans-artifacts/`, any `DfmStatics/`, the verbatim stylesheet copies). A hook blocks it; do not work around the hook.
+- Never edit frozen paths (`docs/ui-plans-artifacts/`, any `DfmStatics/`, the verbatim stylesheet copies). A hook blocks it; do not work around the hook.
 - Never widen the task. Ideas for other tasks go in the final message, not in the code.
 - Never invent backend data the endpoint does not return; hide or degrade per the task's capability notes.
 - JSON shown to the user is always pretty-printed and fully expanded (contracts §9).
