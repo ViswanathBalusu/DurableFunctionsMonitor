@@ -39,6 +39,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
                 extPoints.GetHistoryEventInputRoutine = null;
                 extPoints.UpdateHistoryEventInputRoutine = null;
                 extPoints.TruncateHistoryRoutine = null;
+
+                // For the same reason there are no episode markers and no instance row to read: /spans then
+                // draws no orchestrator lane (totals.orchestratorMs == null) and /about reports
+                // capabilities.episodeMarkers == false.
+                extPoints.GetEpisodeMarkersRoutine = null;
+                extPoints.GetInstanceRowInfoRoutine = null;
             });
         }
 

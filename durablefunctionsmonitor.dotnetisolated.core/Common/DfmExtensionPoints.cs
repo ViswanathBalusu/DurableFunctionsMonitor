@@ -160,11 +160,13 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             this.GetHistoryEventInputRoutine = OrchestrationHistoryEditor.GetEventInputAsync;
             this.UpdateHistoryEventInputRoutine = OrchestrationHistoryEditor.UpdateEventInputAsync;
             this.TruncateHistoryRoutine = OrchestrationHistoryEditor.TruncateHistoryAsync;
+            this.GetEpisodeMarkersRoutine = AzureStorageAggregations.GetEpisodeMarkersAsync;
+            this.GetInstanceRowInfoRoutine = AzureStorageAggregations.GetInstanceRowInfoAsync;
 
-            // The aggregation routines above (stats, failures, children, episode markers, instance row info,
-            // storage health, audit) intentionally stay null here. Each of the B1-B5 epics assigns its own
-            // Azure Storage default; until then the corresponding endpoints answer 400 and /about reports
-            // the capability as false for every provider.
+            // The remaining aggregation routines above (stats, failures, children, storage health, audit)
+            // intentionally stay null here. Each of the B1-B5 epics assigns its own Azure Storage default;
+            // until then the corresponding endpoints answer 400 and /about reports the capability as false
+            // for every provider.
         }
     }
 }

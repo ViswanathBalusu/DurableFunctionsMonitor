@@ -46,11 +46,21 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsNull(extensionPoints.GetStatsRoutine);
             Assert.IsNull(extensionPoints.GetFailuresRoutine);
             Assert.IsNull(extensionPoints.GetChildrenRoutine);
-            Assert.IsNull(extensionPoints.GetEpisodeMarkersRoutine);
-            Assert.IsNull(extensionPoints.GetInstanceRowInfoRoutine);
             Assert.IsNull(extensionPoints.GetStorageHealthRoutine);
             Assert.IsNull(extensionPoints.WriteAuditRecordRoutine);
             Assert.IsNull(extensionPoints.ReadAuditRecordsRoutine);
+        }
+
+        [TestMethod]
+        public void SpansRoutinesHaveTheirAzureStorageDefaults()
+        {
+            // Act
+            var extensionPoints = new DfmExtensionPoints();
+
+            // Assert (B2 gave these two their Azure Storage default; the ones still asserted null above
+            // are waiting for B1, B4 and B5)
+            Assert.IsNotNull(extensionPoints.GetEpisodeMarkersRoutine);
+            Assert.IsNotNull(extensionPoints.GetInstanceRowInfoRoutine);
         }
 
         [TestMethod]

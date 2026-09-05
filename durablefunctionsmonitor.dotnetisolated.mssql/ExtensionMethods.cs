@@ -72,6 +72,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 extPoints.GetHistoryEventInputRoutine = null;
                 extPoints.UpdateHistoryEventInputRoutine = null;
                 extPoints.TruncateHistoryRoutine = null;
+
+                // The defaults for these two read the XXXHistory/XXXInstances tables of Azure Storage,
+                // which do not exist here, so both get their own SQL implementation.
+                extPoints.GetEpisodeMarkersRoutine = GetEpisodeMarkers;
+                extPoints.GetInstanceRowInfoRoutine = GetInstanceRowInfo;
             });
         }
 
@@ -154,6 +159,143 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                             }
                         }
                     }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Custom routine for reading the orchestrator episodes of an instance.
+        /// Pairs the OrchestratorStarted/OrchestratorCompleted rows of dt.History in sequence order;
+        /// an OrchestratorStarted that has no OrchestratorCompleted after it is an open episode (End == null).
+        /// </summary>
+        public static async Task<IReadOnlyList<EpisodeMarker>> GetEpisodeMarkers(DurableTaskClient durableClient, string connName, string hubName, string instanceId)
+        {
+            string sql =
+                $@"SELECT
+                    h.EventType as EventType,
+                    h.Timestamp as Timestamp
+                FROM
+                    [{SchemaName}].History h
+                WHERE
+                    h.InstanceID = @OrchestrationInstanceId AND h.TaskHub = @TaskHub
+                    AND
+                    h.EventType IN ('OrchestratorStarted', 'OrchestratorCompleted')
+                ORDER BY
+                    h.SequenceNumber";
+
+            var result = new List<EpisodeMarker>();
+            DateTimeOffset? episodeStart = null;
+
+            using (var conn = new SqlConnection(ConnString))
+            {
+                conn.Open();
+
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@OrchestrationInstanceId", instanceId);
+                    cmd.Parameters.AddWithValue("@TaskHub", hubName);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            if (reader["Timestamp"] is DBNull)
+                            {
+                                // A row without a timestamp cannot be placed on a timeline
+                                continue;
+                            }
+
+                            // Same conversion the history rows above go through, so that markers and events
+                            // end up on one and the same time axis
+                            var timestamp = new DateTimeOffset(((DateTime)reader["Timestamp"]).ToUniversalTime());
+
+                            if (reader["EventType"].ToString() == "OrchestratorStarted")
+                            {
+                                if (episodeStart != null)
+                                {
+                                    // An episode that never completed (the host crashed mid-replay, say). It stays
+                                    // open, and the row that follows it opens the next one.
+                                    result.Add(new EpisodeMarker { Start = episodeStart.Value, End = null });
+                                }
+
+                                episodeStart = timestamp;
+                            }
+                            else if (episodeStart != null)
+                            {
+                                result.Add(new EpisodeMarker { Start = episodeStart.Value, End = timestamp });
+
+                                episodeStart = null;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (episodeStart != null)
+            {
+                // The orchestrator is running right now
+                result.Add(new EpisodeMarker { Start = episodeStart.Value, End = null });
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Custom routine for reading the storage row of an instance (execution id and generation).
+        /// Returns null when there is no such row.
+        /// </summary>
+        public static async Task<InstanceRowInfo> GetInstanceRowInfo(DurableTaskClient durableClient, string connName, string hubName, string instanceId)
+        {
+            // Selecting the whole row rather than the two columns by name: 'Generation' only exists in the
+            // newer versions of the durabletask-mssql schema, and naming a column that is not there would fail
+            // the whole query instead of just leaving that one value unknown.
+            string sql =
+                $@"SELECT TOP 1
+                    *
+                FROM
+                    [{SchemaName}].Instances i
+                WHERE
+                    i.InstanceID = @OrchestrationInstanceId AND i.TaskHub = @TaskHub";
+
+            using (var conn = new SqlConnection(ConnString))
+            {
+                conn.Open();
+
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@OrchestrationInstanceId", instanceId);
+                    cmd.Parameters.AddWithValue("@TaskHub", hubName);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (!await reader.ReadAsync())
+                        {
+                            return null;
+                        }
+
+                        return new InstanceRowInfo
+                        {
+                            ExecutionId = GetValueOrNull(reader, "ExecutionID")?.ToString(),
+                            Generation = GetValueOrNull(reader, "Generation") is object generation ? Convert.ToInt32(generation) : null,
+
+                            // dt.History keeps payloads in a separate table, so there is no cheap size to report
+                            HistoryBytesEstimate = null
+                        };
+                    }
+                }
+            }
+        }
+
+        // Reads a column by name, tolerating both a missing column and a NULL value
+        private static object GetValueOrNull(SqlDataReader reader, string columnName)
+        {
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                if (string.Equals(reader.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return reader.IsDBNull(i) ? null : reader.GetValue(i);
                 }
             }
 
