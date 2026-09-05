@@ -163,6 +163,17 @@ Accept:
 - [ ] Brushing sets a custom range in the URL.
 Test: as above.
 
+**Deviation, E4-S5-T1 (2026-09-05).** The state file is
+`src/lib/state/instances-histogram.svelte.ts` (the plan wrote `instances-histogram.svelte.ts` without
+the folder, and it belongs beside `instances-timeline.svelte.ts`). Every page of the walk is asked
+for with the filter resolved once, at the start: a preset range ends at "now", and a second page
+asking for a slightly later "now" would page through a list that had moved under it - React had that
+bug. `StackedColumns` gained a `legendMeta` prop, which is where "brush narrows the time filter"
+goes (L124). The brush-to-zoom wiring is three lines in the view and is tested through the state
+(`zoom` rounds outwards to whole seconds and writes `from`/`to`; `resetZoom` puts the preset back):
+d3-brush needs `getScreenCTM`, which jsdom does not implement, so a pointer-level brush test would
+be testing the shim rather than the app.
+
 ### E4-S6 Selection and bulk actions
 
 #### E4-S6-T1 selection.svelte.ts

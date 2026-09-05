@@ -22,6 +22,8 @@
     xTicks?: number;
     formatTick?: (date: Date) => string;
     ariaLabel: string;
+    /** A note at the end of the legend row ("brush narrows the time filter"). */
+    legendMeta?: string;
     class?: string;
     onBrush?: (range: Range | null) => void;
   }
@@ -34,6 +36,7 @@
     xTicks = 6,
     formatTick = (date: Date) => date.toISOString().slice(11, 16),
     ariaLabel,
+    legendMeta,
     class: className,
     onBrush,
   }: Props = $props();
@@ -194,6 +197,10 @@
 
     {#if brush}
       <button class="link" type="button" onclick={clear}>clear</button>
+    {/if}
+
+    {#if legendMeta}
+      <span class="meta" style="margin-left:auto">{legendMeta}</span>
     {/if}
   </div>
 
