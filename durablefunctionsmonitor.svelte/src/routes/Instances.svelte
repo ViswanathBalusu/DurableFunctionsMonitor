@@ -1,11 +1,14 @@
 <script lang="ts">
   import { getContext, onMount } from 'svelte';
   import Button from '$lib/components/Button.svelte';
+  import EmptyState from '$lib/components/EmptyState.svelte';
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import FilterChips from '$lib/instances/FilterChips.svelte';
   import FilterRail from '$lib/instances/FilterRail.svelte';
   import InstancesTable from '$lib/instances/InstancesTable.svelte';
+  import ViewStrip from '$lib/instances/ViewStrip.svelte';
+  import { label as rangeLabel } from '$lib/filters/time-range';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Instances } from '$lib/state/instances.svelte';
 
@@ -57,6 +60,11 @@
     queueMicrotask(() => void instances.reload());
   });
 
+  /** The empty state replaces the whole view, so it must not flash while the first page loads. */
+  const isEmpty = $derived(!instances.loading && instances.rows.length === 0 && !instances.error);
+
+  const rangeLower = $derived(rangeLabel(app.timeRange).toLowerCase());
+
   $effect(() => {
     if (selectAllPending && !instances.loading && instances.rows.length > 0) {
       instances.selectAllLoaded();
@@ -91,9 +99,27 @@
 
   <FilterRail {instances} />
 
-  <InstancesTable {instances} />
+  {#if isEmpty}
+    <!-- L65: nothing matched, so the strip and the table are not drawn at all -->
+    <EmptyState
+      title="No orchestrations"
+      text={`Nothing matches these filters in the ${rangeLower}. Remove a chip, widen the time range or start a new instance.`}
+    >
+      {#snippet actions()}
+        <Button onclick={() => instances.clearAll()}>Clear filters</Button>
+        <Button variant="primary" disabled={app.readOnly} onclick={() => (startOpen = true)}>Start new instance</Button>
+      {/snippet}
+    </EmptyState>
+  {:else}
+    <div>
+      <ViewStrip {instances} />
 
-  {#if instances.error}
-    <p class="meta">{instances.error}</p>
+      {#if instances.view === 'table'}
+        <InstancesTable {instances} />
+      {:else}
+        <!-- The timeline and the histogram are E4-S4 and E4-S5 -->
+        <p class="meta" style="padding:16px">This view is not built yet.</p>
+      {/if}
+    </div>
   {/if}
 </Page>

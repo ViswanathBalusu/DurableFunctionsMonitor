@@ -435,7 +435,7 @@ export class Instances {
       // still saying "Every 5 sec." over a list that is not refreshing would be a lie
       this.stopAutoRefresh();
       this.#app.prefs.setAutoRefresh('instances', 0);
-      this.#app.toast.error(`Could not load the instances. ${message}`, { retry: () => void this.reload() });
+      this.#app.toast.fromError('Load failed', error, () => void this.reload());
     } finally {
       if (requestId === this.#requestId) {
         this.loading = false;

@@ -96,8 +96,8 @@ describe('Instances screen', () => {
     await waitFor(() => expect(app.router.current.query.get('selectAll')).toBeNull());
   });
 
-  it('says why the list is empty when the load failed', async () => {
-    render(ScreenHarness, {
+  it('toasts a load failure with a retry rather than leaving an empty table', async () => {
+    const { component } = render(ScreenHarness, {
       props: {
         screen: Instances,
         endpoints: {
@@ -108,6 +108,12 @@ describe('Instances screen', () => {
       },
     });
 
-    expect(await screen.findByText('503 Service Unavailable')).toBeInTheDocument();
+    const app = (component as unknown as { appState: () => AppState }).appState();
+
+    await waitFor(() => expect(app.toast.current?.message).toBe('Load failed. 503 Service Unavailable'));
+    expect(app.toast.current?.retry).toBeTypeOf('function');
+
+    // And the empty state does not claim that nothing matched
+    expect(screen.queryByRole('heading', { name: 'No orchestrations' })).toBeNull();
   });
 });
