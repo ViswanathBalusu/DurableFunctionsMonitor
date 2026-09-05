@@ -43,7 +43,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             var result = await durableClient.PurgeAllInstancesAsync(new PurgeInstancesFilter(DateTimeOffset.Parse(request.TimeFrom), DateTime.Parse(request.TimeTill), request.Statuses));
 
-            return await req.ReturnJson(result);
+            // The client reads `instancesDeleted` (the in-process backend's PurgeHistoryResult field, and
+            // what every UI ever written against this API expects). PurgeResult calls the same number
+            // PurgedInstanceCount, so returning it verbatim tells the caller nothing it can read.
+            return await req.ReturnJson(new { instancesDeleted = result.PurgedInstanceCount });
         }
     }
 }

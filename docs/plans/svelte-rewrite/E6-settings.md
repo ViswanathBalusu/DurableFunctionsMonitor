@@ -113,3 +113,17 @@ Do:
 Accept:
 - [ ] Green locally and in CI.
 Test: itself.
+
+**Deviation, E6-S5-T1 (2026-09-05).** What the specs found against the real host.
+
+1. **`/purge-history` answered a field no client reads.** The isolated backend returned the SDK's
+`PurgeResult` verbatim, which is `{ purgedInstanceCount }`; contracts §6, React and this app all read
+`instancesDeleted`, so a purge reported "Purged undefined instances". Fixed in the backend
+(`Functions/PurgeHistory.cs`) with `PurgeHistoryFunctionTests`, because the contract is the spec and
+every client of this API has always read that name.
+2. **The purge acts on the whole hub** - there is no id filter - so the spec seeds an instance a
+month old and purges a two-day window around it. Nothing else in the hub is within a week of that,
+so the rest of the fixtures survive by construction rather than by luck, and no re-seed is needed.
+3. **There is no masked string to show.** The harness points the host at `UseDevelopmentStorage=true`,
+which carries no account key at all. The spec asserts what actually matters instead: the field is not
+empty, it is read-only, and no unmasked `AccountKey=` ever reaches the browser.
