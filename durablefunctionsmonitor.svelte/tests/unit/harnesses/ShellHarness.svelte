@@ -30,6 +30,7 @@
     navCollapsed?: boolean;
     /** Whatever /about would have announced; the rest stay off. */
     capabilities?: Partial<Capabilities>;
+    /** What the app state's badge count is set to before the shell renders. */
     failuresCount?: number;
     readOnly?: boolean;
     dangerous?: boolean;
@@ -77,6 +78,9 @@
     permissions: readOnly ? [] : ['DurableFunctionsMonitor.ReadWrite'],
   });
 
+  // svelte-ignore state_referenced_locally
+  app.failuresCount = failuresCount;
+
   setContext(APP_CONTEXT_KEY, app);
 
   let shell = $state<Shell | null>(null);
@@ -106,4 +110,4 @@
   }
 </script>
 
-<Shell bind:this={shell} {failuresCount} {onOpenPalette} {onSignOut} />
+<Shell bind:this={shell} {onOpenPalette} {onSignOut} />

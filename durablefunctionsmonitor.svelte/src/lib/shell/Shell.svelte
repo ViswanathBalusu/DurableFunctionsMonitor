@@ -17,15 +17,13 @@
   import { installVsCodeCommands } from './vscode-commands';
 
   interface Props {
-    /** The badge on the Failures nav item; E9 fills it from the failures screen state. */
-    failuresCount?: number;
     /** Told when the palette is asked for; the shell opens its own either way. */
     onOpenPalette?: () => void;
     /** E2-S7 passes the sign-out. */
     onSignOut?: () => void;
   }
 
-  let { failuresCount = 0, onOpenPalette, onSignOut }: Props = $props();
+  let { onOpenPalette, onSignOut }: Props = $props();
 
   let topBar = $state<TopBar | null>(null);
   let moreOpen = $state(false);
@@ -54,6 +52,28 @@
     sendSignal: 'signal',
     purge: 'purge',
   };
+
+  /** The badge both navs carry, whichever screen is on (E9-S1-T1). */
+  const failuresCount = $derived(app.failuresCount);
+
+  /**
+   * The count follows the hub and the shared range, and has to wait for `/about` like everything
+   * else does - every capability is false until it answers. The Failures screen sets the count from
+   * its own load, so while it is on there is nothing here to ask for.
+   */
+  let loadedCountKey = '';
+
+  $effect(() => {
+    const key = JSON.stringify([app.hub, app.timeRange, app.capabilities.failures]);
+
+    if (key === loadedCountKey || app.router.current.name === 'failures') {
+      return;
+    }
+
+    loadedCountKey = key;
+
+    queueMicrotask(() => void app.loadFailuresCount());
+  });
 
   // The extension's menu commands need a screen to navigate to, so they wait for the shell
   onMount(() => installVsCodeCommands(app));

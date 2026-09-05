@@ -3,6 +3,7 @@
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
+import type { FailuresQuery } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
 import ShellHarness from '../../../tests/unit/harnesses/ShellHarness.svelte';
 
@@ -103,5 +104,71 @@ describe('Outlet', () => {
     // Decision D8: the alias resolves to the instance route, and the URL is rewritten to match
     expect(screen.getByRole('heading', { name: 'order-1', level: 1 })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/DurableFunctionsHub/instances/order-1');
+  });
+});
+
+/**
+ * The Failures badge (E9-S1-T1). The shell keeps it current for every screen but the Failures
+ * screen, which sets it from the load it makes anyway.
+ */
+describe('Shell failures badge', () => {
+  function shellWith(path: string, capabilities: Record<string, boolean> = { failures: true }) {
+    const queries: FailuresQuery[] = [];
+
+    const rendered = render(ShellHarness, {
+      props: {
+        path,
+        capabilities,
+        endpoints: {
+          failures: async (query: FailuresQuery) => {
+            queries.push(query);
+
+            return { totalFailed: 9 } as never;
+          },
+        },
+      },
+    });
+
+    return { queries, app: (rendered.component as unknown as { appState: () => AppState }).appState() };
+  }
+
+  it('counts the failures of the range and badges the nav with them', async () => {
+    const { queries } = shellWith('/DurableFunctionsHub');
+
+    await waitFor(() => expect(document.querySelector('.snav .cnt')).toHaveTextContent('9'));
+
+    expect(queries).toHaveLength(1);
+    expect(document.querySelector('.bottom-nav .bcnt')).toHaveTextContent('9');
+  });
+
+  it('asks again when the shared range changes', async () => {
+    const { app, queries } = shellWith('/DurableFunctionsHub');
+
+    await waitFor(() => expect(queries).toHaveLength(1));
+
+    app.setTimeRange({ preset: '7d' });
+
+    await waitFor(() => expect(queries).toHaveLength(2));
+    expect(new Date(queries[1].to).getTime() - new Date(queries[1].from).getTime()).toBe(7 * 24 * 60 * 60 * 1000);
+  });
+
+  it('leaves the call to the Failures screen while that screen is on', async () => {
+    const { app, queries } = shellWith('/DurableFunctionsHub/failures');
+
+    // The screen loads the same endpoint and sets the count itself; asking twice helps nobody
+    await waitFor(() => expect(app.router.current.name).toBe('failures'));
+    expect(queries).toEqual([]);
+
+    app.failuresCount = 4;
+    await waitFor(() => expect(document.querySelector('.snav .cnt')).toHaveTextContent('4'));
+  });
+
+  it('shows no badge on a backend without the endpoint', async () => {
+    const { queries } = shellWith('/DurableFunctionsHub', {});
+
+    await waitFor(() => expect(document.querySelector('.snav')).not.toBeNull());
+
+    expect(queries).toEqual([]);
+    expect(document.querySelector('.snav .cnt')).toBeNull();
   });
 });

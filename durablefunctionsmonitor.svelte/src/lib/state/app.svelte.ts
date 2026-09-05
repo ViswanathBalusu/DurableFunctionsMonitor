@@ -10,7 +10,7 @@ import { HttpBackendClient } from '../api/http-client';
 import type { About, Capabilities } from '../api/types';
 import { VsCodeBackendClient } from '../api/vscode-client';
 import type { BackendClient } from '../api/client';
-import { DEFAULT_TIME_RANGE, parseTimeRange, toQuery, type TimeRange } from '../filters/time-range';
+import { DEFAULT_TIME_RANGE, parseTimeRange, resolve, toQuery, type TimeRange } from '../filters/time-range';
 import { Actions } from '../instance/actions.svelte';
 import { host as defaultHost, type Host } from '../host.svelte';
 import { Router } from '../router.svelte';
@@ -73,6 +73,18 @@ export class AppState {
 
   /** How many requests are in flight; the top-bar progress bar shows while this is above zero. */
   progress = $state(0);
+
+  /**
+   * How many instances failed in the shared range: the badge on the Failures nav item and on the
+   * bottom tab bar (E2). Zero hides both. The Failures screen sets it whenever it loads, and the
+   * shell loads it on its own for every other screen.
+   */
+  failuresCount = $state(0);
+
+  /** The hub `failuresCount` was loaded for; a count of another hub's failures is not this hub's. */
+  #failuresCountHub = '';
+
+  #failuresCountRequestId = 0;
 
   /**
    * The clock, in ms. Anything that counts up on screen - the workspace's running duration - reads
@@ -232,6 +244,43 @@ export class AppState {
       return await (typeof work === 'function' ? work() : work);
     } finally {
       this.end();
+    }
+  }
+
+  /**
+   * Loads the nav badge's count for the current hub and range. `/failures` is the Failures screen's
+   * own call and the backend caches it, so asking for it from the shell costs no more than the
+   * screen was going to. Never throws: a badge is not worth a toast, and the screen that needs the
+   * data reports its own failure.
+   */
+  async loadFailuresCount(): Promise<void> {
+    const hub = this.hub;
+
+    if (hub !== this.#failuresCountHub) {
+      this.#failuresCountHub = hub;
+      this.failuresCount = 0;
+    }
+
+    if (!hub || !this.capabilities.failures) {
+      this.failuresCount = 0;
+      return;
+    }
+
+    const requestId = ++this.#failuresCountRequestId;
+
+    // eslint-disable-next-line svelte/prefer-svelte-reactivity -- a value passed to a pure function
+    const { from, to } = resolve(this.timeRange, new Date());
+
+    try {
+      const response = await this.track(() =>
+        this.endpoints.failures({ from: from.toISOString(), to: to.toISOString() }),
+      );
+
+      if (requestId === this.#failuresCountRequestId) {
+        this.failuresCount = response.totalFailed;
+      }
+    } catch {
+      // Leaves the badge as it was: a count that could not be refreshed is better than a wrong one
     }
   }
 

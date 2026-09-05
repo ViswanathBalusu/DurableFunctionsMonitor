@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { BackendClient } from '../api/client';
 import type { Endpoints } from '../api/endpoints';
 import { normalizeAbout } from '../api/endpoints';
-import type { About } from '../api/types';
+import type { About, FailuresQuery } from '../api/types';
 import type { Host } from '../host.svelte';
 import { Router } from '../router.svelte';
 import { Prefs } from './prefs.svelte';
@@ -29,8 +29,8 @@ function fakeHost(overrides: Partial<Host> = {}): Host {
 /** A client that never gets called: every test drives the endpoints object directly. */
 const unusedClient = {} as BackendClient;
 
-function fakeEndpoints(about: () => Promise<About>): Endpoints {
-  return { about } as unknown as Endpoints;
+function fakeEndpoints(about: () => Promise<About>, extra: Partial<Endpoints> = {}): Endpoints {
+  return { about, ...extra } as unknown as Endpoints;
 }
 
 function aboutBody(overrides: Partial<About> = {}): About {
@@ -47,7 +47,9 @@ function aboutBody(overrides: Partial<About> = {}): About {
   });
 }
 
-function appWith(options: { about?: () => Promise<About>; host?: Host; path?: string } = {}) {
+function appWith(
+  options: { about?: () => Promise<About>; host?: Host; path?: string; endpoints?: Partial<Endpoints> } = {},
+) {
   const host = options.host ?? fakeHost();
 
   window.history.replaceState({}, '', options.path ?? '/DurableFunctionsHub/instances');
@@ -55,7 +57,7 @@ function appWith(options: { about?: () => Promise<About>; host?: Host; path?: st
   return new AppState({
     host,
     client: unusedClient,
-    endpoints: fakeEndpoints(options.about ?? (() => Promise.resolve(aboutBody()))),
+    endpoints: fakeEndpoints(options.about ?? (() => Promise.resolve(aboutBody())), options.endpoints),
     router: new Router({ mode: 'history', routePrefix: '' }),
     prefs: new Prefs(host, {
       setItem: () => {},
@@ -325,5 +327,88 @@ describe('AppState', () => {
     const app = appWith({ host: fakeHost({ clientConfig: { userName: 'alice@contoso.com' } }) });
 
     expect(app.userName).toBe('alice@contoso.com');
+  });
+});
+
+/**
+ * The badge on the Failures nav item (E9-S1-T1). The shell keeps it up to date for every screen but
+ * the Failures screen itself, which sets it from the load it was making anyway.
+ */
+describe('AppState.loadFailuresCount', () => {
+  function countingApp(options: { totalFailed?: number; path?: string } = {}) {
+    const queries: FailuresQuery[] = [];
+    const down = { now: false };
+
+    const app = appWith({
+      path: options.path,
+      endpoints: {
+        failures: async (query: FailuresQuery) => {
+          queries.push(query);
+
+          if (down.now) {
+            throw new Error('500 Internal Server Error');
+          }
+
+          return { totalFailed: options.totalFailed ?? 9 } as never;
+        },
+      },
+    });
+
+    return { app, queries, down };
+  }
+
+  it('counts the failures of the current range', async () => {
+    const { app, queries } = countingApp();
+
+    app.about = aboutBody({ capabilities: { failures: true } as never });
+    await app.loadFailuresCount();
+
+    expect(app.failuresCount).toBe(9);
+    expect(queries).toHaveLength(1);
+
+    // The shared range, resolved to the window the endpoint takes
+    expect(new Date(queries[0].to).getTime() - new Date(queries[0].from).getTime()).toBe(24 * 60 * 60 * 1000);
+  });
+
+  it('asks nothing of a backend that does not serve /failures, and shows no badge', async () => {
+    const { app, queries } = countingApp();
+
+    app.failuresCount = 4;
+    await app.loadFailuresCount();
+
+    expect(queries).toEqual([]);
+    expect(app.failuresCount).toBe(0);
+  });
+
+  it('drops the count when the hub changes, before it knows the new one', async () => {
+    const { app } = countingApp();
+
+    app.about = aboutBody({ capabilities: { failures: true } as never });
+    await app.loadFailuresCount();
+
+    expect(app.failuresCount).toBe(9);
+
+    app.router.navigate({ name: 'instances', hub: 'OtherHub' });
+    const pending = app.loadFailuresCount();
+
+    // A count of another hub's failures is not this hub's, and is gone before the call answers
+    expect(app.failuresCount).toBe(0);
+
+    await pending;
+    expect(app.failuresCount).toBe(9);
+  });
+
+  it('keeps the count it has when the call fails, and says nothing about it', async () => {
+    const { app, down } = countingApp({ totalFailed: 7 });
+
+    app.about = aboutBody({ capabilities: { failures: true } as never });
+    await app.loadFailuresCount();
+
+    down.now = true;
+    await app.loadFailuresCount();
+
+    // A badge is not worth a toast: the screen that needs the data reports its own failure
+    expect(app.failuresCount).toBe(7);
+    expect(app.toast.current).toBeNull();
   });
 });
