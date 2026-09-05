@@ -87,6 +87,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var tableClient = TableClient.GetTableClient(connEnvVariableName);
             IEnumerable<TableEntity> tableResult;
 
+            // Newer versions of the Durable Task Framework record the parent on the Instances row itself, which is exact and cheap
+            var instanceEntity = await tableClient.GetEntityAsync($"{durableClient.Name}Instances", instanceId, string.Empty);
+
+            string recordedParentInstanceId = instanceEntity?.GetString("ParentInstanceId");
+            if (!string.IsNullOrEmpty(recordedParentInstanceId))
+            {
+                return recordedParentInstanceId;
+            }
+
             // Checking if instanceId looks like a suborchestration (old format)
             var match = SubOrchestrationIdRegex.Match(instanceId);
             if (match.Success)
@@ -111,8 +120,6 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 {
                     return null;
                 }
-
-                var instanceEntity = await tableClient.GetEntityAsync($"{durableClient.Name}Instances", instanceId, string.Empty);
 
                 var createdTime = instanceEntity?.GetDateTimeOffset("CreatedTime");
                 if (createdTime == null)

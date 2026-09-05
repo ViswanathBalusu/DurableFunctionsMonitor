@@ -153,14 +153,34 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             var table = this._client.GetTableClient(tableName);
 
-            // A table transaction takes at most 100 operations, all within one partition
-            foreach (var batch in entities.Chunk(MaxTransactionSize))
+            foreach (var batch in SplitIntoBatches(entities.ToList(), MaxTransactionSize))
             {
                 var actions = batch
                     .Select(e => new TableTransactionAction(TableTransactionActionType.Delete, e, ETag.All))
                     .ToList();
 
                 await table.SubmitTransactionAsync(actions);
+            }
+        }
+
+        // A table transaction takes at most 100 operations, all within one partition. The remainder goes first, so that
+        // the last batch is always a full one: a caller that orders the entities so the ones that matter most come last
+        // gets those deleted together, in a single all-or-nothing transaction.
+        internal static IEnumerable<List<TableEntity>> SplitIntoBatches(List<TableEntity> entities, int batchSize)
+        {
+            int position = 0;
+
+            int remainder = entities.Count % batchSize;
+            if (remainder > 0)
+            {
+                yield return entities.GetRange(0, remainder);
+                position = remainder;
+            }
+
+            while (position < entities.Count)
+            {
+                yield return entities.GetRange(position, batchSize);
+                position += batchSize;
             }
         }
 

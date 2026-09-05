@@ -23,7 +23,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// Takes IDurableClient, connString env variable name, taskHubName and instanceId and returns
         /// Id of parent orchestration, or null if the given instance is not a suborchestration.
         /// Provide your own implementation for a custom storage provider.
-        /// Default implementation matches ExecutionId field in XXXInstances table.
+        /// Default implementation reads the ParentInstanceId column of the XXXInstances row, and falls back to matching
+        /// the ExecutionId (old-format ids) or scanning the XXXHistory table when the column is absent.
         /// </summary>
         public Func<DurableTaskClient, string, string, string, Task<string>> GetParentInstanceIdRoutine { get; set; }
 

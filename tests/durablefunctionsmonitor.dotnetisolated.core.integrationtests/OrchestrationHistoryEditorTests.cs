@@ -301,6 +301,57 @@ namespace durablefunctionsmonitor.dotnetisolated.core.integrationtests
         }
 
         [TestMethod]
+        public async Task RefusesToReplayPastWorkThatFinishedAfterTheEvent()
+        {
+            // Arrange
+
+            // Task.WhenAll(CallActivityAsync("Work"), WaitForExternalEvent("Approval")): the approval arrived while Work ran
+            await this.SeedHistoryAsync(
+                Row(0, "OrchestratorStarted"),
+                Row(1, "ExecutionStarted", name: "MyOrchestrator", input: "{\"a\":1}"),
+                Row(2, "TaskScheduled", name: "Work", eventId: 0),
+                Row(3, "OrchestratorCompleted"),
+                Row(4, "OrchestratorStarted"),
+                Row(5, "EventRaised", name: "Approval", input: "{\"ok\":true}"),
+                Row(6, "OrchestratorCompleted"),
+                Row(7, "OrchestratorStarted"),
+                Row(8, "TaskCompleted", taskScheduledId: 0, result: "42"),
+                Row(9, "OrchestratorCompleted"));
+
+            // Act
+
+            var ex = await Assert.ThrowsExactlyAsync<DfmConflictException>(
+                () => OrchestrationHistoryEditor.TruncateHistoryAsync(null, ConnStringName, this._hubName, InstanceId, 5));
+
+            // Assert
+
+            StringAssert.Contains(ex.Message, "TaskScheduled 'Work'");
+            Assert.AreEqual(10, (await this.GetCurrentExecutionRowsAsync()).Count, "nothing was deleted");
+            Assert.AreEqual("Failed", (await this.GetInstanceRowAsync()).GetString("RuntimeStatus"), "the instance was not reopened");
+        }
+
+        [TestMethod]
+        public async Task BumpsTheSentinelETagSoALiveSessionCannotCheckpointOverTheEdit()
+        {
+            // Arrange
+
+            await this.SeedFailedHistoryAsync();
+            var sentinelBefore = await this.TryGetHistoryRowAsync("sentinel");
+
+            // Act
+
+            await OrchestrationHistoryEditor.TruncateHistoryAsync(null, ConnStringName, this._hubName, InstanceId, 8);
+
+            // Assert
+
+            var sentinelAfter = await this.TryGetHistoryRowAsync("sentinel");
+
+            Assert.AreNotEqual(sentinelBefore.ETag, sentinelAfter.ETag);
+            Assert.AreEqual(ExecutionId, sentinelAfter.GetString("ExecutionId"));
+            Assert.IsTrue(sentinelAfter.GetBoolean("IsCheckpointComplete"));
+        }
+
+        [TestMethod]
         public async Task RefusesToTruncateFromAnythingButAnEventRaised()
         {
             // Arrange

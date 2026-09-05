@@ -68,6 +68,28 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        public async Task ReturnsAnEmptyHistoryForAnUnknownInstance()
+        {
+            // Arrange
+
+            var tableClient = new Mock<ITableClient>();
+
+            tableClient
+                .Setup(c => c.GetEntityAsync("HubInstances", "no-such-instance", string.Empty))
+                .ReturnsAsync((TableEntity)null);
+
+            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = tableClient.Object;
+
+            // Act
+
+            var history = await OrchestrationHistory.GetHistoryDirectlyFromTable(null, "SomeConnString", "Hub", "no-such-instance");
+
+            // Assert
+
+            Assert.AreEqual(0, history.Count());
+        }
+
+        [TestMethod]
         public async Task HistoryEventsCarryTheSequenceNumberOfTheirSchedulingRow()
         {
             // Arrange

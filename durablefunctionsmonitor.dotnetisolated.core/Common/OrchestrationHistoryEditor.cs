@@ -49,7 +49,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var tableClient = TableClient.GetTableClient(connEnvVariableName);
 
             var instanceRow = await LoadInstanceRowAsync(tableClient, hubName, instanceId);
-            var row = await LoadHistoryRowAsync(tableClient, hubName, instanceId, sequenceNumber, instanceRow.GetString(ExecutionIdColumn));
+            var row = await LoadHistoryRowAsync(tableClient, hubName, instanceId, sequenceNumber, instanceRow.GetString(ExecutionIdColumn) ?? string.Empty);
 
             return await ReadInputAsync(connEnvVariableName, hubName, row);
         }
@@ -66,7 +66,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var tableClient = TableClient.GetTableClient(connEnvVariableName);
 
             var instanceRow = await LoadInstanceRowAsync(tableClient, hubName, instanceId);
-            var row = await LoadHistoryRowAsync(tableClient, hubName, instanceId, sequenceNumber, instanceRow.GetString(ExecutionIdColumn));
+            var row = await LoadHistoryRowAsync(tableClient, hubName, instanceId, sequenceNumber, instanceRow.GetString(ExecutionIdColumn) ?? string.Empty);
 
             string eventType = row.GetString(EventTypeColumn);
             if (eventType != HistoryEventTypes.ExecutionStarted && eventType != HistoryEventTypes.EventRaised)
@@ -107,7 +107,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string historyTable = HistoryTable(hubName);
 
             var instanceRow = await LoadInstanceRowAsync(tableClient, hubName, instanceId);
-            string executionId = instanceRow.GetString(ExecutionIdColumn);
+            string executionId = instanceRow.GetString(ExecutionIdColumn) ?? string.Empty;
 
             var targetRow = await LoadHistoryRowAsync(tableClient, hubName, instanceId, fromSequenceNumber, executionId);
             string targetType = targetRow.GetString(EventTypeColumn);
@@ -132,7 +132,23 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string filter = Azure.Data.Tables.TableClient.CreateQueryFilter(
                 $"PartitionKey eq {instanceId} and RowKey ge {ToRowKey(cutPoint)} and RowKey ne {SentinelRowKey} and ExecutionId eq {executionId}");
 
-            var rowsToDelete = (await tableClient.GetAllAsync(historyTable, filter)).ToList();
+            // Highest key first: the target row is deleted last, so an interrupted run leaves a contiguous prefix that
+            // still contains it, and the very same request can be retried.
+            var rowsToDelete = (await tableClient.GetAllAsync(historyTable, filter))
+                .OrderByDescending(r => r.RowKey, StringComparer.Ordinal)
+                .ToList();
+
+            await ThrowIfKeptWorkIsUnfinishedAsync(tableClient, historyTable, instanceId, executionId, cutPoint, fromSequenceNumber);
+
+            // Nothing has been changed up to here. The first write is a conditional one on the Instances row: if the row
+            // changed since it was read, someone else is working on this instance (a rewind, a restart) and we stop
+            // before touching the history. The re-read gives the ETag the reopen at the end needs.
+            instanceRow["LastUpdatedTime"] = DateTimeOffset.UtcNow;
+            await ReplaceOrConflictAsync(tableClient, InstancesTable(hubName), instanceRow, $"instance {instanceId}");
+            instanceRow = await LoadInstanceRowAsync(tableClient, hubName, instanceId);
+
+            await TouchSentinelAsync(tableClient, historyTable, instanceId);
+
             var blobNames = rowsToDelete.SelectMany(GetBlobNames).ToList();
 
             await tableClient.DeleteEntitiesAsync(historyTable, rowsToDelete);
@@ -179,6 +195,54 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
         }
 
+        private static readonly string[] SchedulingEventTypes = { "TaskScheduled", "SubOrchestrationInstanceCreated" };
+        private static readonly string[] CompletionEventTypes = { "TaskCompleted", "TaskFailed", "SubOrchestrationInstanceCompleted", "SubOrchestrationInstanceFailed" };
+
+        // Activities and sub-orchestrations scheduled before the cut point must have completed before it as well.
+        // Otherwise the orchestrator would replay them as still pending and wait for completions that were consumed
+        // (or discarded) long ago, and never arrive again. Timers are exempt: a timer the orchestrator no longer
+        // awaits can fire or not without consequence.
+        private static async Task ThrowIfKeptWorkIsUnfinishedAsync(ITableClient tableClient, string historyTable, string instanceId, string executionId, long cutPoint, long targetSequenceNumber)
+        {
+            string keptFilter = Azure.Data.Tables.TableClient.CreateQueryFilter(
+                $"PartitionKey eq {instanceId} and RowKey lt {ToRowKey(cutPoint)} and ExecutionId eq {executionId}");
+
+            var keptRows = (await tableClient.GetAllAsync(historyTable, keptFilter)).ToList();
+
+            var completedIds = keptRows
+                .Where(r => CompletionEventTypes.Contains(r.GetString(EventTypeColumn)))
+                .Select(r => r.GetInt32("TaskScheduledId"))
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .ToHashSet();
+
+            var unfinished = keptRows
+                .Where(r => SchedulingEventTypes.Contains(r.GetString(EventTypeColumn)))
+                .Where(r => !completedIds.Contains(r.GetInt32("EventId") ?? -1))
+                .Select(r => $"{r.GetString(EventTypeColumn)} '{r.GetString("Name")}' (id {r.GetInt32("EventId")})")
+                .ToList();
+
+            if (unfinished.Count > 0)
+            {
+                throw new DfmConflictException(
+                    $"Event {targetSequenceNumber} arrived while work scheduled before it was still running: {string.Join(", ", unfinished)}. " +
+                    "Replaying from this event would leave the orchestrator waiting for completions that will never be delivered again. " +
+                    "Use update-input-and-rewind (for a failed instance) or restart-in-place instead.");
+            }
+        }
+
+        // The framework checkpoints with If-Match on the sentinel row. Writing it back unchanged bumps its ETag, so a
+        // worker that still holds this instance's session fails its next checkpoint as split-brain, instead of writing
+        // over the edited history.
+        private static async Task TouchSentinelAsync(ITableClient tableClient, string historyTable, string instanceId)
+        {
+            var sentinel = await tableClient.GetEntityAsync(historyTable, instanceId, SentinelRowKey);
+            if (sentinel != null)
+            {
+                await ReplaceOrConflictAsync(tableClient, historyTable, sentinel, $"history of instance {instanceId}");
+            }
+        }
+
         private static async Task<TableEntity> LoadInstanceRowAsync(ITableClient tableClient, string hubName, string instanceId)
         {
             var row = await tableClient.GetEntityAsync(InstancesTable(hubName), instanceId, string.Empty);
@@ -203,7 +267,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             var row = await tableClient.GetEntityAsync(HistoryTable(hubName), instanceId, ToRowKey(sequenceNumber));
 
-            return row?.GetString(ExecutionIdColumn) == executionId ? row : null;
+            return row != null && (row.GetString(ExecutionIdColumn) ?? string.Empty) == executionId ? row : null;
         }
 
         private static Task<string> ReadInputAsync(string connEnvVariableName, string hubName, TableEntity row)

@@ -18,9 +18,16 @@ namespace DurableFunctionsMonitor.DotNetIsolated
     /// Operations on an instance's input-bearing history events (ExecutionStarted and EventRaised): listing them
     /// together with what can be done to each, restarting a failed instance in place with an edited initial input,
     /// editing the last event's input and rewinding, and replaying everything after the last event.
+    ///
+    /// The write operations live two segments below the instance ('.../input-events/replay') on purpose. The Functions
+    /// host resolves HTTP routes first-match in function-name order, not by literal precedence, so a single-segment
+    /// action would be swallowed by DfmPostOrchestrationFunction's 'orchestrations('{instanceId}')/{action?}' route.
+    /// RouteTests guards this for every route in the assembly.
     /// </summary>
     public class InputEvents : DfmFunctionBase
     {
+        private const string InputEventsRoute = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/input-events";
+
         public InputEvents(DfmSettings dfmSettings, DfmExtensionPoints extensionPoints, ILoggerFactory loggerFactory) : base(dfmSettings, extensionPoints)
         {
             this._logger = loggerFactory.CreateLogger<InputEvents>();
@@ -31,7 +38,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         [Function(nameof(DfmGetInputEventsFunction))]
         [OperationKind(Kind = OperationKind.Read)]
         public Task<HttpResponseData> DfmGetInputEventsFunction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/input-events")] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = InputEventsRoute)] HttpRequestData req,
             [DurableClient(TaskHub = Globals.HubNameRouteParamName)] DurableTaskClient durableClient,
             string connName,
             string hubName,
@@ -39,12 +46,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             return this.ExecuteAsync(req, async () =>
             {
-                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, loadParent: true);
+                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, ParentLookup.BestEffort);
                 var result = this.ComputeEligibility(instance);
 
                 foreach (var evt in result.Events)
                 {
-                    evt.Input = ToJToken(await this.ReadEventInputAsync(instance, evt));
+                    evt.Input = ToJToken(await this.ReadEventInputAsync(instance, evt, failClosed: false));
                 }
 
                 return await req.ReturnJson(result);
@@ -53,12 +60,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         // Purges a failed instance and re-creates it under the same instanceId, with the same or an edited input.
         // Only for instances that have not received external events.
-        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/restart-in-place
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/input-events/restart-in-place
         // Body: { "input": <any JSON value, optional> }
         [Function(nameof(DfmRestartInPlaceFunction))]
         [OperationKind(Kind = OperationKind.Dangerous)]
         public Task<HttpResponseData> DfmRestartInPlaceFunction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/" + InputEventOperations.RestartInPlace)] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = InputEventsRoute + "/" + InputEventOperations.RestartInPlace)] HttpRequestData req,
             [DurableClient(TaskHub = Globals.HubNameRouteParamName)] DurableTaskClient durableClient,
             string connName,
             string hubName,
@@ -69,7 +76,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 var body = await ReadBodyAsync(req);
                 bool hasInput = body.TryGetPropertyValue("input", out var editedInput);
 
-                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, loadParent: true);
+                // A sub-orchestration must never be re-created as a top-level instance, so an unknown parent is a refusal here
+                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, ParentLookup.Required);
                 var eligibility = this.ComputeEligibility(instance);
 
                 var target = eligibility.Events.FirstOrDefault(e => e.EventType == HistoryEventTypes.ExecutionStarted)
@@ -114,12 +122,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         // Replaces the input of the last input-bearing event of a failed instance, then rewinds it.
         // Only the failed steps run again, now seeing the edited input.
-        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/update-input-and-rewind
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/input-events/update-input-and-rewind
         // Body: { "sequenceNumber": 27, "input": <any JSON value>, "reason": "optional" }
         [Function(nameof(DfmUpdateInputAndRewindFunction))]
         [OperationKind(Kind = OperationKind.Write)]
         public Task<HttpResponseData> DfmUpdateInputAndRewindFunction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/" + InputEventOperations.UpdateInputAndRewind)] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = InputEventsRoute + "/" + InputEventOperations.UpdateInputAndRewind)] HttpRequestData req,
             [DurableClient(TaskHub = Globals.HubNameRouteParamName)] DurableTaskClient durableClient,
             string connName,
             string hubName,
@@ -141,7 +149,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     throw new DfmNotSupportedException("Editing history events is not supported for this storage provider");
                 }
 
-                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, loadParent: false);
+                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, ParentLookup.Skip);
                 var target = FindEvent(this.ComputeEligibility(instance), sequenceNumber);
 
                 EnsureAllowed(target, InputEventOperations.UpdateInputAndRewind);
@@ -173,12 +181,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         // Deletes the history from the last EventRaised event onward, reopens the instance and raises the event again
         // with the same or an edited input, so that everything after the event runs again.
-        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/replay
+        // POST /a/p/i/{connName}-{hubName}/orchestrations('<id>')/input-events/replay
         // Body: { "sequenceNumber": 27, "input": <any JSON value, optional>, "terminateIfRunning": false }
         [Function(nameof(DfmReplayFunction))]
         [OperationKind(Kind = OperationKind.Dangerous)]
         public Task<HttpResponseData> DfmReplayFunction(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = Globals.ApiRoutePrefix + "/orchestrations('{instanceId}')/" + InputEventOperations.Replay)] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = InputEventsRoute + "/" + InputEventOperations.Replay)] HttpRequestData req,
             [DurableClient(TaskHub = Globals.HubNameRouteParamName)] DurableTaskClient durableClient,
             string connName,
             string hubName,
@@ -196,13 +204,13 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     throw new DfmNotSupportedException("Truncating history is not supported for this storage provider");
                 }
 
-                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, loadParent: false);
+                var instance = await this.LoadAsync(durableClient, connName, hubName, instanceId, ParentLookup.Skip);
                 var target = FindEvent(this.ComputeEligibility(instance), sequenceNumber);
 
                 var operation = EnsureAllowed(target, InputEventOperations.Replay);
 
-                // Captured before the history is touched
-                var input = hasInput ? editedInput : ParseStoredPayload(await this.ReadEventInputAsync(instance, target));
+                // Captured before the history is touched, and only if it can actually be read: the truncation deletes the stored payload
+                var input = hasInput ? editedInput : ParseStoredPayload(await this.ReadEventInputAsync(instance, target, failClosed: true));
 
                 if (operation.RequiresTerminate == true)
                 {
@@ -260,7 +268,17 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             public string ParentInstanceId { get; init; }
         }
 
-        private async Task<InstanceContext> LoadAsync(DurableTaskClient durableClient, string connName, string hubName, string instanceId, bool loadParent)
+        // Whether, and how strictly, to find out if the instance is a sub-orchestration
+        private enum ParentLookup
+        {
+            Skip,
+            // A failed lookup is logged and treated as 'no parent'
+            BestEffort,
+            // A failed lookup fails the operation
+            Required
+        }
+
+        private async Task<InstanceContext> LoadAsync(DurableTaskClient durableClient, string connName, string hubName, string instanceId, ParentLookup parentLookup)
         {
             if (ExpandedOrchestrationStatus.TryGetEntityInstanceId(instanceId, out _))
             {
@@ -275,15 +293,19 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var history = (await this.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connEnvVariableName, hubName, instanceId)).ToList();
 
             string parentInstanceId = null;
-            if (loadParent)
+            if (parentLookup != ParentLookup.Skip)
             {
                 try
                 {
                     parentInstanceId = await this.ExtensionPoints.GetParentInstanceIdRoutine(durableClient, connEnvVariableName, hubName, instanceId);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (parentLookup == ParentLookup.BestEffort)
                 {
                     this._logger.LogWarning(ex, "Failed to get parent instanceId");
+                }
+                catch (Exception ex)
+                {
+                    throw new DfmStorageException($"Could not determine whether instance {instanceId} is a sub-orchestration: {ex.Message}. Nothing was changed.", ex);
                 }
             }
 
@@ -311,8 +333,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 canTruncateHistory: this.ExtensionPoints.TruncateHistoryRoutine != null);
         }
 
-        // The event's input, resolved through the storage provider when it keeps large payloads outside the history record
-        private async Task<string> ReadEventInputAsync(InstanceContext instance, InputEventInfo evt)
+        // The event's input, resolved through the storage provider when it keeps large payloads outside the history record.
+        // A destructive caller passes failClosed: it is about to delete the stored payload, so a failed read has to stop it
+        // instead of degrading into the empty marker the history record holds for an offloaded payload.
+        private async Task<string> ReadEventInputAsync(InstanceContext instance, InputEventInfo evt, bool failClosed)
         {
             if (evt.SequenceNumber.HasValue && this.ExtensionPoints.GetHistoryEventInputRoutine != null)
             {
@@ -320,13 +344,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 {
                     return await this.ExtensionPoints.GetHistoryEventInputRoutine(instance.DurableClient, instance.ConnEnvVariableName, instance.HubName, instance.InstanceId, evt.SequenceNumber.Value);
                 }
-                catch (DfmNotFoundException)
+                catch (Exception ex) when (ex is not DfmNotFoundException)
                 {
-                    throw;
-                }
-                catch (Exception ex)
-                {
+                    if (failClosed)
+                    {
+                        throw new DfmStorageException($"The stored input of event {evt.SequenceNumber} could not be read: {ex.Message}. Nothing was changed.", ex);
+                    }
+
                     this._logger.LogWarning(ex, "Failed to read the input of event {SequenceNumber} of instance {InstanceId} from storage, falling back to the history record", evt.SequenceNumber, instance.InstanceId);
+                    evt.InputError = $"The stored input could not be read ({ex.Message}). This is what the history record itself holds.";
                 }
             }
 
@@ -336,7 +362,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         // The initial input as the orchestrator saw it: the ExecutionStarted record, then the instance's own input field
         private async Task<string> ReadInitialInputAsync(InstanceContext instance, InputEventInfo executionStarted)
         {
-            string input = await this.ReadEventInputAsync(instance, executionStarted);
+            string input = await this.ReadEventInputAsync(instance, executionStarted, failClosed: true);
             if (input != null)
             {
                 return input;
@@ -367,9 +393,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 await durableClient.TerminateInstanceAsync(instanceId, "Terminated by Durable Functions Monitor before a replay");
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                throw new DfmConflictException($"Instance {instanceId} could not be terminated: {ex.Message}");
+                // Nothing has been changed yet. Depending on the operation, the client reports a refusal by the host
+                // as an InvalidOperationException or as a raw RpcException, so no narrower filter is possible.
+                throw new DfmConflictException($"Instance {instanceId} could not be terminated: {ex.Message}. Nothing was changed.");
             }
 
             using (var cts = new CancellationTokenSource(TerminateTimeout))
@@ -428,6 +456,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             catch (DfmPayloadTooLargeException ex)
             {
                 return await req.ReturnStatus(HttpStatusCode.RequestEntityTooLarge, ex.Message);
+            }
+            catch (DfmStorageException ex)
+            {
+                this._logger.LogError(ex, "Storage could not be read");
+                return await req.ReturnStatus(HttpStatusCode.InternalServerError, ex.Message);
             }
         }
 
