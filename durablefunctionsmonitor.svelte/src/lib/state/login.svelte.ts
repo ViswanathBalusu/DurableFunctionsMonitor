@@ -157,6 +157,14 @@ export class Login {
     }
   }
 
+  /**
+   * The Sign in button. `login()` already redirects a browser with no account; this is the way back
+   * for the case where that redirect came back without one - and the button the mockup draws.
+   */
+  async signIn(): Promise<void> {
+    await this.#aad?.signIn();
+  }
+
   /** The headers every call carries: the anti-forgery one is the client's, the bearer is ours. */
   async getAuthHeaders(): Promise<Record<string, string>> {
     return this.#aad ? await this.#aad.authorizationHeaders() : {};

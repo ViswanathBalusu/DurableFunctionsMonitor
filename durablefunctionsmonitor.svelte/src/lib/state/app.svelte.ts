@@ -51,6 +51,9 @@ export class AppState {
   /** The error of the last failed `/about`, so the shell can say why it is empty. */
   aboutError = $state<string | null>(null);
 
+  /** Where the Authorization header comes from once the login state has one (E2-S7). */
+  #authHeaders: () => Record<string, string> | Promise<Record<string, string>> = () => ({});
+
   /** How many requests are in flight; the top-bar progress bar shows while this is above zero. */
   progress = $state(0);
 
@@ -70,9 +73,9 @@ export class AppState {
         ? new VsCodeBackendClient(this.host.vsCodeApi as ConstructorParameters<typeof VsCodeBackendClient>[0])
         : new HttpBackendClient(
             () => this.hub,
-            // MSAL fills this in from E2; until then every call goes out unauthenticated, which is
-            // what a local host with DFM_NONCE expects.
-            () => ({}),
+            // Empty until the login state wires itself in (E2-S7), which is what a local host with
+            // DFM_NONCE expects anyway: no Authorization header at all.
+            () => this.#authHeaders(),
           ));
 
     this.endpoints = options.endpoints ?? createEndpoints(this.client);
@@ -107,6 +110,11 @@ export class AppState {
 
   get busy(): boolean {
     return this.progress > 0;
+  }
+
+  /** Wired by the browser's login state, so every request carries its bearer token. */
+  setAuthHeaders(provider: () => Record<string, string> | Promise<Record<string, string>>): void {
+    this.#authHeaders = provider;
   }
 
   /** The shared time range, read from the current route's query (contracts §4). */
