@@ -47,19 +47,44 @@ jobs:
     - name: create ArtifactStagingDirectory folder
       run: mkdir drop
 
-    # Building and copying React
+    # Building, checking and testing the Svelte UI
 
-    - name: npm install durablefunctionsmonitor.react
-      run: npm install -legacy-peer-deps
-      working-directory: durablefunctionsmonitor.react
-    - name: npm build durablefunctionsmonitor.react
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: durablefunctionsmonitor.svelte/package-lock.json
+
+    - name: npm ci durablefunctionsmonitor.svelte
+      run: npm ci
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: npm run lint
+      run: npm run lint
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: npm run check
+      run: npm run check
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: npm test
+      run: npm test
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: npm run build
       run: npm run build
-      working-directory: durablefunctionsmonitor.react
+      working-directory: durablefunctionsmonitor.svelte
+
+    # The host serves these files and fills seven placeholder tags in index.html; the contract that
+    # keeps that working is checked here rather than discovered at runtime (00-shared-contracts.md §2)
+    - name: verify the build output contract
+      run: node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build
 
     - name: copy statics to durablefunctionsmonitor.dotnetisolated/DfmStatics
       run: |
         rm -rf durablefunctionsmonitor.dotnetisolated/DfmStatics
-        cp -r durablefunctionsmonitor.react/build durablefunctionsmonitor.dotnetisolated/DfmStatics
+        cp -r durablefunctionsmonitor.svelte/build durablefunctionsmonitor.dotnetisolated/DfmStatics
 
     # Building and testing .NET
 
@@ -87,6 +112,33 @@ jobs:
 
     - name: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests
       run: dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests/*.csproj -c Release
+
+    # End to end, against the standalone host on the Azurite service container above. The Playwright
+    # webServer entry starts the host itself (scripts/harness/start-host.mjs), which needs the Core
+    # Tools on PATH and serves the statics copied in above.
+
+    - name: install the Azure Functions Core Tools
+      run: npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
+    - name: install the Playwright browser
+      run: npx playwright install --with-deps chromium
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: seed the end-to-end task hub
+      run: npm run seed
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: npx playwright test
+      run: npx playwright test
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: upload the Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: durablefunctionsmonitor.svelte/playwright-report
+        if-no-files-found: warn
 
     - name: copy durablefunctionsmonitor.dotnetisolated to ArtifactStagingDirectory
       run: cp -r durablefunctionsmonitor.dotnetisolated drop/durablefunctionsmonitor.dotnetisolated

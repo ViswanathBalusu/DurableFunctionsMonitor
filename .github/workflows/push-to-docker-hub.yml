@@ -35,19 +35,30 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    # Building and copying React
+    # Building the Svelte UI
 
-    - name: npm install durablefunctionsmonitor.react
-      run: npm install -legacy-peer-deps
-      working-directory: durablefunctionsmonitor.react
-    - name: npm build durablefunctionsmonitor.react
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: durablefunctionsmonitor.svelte/package-lock.json
+
+    - name: npm ci durablefunctionsmonitor.svelte
+      run: npm ci
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: npm run build
       run: npm run build
-      working-directory: durablefunctionsmonitor.react
+      working-directory: durablefunctionsmonitor.svelte
+
+    - name: verify the build output contract
+      run: node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build
 
     - name: copy statics to durablefunctionsmonitor.dotnetisolated/DfmStatics
       run: |
         rm -rf durablefunctionsmonitor.dotnetisolated/DfmStatics
-        cp -r durablefunctionsmonitor.react/build durablefunctionsmonitor.dotnetisolated/DfmStatics
+        cp -r durablefunctionsmonitor.svelte/build durablefunctionsmonitor.dotnetisolated/DfmStatics
 
     # Building and testing .NET
 

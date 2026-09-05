@@ -308,3 +308,12 @@ Both harness scripts run unchanged on this OS; nothing needed fixing. What was c
 - `/about` then reports `templates.functionMapAvailable: true` and `templates.functionCount` = the number of keys under `functions`.
 
 The same folder holds `tab-templates/` (Liquid tab templates) and `custom-meta-tag.htm`, read the same way.
+
+### E3-S3-T1 — CI on the Svelte build (2026-09-05)
+
+`build.yml` and `push-to-docker-hub.yml` no longer touch `durablefunctionsmonitor.react`. `build.yml` now sets up Node 22 with the npm cache keyed on `durablefunctionsmonitor.svelte/package-lock.json`, runs `npm ci`, `lint`, `check`, `test`, `build`, then `verify-build-contract.mjs` before copying `build/` into `durablefunctionsmonitor.dotnetisolated/DfmStatics`. After the .NET tests and before `dotnet publish` it installs the Core Tools and the Playwright browser, seeds the hub and runs `npx playwright test` against the Azurite service container, uploading `playwright-report` with `if: always()`. `push-to-docker-hub.yml` gets the same build-and-copy (no e2e: the images only need the statics).
+
+**Unverified acceptance.** "A PR run is green end to end" cannot be checked from here - no workflow was executed. Both files parse as YAML and every path, working directory and script name in them exists in the repo, but the first PR run is what proves it. Two things to watch on that run:
+
+- `npx playwright test` starts the host itself through `webServer` (`reuseExistingServer: !CI`), which runs `dotnet build` in Debug. It needs `func` on PATH - the step before it installs the Core Tools globally - and it writes `local.settings.json` if the repo has none, which CI will not.
+- The VS Code extension step still runs its own `npm install -g azure-functions-core-tools@4`; it is now redundant but harmless, and pruning it belongs to E12.
