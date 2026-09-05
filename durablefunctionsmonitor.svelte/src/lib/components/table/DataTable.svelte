@@ -12,6 +12,11 @@
     rowKey: (row: Row) => string;
     /** The runtime status that colours the spine (`data-st`). */
     rowStatus?: (row: Row) => string | undefined;
+    /**
+     * One colour for every spine, for a table whose rows have no runtime status of their own -
+     * the Functions table paints them `var(--node-orchestrator)` (ScreenFunctions.dc.html L30).
+     */
+    spineColor?: string;
     selectable?: boolean;
     /** Bindable set of selected row keys. */
     selected?: Set<string>;
@@ -48,6 +53,7 @@
     rows,
     rowKey,
     rowStatus,
+    spineColor,
     selectable = false,
     selected = $bindable(new Set<string>()),
     hiddenColumns = $bindable([]),
@@ -230,7 +236,7 @@
               ></button>
             </td>
           {/if}
-          <td class="spine"></td>
+          <td class="spine" style={spineColor ? `background:${spineColor}` : undefined}></td>
           {#each shown as column (column.id)}
             <td
               class={cn(column.mono ? 'mono' : '', column.trunc ? 'trunc' : '')}
