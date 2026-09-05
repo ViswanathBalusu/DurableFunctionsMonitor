@@ -12,6 +12,7 @@
   import SequenceTab from '$lib/instance/SequenceTab.svelte';
   import SummaryColumn from '$lib/instance/SummaryColumn.svelte';
   import TimelineTab from '$lib/instance/TimelineTab.svelte';
+  import WhereTheTimeWent from '$lib/instance/WhereTheTimeWent.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
   import { outcomeAction, type Recovery } from '$lib/instance/input-outcomes';
   import StartNewInstanceDialog from '$lib/instances/StartNewInstanceDialog.svelte';
@@ -109,7 +110,14 @@
   <WorkspaceTabs {instance} inputsCount={inputs.loaded ? inputs.cards.length : null} />
 
   <div class="ws" data-tab={tab}>
-    <SummaryColumn {instance} />
+    <SummaryColumn {instance}>
+      {#snippet timeSpent()}
+        <!-- Only once /spans has said where it went: a panel of em dashes is worse than no panel -->
+        {#if instance.spans.totals}
+          <WhereTheTimeWent totals={instance.spans.totals} />
+        {/if}
+      {/snippet}
+    </SummaryColumn>
 
     <div class="tabbody" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
       {#if tab === 'summary'}

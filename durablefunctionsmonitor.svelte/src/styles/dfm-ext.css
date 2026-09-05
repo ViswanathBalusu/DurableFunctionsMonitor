@@ -74,3 +74,15 @@
 .panels.single {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* The swatches of "Where the time went" (E8-S3-T1, ScreenInstance.dc.html L60-L63). dfm-ui.css
+   fills `.wbar i.wait` and `.wbar i.orch` but leaves `.swq` with a border and nothing inside, and a
+   legend whose squares do not look like the bar they explain explains nothing. The hatch is the
+   `.wbar` one at a tighter pitch, which is what fits in a 12 px square. */
+.swq.wait {
+  background-image: repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 4px);
+}
+
+.swq.orch {
+  background: var(--ink);
+}
