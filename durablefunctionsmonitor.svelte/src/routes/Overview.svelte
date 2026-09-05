@@ -16,6 +16,7 @@
   } from '$lib/filters/time-range';
   import { fmtInt } from '$lib/format/number';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
+  import StatTiles from '$lib/overview/StatTiles.svelte';
   import { NO_STATS_TEXT, NO_STATS_TITLE, Overview } from '$lib/state/overview.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
@@ -152,6 +153,8 @@
           <Button variant="primary" onclick={startNewInstance}>Start new instance</Button>
         {/snippet}
       </EmptyState>
+    {:else if overview.stats}
+      <StatTiles stats={overview.stats} />
     {/if}
   {/if}
 </Page>
