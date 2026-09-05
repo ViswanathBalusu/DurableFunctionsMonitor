@@ -18,6 +18,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "seed": "node tests/e2e/seed/seed-hub.mjs",
+    "host": "node ../scripts/harness/start-host.mjs",
+    "test:e2e:local": "npm run seed && playwright test",
     "verify": "node ../scripts/harness/verify-build-contract.mjs build"
   },
   "dependencies": {

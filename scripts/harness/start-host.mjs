@@ -7,7 +7,27 @@
 //   node scripts/harness/start-host.mjs [--port=7072] [--hub=DurableFunctionsHub] [--no-build] [--project=<folder>]
 //
 // Environment passed through: DFM_DANGEROUS_OPERATIONS_ENABLED, DFM_AUDIT_ENABLED, DFM_INGRESS_ROUTE_PREFIX,
-// DFM_STATS_CAP, DFM_CUSTOM_TEMPLATES_FOLDER (overrides what local.settings.json says).
+// DFM_STATS_CAP. Verified on Windows 11 (2026-09-05): process env wins over local.settings.json, so a
+// second host on another port needs no settings file of its own -
+//
+//   DFM_DANGEROUS_OPERATIONS_ENABLED=false node scripts/harness/start-host.mjs --port=7073 --no-build
+//
+// answers /about with dangerousOperations false while the host on 7072 still answers true. Pass
+// --no-build for the second host: two builds of the same project at once fight over the output dll.
+//
+// Custom templates and function maps: the standalone host has no environment variable for
+// DfmSettings.CustomTemplatesFolderName (it is set in code, and Program.cs sets only the user agent),
+// so there is nothing for a --custom-templates flag to set. Seed a function map as a blob instead -
+// that is the path GetFunctionMapsFromStorageAsync reads, and it needs no host restart:
+//
+//   container: durable-functions-monitor
+//   blob:      function-maps/dfm-func-map.<TaskHubName>.json   (or dfm-func-map.json for every hub)
+//   content:   { "functions": { "<name>": { ... } }, "proxies": { ... } }
+//
+// with, against Azurite:
+//   az storage blob upload --connection-string "UseDevelopmentStorage=true" //     -c durable-functions-monitor -n function-maps/dfm-func-map.DurableFunctionsHub.json -f map.json
+//
+// /about then reports templates.functionMapAvailable true and templates.functionCount.
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
