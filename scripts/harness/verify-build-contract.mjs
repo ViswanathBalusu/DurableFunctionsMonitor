@@ -84,8 +84,10 @@ if (!fs.existsSync(indexPath)) {
 
   const links = [...html.matchAll(/\s(?:href|src)="([^"]+)"/g)].map((m) => m[1]);
   for (const l of links) {
-    if (/^https?:\/\//.test(l)) continue; // fonts, allowed by the default CSP
-    if (!l.startsWith('/')) bad(`asset link is not root-absolute: ${l}`);
+    // Nothing is fetched from another host any more (E12-S3-T1): the fonts are in static/media, and
+    // a webview CSP that forbids the font host must not be able to change how the app looks
+    if (/^[a-z]+:\/\//.test(l)) bad(`index.html links to an external host: ${l}`);
+    else if (!l.startsWith('/')) bad(`asset link is not root-absolute: ${l}`);
     if (l.startsWith('/static/') && !/^[0-9a-z./]+$/.test(l.slice(1))) bad(`asset link has characters the VS Code rewrite cannot handle: ${l}`);
     if (l.startsWith('/static/') && !fs.existsSync(path.join(dir, l.slice(1)))) bad(`asset link points to a missing file: ${l}`);
   }
@@ -97,14 +99,23 @@ if (!fs.existsSync(indexPath)) {
   if (/rel="modulepreload"/.test(html)) bad('modulepreload links found: code splitting must be off (inlineDynamicImports)');
 }
 
-// 5. CSS url() references must be relative (VS Code only rewrites index.html)
+// 5. Every CSS url() is relative and lands on a file that is in the build (VS Code only rewrites
+// index.html, and a font nobody shipped is a font the app silently falls back from)
 for (const f of css) {
   const text = fs.readFileSync(path.join(dir, f), 'utf8');
-  const urls = [...text.matchAll(/url\(\s*['"]?([^'")]+)['"]?\s*\)/g)].map((m) => m[1]);
-  const absolute = urls.filter((u) => u.startsWith('/') && !u.startsWith('//'));
-  if (absolute.length) bad(`CSS references root-absolute urls (VS Code cannot rewrite them): ${absolute.slice(0, 3).join(', ')}`);
-  else ok(`CSS urls are relative or external (${urls.length} url() references)`);
+  const urls = [...text.matchAll(/url\(\s*['"]?([^'")]+)['"]?\s*\)/g)].map((m) => m[1]).filter((u) => !u.startsWith('data:') && !u.startsWith('#'));
+  const absolute = urls.filter((u) => u.startsWith('/') || /^[a-z]+:\/\//.test(u));
+  const missing = urls.filter((u) => !absolute.includes(u) && !fs.existsSync(path.resolve(path.dirname(path.join(dir, f)), u.split('?')[0])));
+  if (absolute.length) bad(`CSS references urls that are not relative (VS Code cannot rewrite them, a CSP can block them): ${absolute.slice(0, 3).join(', ')}`);
+  else ok(`CSS urls are relative (${urls.length} url() references)`);
+  if (missing.length) bad(`CSS references files that are not in the build: ${missing.slice(0, 3).join(', ')}`);
 }
+
+// 6. The fonts themselves are here (E12-S3-T1): woff2 in static/media, nothing else needed
+const media = nonMap.filter((f) => f.startsWith('static/media/'));
+const fonts = media.filter((f) => f.endsWith('.woff2'));
+if (!fonts.length) bad('no woff2 font in static/media: the fonts must be self-hosted, not fetched from a font host');
+else ok(`${fonts.length} self-hosted font files in static/media`);
 
 if (problems.length) {
   console.error('\nBuild contract violations:');

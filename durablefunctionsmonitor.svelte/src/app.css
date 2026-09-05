@@ -2,6 +2,14 @@
    follow win over preflight at equal specificity - which is what lets dfm-ui.css state
    `button { border: 0; background: none }` and have it stick. The Svelte Flow base stylesheet comes
    before them, so the `.svelte-flow` bridge in the tokens file and in dfm-ext.css overrides it. */
+/* The two families the design system asks for, from node_modules rather than from Google: the app
+   runs inside a VS Code webview and behind CSPs that allow neither the stylesheet host nor the font
+   host, and an offline install must look the same as an online one. Fontsource names the variable
+   faces `Archivo Variable` and `JetBrains Mono Variable`, which is the second family of `--font-sans`
+   and `--font-mono` (dfm-tokens.css L934-L935) - so nothing in the frozen stylesheets changes.
+   `wdth.css` is the two-axis file: the display and condensed utilities set `wdth` themselves. */
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/jetbrains-mono/index.css';
 @import './styles/dfm-tokens.css';
 @import '@xyflow/svelte/dist/style.css';
 @import './styles/dfm-ui.css';

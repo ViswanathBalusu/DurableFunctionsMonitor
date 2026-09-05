@@ -59,6 +59,13 @@ Accept:
 - [ ] No request to `fonts.googleapis.com` in the network tab; fonts render in the webview.
 Test: verify script + manual webview check noted in `notes/E12-release.md`.
 
+**Deviation, E12-S3-T1 (2026-09-05).** The verify script already had the "CSS urls are relative"
+rule; what it gained instead is stricter: `index.html` may no longer link to *any* external host (the
+font host was its one exemption), every `url()` in the CSS must resolve to a file that is in the
+build, and at least one woff2 must be in `static/media` - so a build that quietly loses the fonts
+fails rather than falling back to a system face. The webview half of the acceptance is **pending**
+for want of an interactive extension host; see `notes/E12-release.md` for what holds without one.
+
 #### E12-S3-T2 Accessibility and keyboard pass
 Files: touched components, `tests/e2e/a11y.spec.ts`
 Depends: E11
