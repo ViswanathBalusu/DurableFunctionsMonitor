@@ -64,9 +64,9 @@
       return;
     }
 
-    // Enter with the list closed (or nothing highlighted) applies what was typed; bits-ui handles
-    // Enter on a highlighted option itself, and closes the list when it does.
-    if (event.key === 'Enter' && !open) {
+    // Enter applies what was typed when there is nothing to choose instead: either the list is shut,
+    // or it is open with no suggestions in it. bits-ui handles Enter on a highlighted option itself.
+    if (event.key === 'Enter' && (!open || suggestions.length === 0)) {
       onEnter?.(value);
     }
   }

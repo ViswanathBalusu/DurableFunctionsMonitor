@@ -20,6 +20,7 @@
     readOnly = false,
     dangerous = false,
     hubNames = ['DurableFunctionsHub'],
+    suggestions = [],
   }: {
     path?: string;
     navCollapsed?: boolean;
@@ -29,6 +30,7 @@
     readOnly?: boolean;
     dangerous?: boolean;
     hubNames?: string[];
+    suggestions?: string[];
   } = $props();
 
   // Read once on purpose: the harness renders one URL per test, and the router reads location at
@@ -45,7 +47,10 @@
 
   const app = new AppState({
     client: {} as BackendClient,
-    endpoints: { taskHubNames: async () => hubNames } as Endpoints,
+    endpoints: {
+      taskHubNames: async () => hubNames,
+      idSuggestions: async () => suggestions,
+    } as unknown as Endpoints,
     router: new Router({ mode: 'history', routePrefix: '' }),
     prefs,
   });
@@ -62,6 +67,12 @@
 
   setContext(APP_CONTEXT_KEY, app);
 
+  let shell = $state<Shell | null>(null);
+
+  export function focusJump(): void {
+    shell?.focusJump();
+  }
+
   export function begin(): void {
     app.begin();
   }
@@ -71,4 +82,4 @@
   }
 </script>
 
-<Shell {failuresCount} />
+<Shell bind:this={shell} {failuresCount} />

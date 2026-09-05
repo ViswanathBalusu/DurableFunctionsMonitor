@@ -13,6 +13,13 @@
 
   let { failuresCount = 0 }: Props = $props();
 
+  let topBar = $state<TopBar | null>(null);
+
+  /** The keyboard map (E2-S5) focuses the instance jump through the shell. */
+  export function focusJump(): void {
+    topBar?.focusJump();
+  }
+
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 </script>
 
@@ -28,7 +35,7 @@
   <SideNav {failuresCount} />
 
   <div class="main">
-    <TopBar />
+    <TopBar bind:this={topBar} />
 
     {#if app.busy}
       <ProgressBar inline />

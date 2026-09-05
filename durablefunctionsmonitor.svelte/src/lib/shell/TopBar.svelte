@@ -7,8 +7,16 @@
   import { timeZoneLabel } from '$lib/format/time';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import HubSwitcher from './HubSwitcher.svelte';
+  import InstanceJump from './InstanceJump.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
+
+  let jump = $state<InstanceJump | null>(null);
+
+  /** The `/` shortcut reaches the jump field through here (contracts §13). */
+  export function focusJump(): void {
+    jump?.focus();
+  }
 
   /** The intervals of DFM App.dc.html L72; 0 is "Never". */
   const refreshOptions = [
@@ -45,6 +53,8 @@
   <span class="muted hide-m" aria-hidden="true">/</span>
 
   <HubSwitcher />
+
+  <InstanceJump bind:this={jump} />
 
   {#if app.readOnly}
     <Chip size="sm" title="/about does not list DurableFunctionsMonitor.ReadWrite" style="background:var(--muted)">
