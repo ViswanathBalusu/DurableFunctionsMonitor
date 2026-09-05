@@ -61,6 +61,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             result.Output = that.Output;
             result.CustomStatus = that.CustomStatus;
             result.Input = that.Input;
+            result.Tags = that.Tags;
 
             // Trying to get parent orchestrationId for this instance, if it is a subOrchestration
             try
