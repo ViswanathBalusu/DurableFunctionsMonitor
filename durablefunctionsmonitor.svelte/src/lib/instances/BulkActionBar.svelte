@@ -1,8 +1,8 @@
 <script lang="ts" module>
-  import type { BatchAction } from '$lib/api/types';
+  import type { BulkAction } from './bulk-defs';
 
   /** The six the bar offers, in the mockup's order. Dangerous operations are never bulk (design §3). */
-  export const BULK_BUTTONS: { action: BatchAction; label: string; destructive?: boolean }[] = [
+  export const BULK_BUTTONS: { action: BulkAction; label: string; destructive?: boolean }[] = [
     { action: 'terminate', label: 'Terminate' },
     { action: 'suspend', label: 'Suspend' },
     { action: 'resume', label: 'Resume' },
@@ -21,7 +21,7 @@
   interface Props {
     /** How many rows are selected; the bar is not drawn at all when nothing is. */
     count: number;
-    onAction: (action: BatchAction) => void;
+    onAction: (action: BulkAction) => void;
     onClear: () => void;
   }
 
