@@ -184,7 +184,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
-        public async Task ReturnsAnEmptySpanListForAnEntityInstance()
+        public async Task ReturnsBadRequestForAnEntityInstance()
         {
             // Arrange
 
@@ -196,23 +196,8 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             // Assert
 
-            // An entity has no orchestrator, no activities and no timers, so it has an empty timeline
-            // rather than an error: the peek panel and the Timeline tab open for entities too
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode);
-
-            var result = await ReadJsonAsync(response);
-
-            Assert.AreEqual(EntityId, result.Value<string>("instanceId"));
-            Assert.AreEqual(0, ((JArray)result["spans"]).Count);
-            Assert.AreEqual(0, result.Value<int>("historyRows"));
-            Assert.IsNull(result["historyBytes"].Value<long?>());
-            Assert.IsNull(result["executionId"].Value<string>());
-            Assert.IsNull(result["generation"].Value<int?>());
-            Assert.IsNull(result["totals"]["orchestratorMs"].Value<double?>());
-            Assert.AreEqual(0d, result["totals"].Value<double>("totalMs"));
-
-            // The instance itself was never looked up, and neither was storage
-            Assert.AreEqual(0, this._durableClient.Calls.Count);
+            // Plan B2-S3-T1: entity ids answer 400; entities have no orchestrator, activities or timers
+            Assert.AreEqual(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [TestMethod]

@@ -94,12 +94,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 var now = DateTimeOffset.UtcNow;
 
-                // A Durable Entity has no orchestrator, no activities and no timers, so it has no timeline.
-                // It answers with an empty, well-formed SpansResponse rather than an error, because the peek
-                // panel and the Timeline tab open for entities too and must not show a failed request.
+                // A Durable Entity has no orchestrator, no activities and no timers, so it has no timeline:
+                // the plan (B2-S3-T1) answers 400 for entity ids, and the UI never requests spans for an entity.
                 if (ExpandedOrchestrationStatus.TryGetEntityInstanceId(instanceId, out var _))
                 {
-                    return await req.ReturnJson(new SpansResponse { InstanceId = instanceId, Now = now });
+                    return await req.ReturnStatus(HttpStatusCode.BadRequest, $"Instance {instanceId} is a Durable Entity and has no spans");
                 }
 
                 // Cheap: no inputs/outputs needed, just the runtime status and enough to compute the etag
