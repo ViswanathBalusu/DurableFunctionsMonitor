@@ -49,6 +49,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
                 // Netherite has no XXXInstances table to scan either, so there are no Task Hub statistics:
                 // /stats answers 400 and /about reports capabilities.stats == false.
                 extPoints.GetStatsRoutine = null;
+
+                // And no way to find an instance's sub-orchestrations either: there is no Instances table
+                // to match generated child ids in and no parent column to filter by, so
+                // orchestrations('{id}')/children answers 400 and /about reports capabilities.children == false.
+                extPoints.GetChildrenRoutine = null;
             });
         }
 

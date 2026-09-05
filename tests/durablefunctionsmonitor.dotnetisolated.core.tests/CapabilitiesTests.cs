@@ -26,7 +26,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.IsTrue(capabilities.Stats); // B1-S2-T2 sets the Azure Storage default
             Assert.IsFalse(capabilities.Failures);
             Assert.IsTrue(capabilities.Spans);
-            Assert.IsFalse(capabilities.Children);
+            Assert.IsTrue(capabilities.Children); // B1-S3-T1 sets the Azure Storage default
             Assert.IsTrue(capabilities.Batch);
             Assert.IsFalse(capabilities.StorageHealth);
             Assert.IsFalse(capabilities.Audit);
@@ -66,7 +66,10 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             // grouped-SQL implementation; either way the capability is true for this provider).
             Assert.IsTrue(capabilities.Stats);
             Assert.IsFalse(capabilities.Failures);
-            Assert.IsFalse(capabilities.Children);
+
+            // Same for children: the Azure Storage default is inherited here and B1-S3-T1 replaces it
+            // with the ParentInstanceID query, which is the one that also finds explicitly named children.
+            Assert.IsTrue(capabilities.Children);
             Assert.IsFalse(capabilities.StorageHealth);
             Assert.IsTrue(capabilities.EpisodeMarkers); // MSSQL implements the routine (B2-S1-T2)
             Assert.IsFalse(capabilities.UpdateInput);
@@ -94,6 +97,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 GetEpisodeMarkersRoutine = null,
                 GetInstanceRowInfoRoutine = null,
                 GetStatsRoutine = null,
+                GetChildrenRoutine = null,
             };
 
             // Act

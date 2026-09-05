@@ -79,6 +79,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 extPoints.GetEpisodeMarkersRoutine = GetEpisodeMarkers;
                 extPoints.GetInstanceRowInfoRoutine = GetInstanceRowInfo;
                 extPoints.GetStatsRoutine = GetStats;
+                extPoints.GetChildrenRoutine = GetChildren;
             });
         }
 
@@ -433,6 +434,66 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Custom routine for listing the sub-orchestrations of an instance.
+        ///
+        /// dt.Instances carries the parent's id in its own column, so unlike Azure Storage (which has to
+        /// match the generated "{parent ExecutionId}:{taskId}" instance ids) this finds explicitly named
+        /// children too - hence Complete == true.
+        /// </summary>
+        public static async Task<ChildrenResult> GetChildren(DurableTaskClient durableClient, string connName, string hubName, string instanceId)
+        {
+            string sql =
+                $@"SELECT
+                    i.InstanceID as InstanceID,
+                    i.Name as Name,
+                    i.RuntimeStatus as RuntimeStatus,
+                    i.CreatedTime as CreatedTime,
+                    i.LastUpdatedTime as LastUpdatedTime
+                FROM
+                    [{SchemaName}].Instances i
+                WHERE
+                    i.ParentInstanceID = @OrchestrationInstanceId AND i.TaskHub = @TaskHub
+                ORDER BY
+                    i.CreatedTime";
+
+            var children = new List<ChildInstance>();
+
+            using (var conn = new SqlConnection(ConnString))
+            {
+                conn.Open();
+
+                using (var cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@OrchestrationInstanceId", instanceId);
+                    cmd.Parameters.AddWithValue("@TaskHub", hubName);
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            DateTimeOffset createdTime = ToUtcOrNull(reader["CreatedTime"]) ?? default;
+
+                            children.Add(new ChildInstance
+                            {
+                                InstanceId = ToStringOrNull(reader["InstanceID"]),
+                                Name = ToStringOrNull(reader["Name"]),
+
+                                // The PascalCase RuntimeStatus name, verbatim as the row spells it
+                                RuntimeStatus = ToStringOrNull(reader["RuntimeStatus"]),
+                                CreatedTime = createdTime,
+
+                                // A row is always written at least once, but an older schema might leave this empty
+                                LastUpdatedTime = ToUtcOrNull(reader["LastUpdatedTime"]) ?? createdTime
+                            });
+                        }
+                    }
+                }
+            }
+
+            return new ChildrenResult { Children = children, Complete = true };
         }
 
         /// <summary>

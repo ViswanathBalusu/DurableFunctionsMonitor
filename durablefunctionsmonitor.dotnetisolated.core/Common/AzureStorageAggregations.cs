@@ -143,6 +143,67 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         }
 
         /// <summary>
+        /// Lists the sub-orchestrations of an instance.
+        ///
+        /// DurableTask.Core names a sub-orchestration it was not given an explicit id for
+        /// "{parent's ExecutionId}:{taskId}", so every generated child of this instance sits in the
+        /// XXXInstances partition range ['{executionId}:', '{executionId};') - ';' is the character right
+        /// after ':' in ASCII, and Table Storage compares PartitionKeys ordinally, so that half-open range
+        /// is exactly the set of ids that start with "{executionId}:" and nothing else (an unrelated
+        /// "{executionId}x:0" sorts past its upper bound).
+        ///
+        /// Children the orchestrator named itself do not follow that convention and cannot be found this
+        /// way, which is why the result always reports Complete == false: the list is what could be
+        /// matched, never a guarantee. Grandchildren carry the *child's* ExecutionId and so are correctly
+        /// left out - one call, one level of the tree.
+        ///
+        /// Returns an empty list when the instance (or its row) is gone.
+        /// </summary>
+        public static async Task<ChildrenResult> GetChildrenAsync(DurableTaskClient durableClient, string connName, string hubName, string instanceId)
+        {
+            var tableClient = TableClient.GetTableClient(connName);
+
+            // Only the instance row knows the current ExecutionId, and the child ids are built from it
+            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty);
+
+            string executionId = instanceEntity?.GetString(ExecutionIdColumn);
+            if (string.IsNullOrEmpty(executionId))
+            {
+                // No row, or a row without an ExecutionId. There is no prefix to match children by, and
+                // querying on an empty prefix would drag the whole table in, so: nothing found.
+                return new ChildrenResult { Children = Array.Empty<ChildInstance>(), Complete = false };
+            }
+
+            // CreateQueryFilter escapes the interpolated values, so an instance id cannot break out of the filter
+            string filter = Azure.Data.Tables.TableClient.CreateQueryFilter(
+                $"PartitionKey ge {executionId + ChildIdSeparator} and PartitionKey lt {executionId + ChildIdRangeEnd}");
+
+            // Bounded like every other scan here. Hitting the cap is not reported separately: Complete is
+            // already false for this provider, which is exactly what 'this list may be short' means.
+            var (rows, _) = await tableClient.QueryAsync($"{hubName}Instances", filter, ChildColumns, MaxChildRowsToScan, CancellationToken.None);
+
+            var children = rows
+                .Select(row => new ChildInstance
+                {
+                    // The Instances row of an instance is (PartitionKey = instanceId, RowKey = "")
+                    InstanceId = row.PartitionKey,
+                    Name = row.GetString(NameColumn),
+
+                    // The PascalCase RuntimeStatus name, verbatim as the storage row spells it
+                    RuntimeStatus = row.GetString(RuntimeStatusColumn),
+                    CreatedTime = TryGetDateTimeOffset(row, CreatedTimeColumn) ?? default,
+                    LastUpdatedTime = TryGetDateTimeOffset(row, LastUpdatedTimeColumn) ?? default
+                })
+                // Oldest first, so the tree reads in the order the orchestrator started them; the id breaks
+                // ties, because sub-orchestrations started in the same instant would otherwise shuffle
+                .OrderBy(child => child.CreatedTime)
+                .ThenBy(child => child.InstanceId, StringComparer.Ordinal)
+                .ToList();
+
+            return new ChildrenResult { Children = children, Complete = false };
+        }
+
+        /// <summary>
         /// Reads the values of an instance's XXXInstances row that the DurableTaskClient does not expose.
         /// Returns null when there is no such row (the instance never existed, or was purged).
         /// HistoryBytesEstimate is always null here: Azure Storage cannot tell the size of a history without
@@ -224,6 +285,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         private const string GenerationColumn = "Generation";
         private const string TimestampColumn = "_Timestamp";
 
+        // What DurableTask.Core puts between a parent's ExecutionId and the task id when it generates a
+        // sub-orchestration's instance id, and the character right after it in ASCII, which closes the
+        // half-open PartitionKey range the children query uses.
+        internal const string ChildIdSeparator = ":";
+        internal const string ChildIdRangeEnd = ";";
+
         // An orchestrator replays once per event it observes, so this cap covers instances tens of thousands
         // of episodes deep. Beyond it the timeline is cut short rather than the query running away with the
         // history table.
@@ -233,11 +300,18 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         // through StatsQuery.Cap, which the /stats function fills from DfmSettings (env DFM_STATS_CAP).
         internal const int DefaultStatsScanCap = 50000;
 
+        // An orchestration with more direct sub-orchestrations than this is not a tree anyone can read;
+        // beyond it the list is cut short (and Complete is false anyway).
+        internal const int MaxChildRowsToScan = 500;
+
         // PartitionKey and RowKey come back regardless - ITableClient adds them to every projection
         private static readonly string[] MarkerColumns = new[] { EventTypeColumn, TimestampColumn };
 
         // Everything StatsAggregator needs and nothing else: Input, Output and CustomStatus are the big
         // columns of an Instances row and are never pulled over the wire for statistics.
         private static readonly string[] StatsColumns = new[] { NameColumn, RuntimeStatusColumn, CreatedTimeColumn, LastUpdatedTimeColumn, CompletedTimeColumn };
+
+        // Exactly the four fields of contracts section 6 ChildInstance that are not the id (PartitionKey)
+        private static readonly string[] ChildColumns = new[] { NameColumn, RuntimeStatusColumn, CreatedTimeColumn, LastUpdatedTimeColumn };
     }
 }
