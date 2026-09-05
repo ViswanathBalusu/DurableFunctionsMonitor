@@ -16,6 +16,7 @@
   } from '$lib/filters/time-range';
   import { fmtInt } from '$lib/format/number';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
+  import NeedsAttention from '$lib/overview/NeedsAttention.svelte';
   import StatTiles from '$lib/overview/StatTiles.svelte';
   import ThroughputPanel from '$lib/overview/ThroughputPanel.svelte';
   import { NO_STATS_TEXT, NO_STATS_TITLE, Overview } from '$lib/state/overview.svelte';
@@ -159,6 +160,7 @@
 
       <div class="panels">
         <ThroughputPanel stats={overview.stats} />
+        <NeedsAttention stats={overview.stats} storage={overview.storage} />
       </div>
     {/if}
   {/if}

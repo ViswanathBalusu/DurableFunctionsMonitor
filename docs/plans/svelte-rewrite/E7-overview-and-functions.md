@@ -63,6 +63,13 @@ Accept:
 - [ ] Renders the four rows for the stats fixture; queue row absent without storage.
 Test: as above.
 
+**Deviation, E7-S2-T4 (2026-09-05).** The stuck row's link carries `stuck=1` as the plan says, but
+E4 never read that parameter - nothing in the Instances screen sorts on it - so the link carries
+`orderby=lastUpdatedTime&dir=asc` beside it, which is the view state E4 does read and is exactly what
+the plan asks the marker to achieve. Every row of this panel also carries the range that is on
+screen, as the tiles do: the counts are counted over that range, and a list that showed another one
+would disagree with the number that was clicked.
+
 #### E7-S2-T5 Top orchestrators panel
 Files: `src/lib/overview/TopOrchestrators.svelte`, tests
 Depends: E1-S5-T1
