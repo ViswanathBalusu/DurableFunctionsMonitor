@@ -9,8 +9,21 @@
   import { APP_CONTEXT_KEY, AppState } from '$lib/state/app.svelte';
   import { Prefs } from '$lib/state/prefs.svelte';
   import { host } from '$lib/host.svelte';
+  import { normalizeAbout } from '$lib/api/endpoints';
+  import type { Capabilities } from '$lib/api/types';
 
-  let { path = '/DurableFunctionsHub', navCollapsed = false }: { path?: string; navCollapsed?: boolean } = $props();
+  let {
+    path = '/DurableFunctionsHub',
+    navCollapsed = false,
+    capabilities = {},
+    failuresCount = 0,
+  }: {
+    path?: string;
+    navCollapsed?: boolean;
+    /** Whatever /about would have announced; the rest stay off. */
+    capabilities?: Partial<Capabilities>;
+    failuresCount?: number;
+  } = $props();
 
   // Read once on purpose: the harness renders one URL per test, and the router reads location at
   // construction. svelte-ignore, because that is exactly what the warning is about.
@@ -31,6 +44,9 @@
     prefs,
   });
 
+  // svelte-ignore state_referenced_locally
+  app.about = normalizeAbout({ capabilities: capabilities as Capabilities });
+
   setContext(APP_CONTEXT_KEY, app);
 
   export function begin(): void {
@@ -42,4 +58,4 @@
   }
 </script>
 
-<Shell />
+<Shell {failuresCount} />
