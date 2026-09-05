@@ -12,15 +12,14 @@ using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
 using Fluid;
 using Fluid.Values;
-using System.IO.Compression;
 using System.Text.Json.Nodes;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
 {
     public class Orchestration : DfmFunctionBase
     {
-        public Orchestration(DfmSettings dfmSettings, DfmExtensionPoints extensionPoints, ILoggerFactory loggerFactory) : base(dfmSettings, extensionPoints) 
-        { 
+        public Orchestration(DfmSettings dfmSettings, DfmExtensionPoints extensionPoints, ILoggerFactory loggerFactory) : base(dfmSettings, extensionPoints)
+        {
             this._logger = loggerFactory.CreateLogger<Orchestration>();
         }
 
@@ -54,11 +53,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
 
             var detailedStatus = await DetailedOrchestrationStatus.CreateFrom(
-                new DurableOrchestrationStatus(metadata), 
-                durableClient, 
-                connName, 
-                hubName, 
-                this._logger, 
+                new DurableOrchestrationStatus(metadata),
+                durableClient,
+                connName,
+                hubName,
+                this._logger,
                 this.Settings,
                 this.ExtensionPoints
             );
@@ -78,7 +77,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string instanceId)
         {
             var filterClause = new FilterClause(req.Query["$filter"]);
-            
+
             var connEnvVariableName = Globals.GetFullConnectionStringEnvVariableName(connName);
 
             var history = (await this.ExtensionPoints.GetInstanceHistoryRoutine(durableClient, connEnvVariableName, hubName, instanceId))
@@ -244,11 +243,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
 
             var status = await DetailedOrchestrationStatus.CreateFrom(
-                new DurableOrchestrationStatus(metadata), 
-                durableClient, 
-                connName, 
-                hubName, 
-                this._logger, 
+                new DurableOrchestrationStatus(metadata),
+                durableClient,
+                connName,
+                hubName,
+                this._logger,
                 this.Settings,
                 this.ExtensionPoints
             );
@@ -297,13 +296,6 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
         }
 
-        private static readonly string[] SubOrchestrationEventTypes = new[]
-        {
-            "SubOrchestrationInstanceCreated",
-            "SubOrchestrationInstanceCompleted",
-            "SubOrchestrationInstanceFailed",
-        };
-
         private readonly ILogger _logger;
 
         // Need special serializer settings for execution history, to match the way it was originally serialized
@@ -313,96 +305,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             DateFormatString = "yyyy-MM-ddTHH:mm:ss.FFFFFFFZ"
         };
 
-        private static void ConvertScheduledTime(JArray history)
-        {
-            if (history == null)
-            {
-                return;
-            }
-
-            var orchestrationStartedEvent = history.FirstOrDefault(h => h.Value<string>("EventType") == "ExecutionStarted");
-
-            foreach (var e in history)
-            {
-                if (e["ScheduledTime"] != null)
-                {
-                    // Converting to UTC and explicitly formatting as a string (otherwise default serializer outputs it as a local time)
-                    var scheduledTime = e.Value<DateTime>("ScheduledTime").ToUniversalTime();
-                    e["ScheduledTime"] = scheduledTime.ToString("o");
-
-                    // Also adding DurationInMs field
-                    var timestamp = e.Value<DateTime>("Timestamp").ToUniversalTime();
-                    var duration = timestamp - scheduledTime;
-                    e["DurationInMs"] = duration.TotalMilliseconds;
-                }
-
-                // Also adding duration of the whole orchestration
-                if (e.Value<string>("EventType") == "ExecutionCompleted" && orchestrationStartedEvent != null)
-                {
-                    var scheduledTime = orchestrationStartedEvent.Value<DateTime>("Timestamp").ToUniversalTime();
-                    var timestamp = e.Value<DateTime>("Timestamp").ToUniversalTime();
-                    var duration = timestamp - scheduledTime;
-                    e["DurationInMs"] = duration.TotalMilliseconds;
-                }
-            }
-        }
-
-        internal static void CheckBlobUrl(string blobUrl, Uri blobServiceUri)
-        {
-            blobUrl = blobUrl.ToLower();
-
-            // The trailing slash matters. BlobServiceClient.Uri only sometimes carries one - a
-            // connection string with an explicit BlobEndpoint yields e.g.
-            // "http://127.0.0.1:10000/devstoreaccount1" with no slash - and without it this prefix
-            // test would also accept "https://myaccount.blob.core.windows.net.evil.com/...".
-            string primaryUri = EndWithSlash(blobServiceUri.ToString().ToLower());
-            string secondaryUri = Globals.GetSecondaryBlobServiceUri(blobServiceUri)?.ToString().ToLower();
-            secondaryUri = string.IsNullOrEmpty(secondaryUri) ? primaryUri : EndWithSlash(secondaryUri);
-
-            if (!blobUrl.StartsWith(primaryUri) && !blobUrl.StartsWith(secondaryUri))
-            {
-                throw new NotSupportedException("The field value is not a valid blob URL");
-            }
-        }
-
-        private static string EndWithSlash(string uri)
-        {
-            return uri.EndsWith("/") ? uri : uri + "/";
-        }
-
-        /// <summary>
-        /// Splits an absolute blob URL into its container name and blob name, relative to the
-        /// Blob service endpoint. Only ever called after CheckBlobUrl() has confirmed the URL
-        /// belongs to this account.
-        /// </summary>
-        internal static (string ContainerName, string BlobName) SplitBlobUrl(Uri blobServiceUri, string blobUrl)
-        {
-            string path = new Uri(blobUrl).AbsolutePath;
-
-            // The emulator puts the account name in the path (http://127.0.0.1:10000/devstoreaccount1/...),
-            // so strip whatever path the service endpoint itself carries.
-            string basePath = blobServiceUri.AbsolutePath.TrimEnd('/');
-            if (basePath.Length > 0 && path.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
-            {
-                path = path.Substring(basePath.Length);
-            }
-
-            path = path.TrimStart('/');
-
-            int slashIdx = path.IndexOf('/');
-            if (slashIdx < 0)
-            {
-                throw new NotSupportedException("The field value is not a valid blob URL");
-            }
-
-            // Blob names are percent-encoded in the URL, but BlobContainerClient wants them decoded
-            return (Uri.UnescapeDataString(path.Substring(0, slashIdx)), Uri.UnescapeDataString(path.Substring(slashIdx + 1)));
-        }
-
+        // Serves a large input/output/custom status field, which the Durable Task Framework stores as a blob and
+        // exposes to us as that blob's URL
         private async Task<HttpResponseData> DownloadFieldValue(HttpRequestData req,
-            DurableTaskClient durableClient, 
-            string connEnvVariableName, 
-            string instanceId, 
+            DurableTaskClient durableClient,
+            string connEnvVariableName,
+            string instanceId,
             Func<OrchestrationMetadata, string> fieldGetter)
         {
             var status = await durableClient.GetInstanceAsync(instanceId, true);
@@ -411,64 +319,43 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 return await req.ReturnStatus(HttpStatusCode.NotFound, $"Instance {instanceId} doesn't exist");
             }
 
-            string blobUrl = fieldGetter(status);
+            // Refuses anything outside our own Storage account
+            string data = await LargeMessageBlobs.DownloadByUrlAsync(connEnvVariableName, fieldGetter(status));
 
-            var blobClient = Globals.GetBlobServiceClient(connEnvVariableName);
+            var response = req.CreateResponse(HttpStatusCode.OK);
 
-            // Important check, to make sure we're not trying to access anything other than our own blob storage
-            CheckBlobUrl(blobUrl, blobClient.Uri);
-
-            // Addressing the blob through our already-authenticated service client, rather than by
-            // absolute URL. Note that for a secondary (RA-GRS) URL this reads the primary replica.
-            var (containerName, blobName) = SplitBlobUrl(blobClient.Uri, blobUrl);
-            var blob = blobClient.GetBlobContainerClient(containerName).GetBlobClient(blobName);
-
-            using (var memoryStream = new MemoryStream())
+            // If it looks like JSON
+            if (data.StartsWith('{') || data.StartsWith('['))
             {
-                await blob.DownloadToAsync(memoryStream);
-                memoryStream.Position = 0;
+                response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(data);
 
-                using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Decompress))
-                using (var streamReader = new StreamReader(gzipStream))
+                return response;
+            }
+
+            // If it looks like a base64 string
+            if (data.StartsWith('"'))
+            {
+                try
                 {
-                    string data = await streamReader.ReadToEndAsync();
+                    var bytes = Convert.FromBase64String(data[1..^1]);
 
-                    var response = req.CreateResponse(HttpStatusCode.OK);
-
-                    // If it looks like JSON
-                    if (data[0] == '{' || data[0] == '[')
-                    {
-                        response.Headers.Add("Content-Type", "application/json");
-                        await response.WriteStringAsync(data);
-
-                        return response;
-                    }
-
-                    // If it looks like a base64 string
-                    if (data[0] == '"')
-                    {
-                        try
-                        {
-                            var bytes = Convert.FromBase64String(data[1..^1]);
-
-                            response.Headers.Add("Content-Type", "application/octet-stream");
-                            await response.WriteBytesAsync(bytes);
-
-                            return response;
-                        }
-                        catch (Exception)
-                        {
-                            // Let's think it is just a plain string
-                        }
-                    }
-
-                    // Otherwise just returning it as text
-                    response.Headers.Add("Content-Type", "text/plain");
-                    await response.WriteStringAsync(data);
+                    response.Headers.Add("Content-Type", "application/octet-stream");
+                    await response.WriteBytesAsync(bytes);
 
                     return response;
                 }
+                catch (Exception)
+                {
+                    // Let's think it is just a plain string
+                }
             }
+
+            // Otherwise just returning it as text
+            response.Headers.Add("Content-Type", "text/plain");
+            await response.WriteStringAsync(data);
+
+            return response;
         }
     }
 }

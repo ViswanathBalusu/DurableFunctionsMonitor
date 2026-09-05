@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+using Azure;
 using Azure.Data.Tables;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
@@ -26,6 +27,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         // Replaces an entity. Fails if the entity was modified after it was read.
         Task ReplaceEntityAsync(string tableName, TableEntity entity);
+
+        // Inserts an entity, or replaces it regardless of when it was last modified
+        Task UpsertEntityAsync(string tableName, TableEntity entity);
+
+        // Deletes entities, all of which must share one partition key, in transaction batches
+        Task DeleteEntitiesAsync(string tableName, IEnumerable<TableEntity> entities);
     }
 
     // TableServiceClient wrapper. Seems to be the only way to unit-test.
@@ -134,6 +141,30 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // the legacy TableOperation.Replace performed.
             return this._client.GetTableClient(tableName).UpdateEntityAsync(entity, entity.ETag, TableUpdateMode.Replace);
         }
+
+        /// <inheritdoc/>
+        public Task UpsertEntityAsync(string tableName, TableEntity entity)
+        {
+            return this._client.GetTableClient(tableName).UpsertEntityAsync(entity, TableUpdateMode.Replace);
+        }
+
+        /// <inheritdoc/>
+        public async Task DeleteEntitiesAsync(string tableName, IEnumerable<TableEntity> entities)
+        {
+            var table = this._client.GetTableClient(tableName);
+
+            // A table transaction takes at most 100 operations, all within one partition
+            foreach (var batch in entities.Chunk(MaxTransactionSize))
+            {
+                var actions = batch
+                    .Select(e => new TableTransactionAction(TableTransactionActionType.Delete, e, ETag.All))
+                    .ToList();
+
+                await table.SubmitTransactionAsync(actions);
+            }
+        }
+
+        private const int MaxTransactionSize = 100;
 
         private readonly TableServiceClient _client;
     }

@@ -76,6 +76,14 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public string RolesClaimName { get; set; }
 
         /// <summary>
+        /// Enables the operations marked as <see cref="OperationKind.Dangerous"/>: 'restart in place' and 'replay'.
+        /// They rewrite Task Hub storage (purge and re-create an instance, delete part of an instance's history)
+        /// and re-execute activities that already ran. Off by default.
+        /// Can also be enabled by setting DFM_DANGEROUS_OPERATIONS_ENABLED to 'true'.
+        /// </summary>
+        public bool DangerousOperationsEnabled { get; set; }
+
+        /// <summary>
         /// Custom prefix for 'User-Agent' header for requests to Azure Storage.
         /// When specified, the final 'User-Agent' header will look like this: 
         /// "CustomUserAgentPrefix/{DfMon's Version}"
@@ -99,6 +107,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string dfmMode = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_MODE);
             string dfmUserNameClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_USERNAME_CLAIM_NAME);
             string dfmRolesClaimName = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_ROLES_CLAIM_NAME);
+            string dfmDangerousOperationsEnabled = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_DANGEROUS_OPERATIONS_ENABLED);
 
             // NOTE: an unset setting and a setting explicitly set to an empty string both mean
             // "no restriction" and must map to null. Up to .NET 9 an empty value could only ever
@@ -124,6 +133,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             this.AllowedReadOnlyAppRoles = allowedReadOnlyAppRoles;
             this.UserNameClaimName = string.IsNullOrEmpty(dfmUserNameClaimName) ? Auth.PreferredUserNameClaim : dfmUserNameClaimName;
             this.RolesClaimName = string.IsNullOrEmpty(dfmRolesClaimName) ? Auth.RolesClaim : dfmRolesClaimName;
+
+            // Only the literal 'true' (any casing) opts in. Unset, empty or anything else keeps dangerous operations off.
+            this.DangerousOperationsEnabled = string.Equals(dfmDangerousOperationsEnabled?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

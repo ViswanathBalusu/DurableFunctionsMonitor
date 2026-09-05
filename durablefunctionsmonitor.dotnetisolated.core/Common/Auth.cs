@@ -23,7 +23,13 @@ namespace DurableFunctionsMonitor.DotNetIsolated
     public enum OperationKind
     {
         Read,
-        Write
+        Write,
+
+        /// <summary>
+        /// Rewrites Task Hub storage or destroys data that cannot be recovered. Refused unless
+        /// <see cref="DfmSettings.DangerousOperationsEnabled"/> is set, and (like Write) always refused in read-only mode.
+        /// </summary>
+        Dangerous
     }
 
     internal static class Auth
@@ -93,6 +99,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// <exception cref="DfmUnauthorizedException"></exception>
         public static async Task<DfmMode> ValidateIdentityAsync(HttpRequestData request, OperationKind operationKind, DfmSettings settings)
         {
+            // Dangerous operations are off unless this deployment explicitly opted in
+            if (operationKind == OperationKind.Dangerous && !settings.DangerousOperationsEnabled)
+            {
+                throw new DfmAccessViolationException($"Dangerous operations are disabled. Set {EnvVariableNames.DFM_DANGEROUS_OPERATIONS_ENABLED} to 'true' (or DfmSettings.DangerousOperationsEnabled) to enable them.");
+            }
+
             // Checking if the endpoint is in ReadOnly mode
             if (operationKind != OperationKind.Read && settings.Mode == DfmMode.ReadOnly)
             {

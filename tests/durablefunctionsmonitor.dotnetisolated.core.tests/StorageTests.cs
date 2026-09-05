@@ -90,7 +90,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         [DataRow("http://127.0.0.1:10000/devstoreaccount1", "http://127.0.0.1:10000/devstoreaccount1/big/payload.gz", DisplayName = "storage emulator")]
         public void AcceptsOurOwnBlobUrls(string blobServiceUri, string blobUrl)
         {
-            Orchestration.CheckBlobUrl(blobUrl, new Uri(blobServiceUri));
+            LargeMessageBlobs.CheckBlobUrl(blobUrl, new Uri(blobServiceUri));
         }
 
         [TestMethod]
@@ -102,7 +102,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         [DataRow("http://127.0.0.1:10000/devstoreaccount1", "http://127.0.0.1:10000/devstoreaccount1evil/big/payload.gz", DisplayName = "an emulator account with our name as its prefix")]
         public void RejectsForeignBlobUrls(string blobServiceUri, string blobUrl)
         {
-            Assert.ThrowsExactly<NotSupportedException>(() => Orchestration.CheckBlobUrl(blobUrl, new Uri(blobServiceUri)));
+            Assert.ThrowsExactly<NotSupportedException>(() => LargeMessageBlobs.CheckBlobUrl(blobUrl, new Uri(blobServiceUri)));
         }
 
         [TestMethod]
@@ -110,7 +110,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var serviceUri = new Uri("https://myacct.blob.core.windows.net/");
 
-            var (containerName, blobName) = Orchestration.SplitBlobUrl(serviceUri, "https://myacct.blob.core.windows.net/bigcontainer/some/nested/payload.gz");
+            var (containerName, blobName) = LargeMessageBlobs.SplitBlobUrl(serviceUri, "https://myacct.blob.core.windows.net/bigcontainer/some/nested/payload.gz");
 
             Assert.AreEqual("bigcontainer", containerName);
             Assert.AreEqual("some/nested/payload.gz", blobName);
@@ -122,7 +122,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             // The storage emulator puts the account name in the path rather than the host
             var serviceUri = new Uri("http://127.0.0.1:10000/devstoreaccount1");
 
-            var (containerName, blobName) = Orchestration.SplitBlobUrl(serviceUri, "http://127.0.0.1:10000/devstoreaccount1/bigcontainer/payload.gz");
+            var (containerName, blobName) = LargeMessageBlobs.SplitBlobUrl(serviceUri, "http://127.0.0.1:10000/devstoreaccount1/bigcontainer/payload.gz");
 
             Assert.AreEqual("bigcontainer", containerName);
             Assert.AreEqual("payload.gz", blobName);
@@ -133,7 +133,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var serviceUri = new Uri("https://myacct.blob.core.windows.net/");
 
-            var (containerName, blobName) = Orchestration.SplitBlobUrl(serviceUri, "https://myacct.blob.core.windows.net/bigcontainer/name%20with%20spaces.gz");
+            var (containerName, blobName) = LargeMessageBlobs.SplitBlobUrl(serviceUri, "https://myacct.blob.core.windows.net/bigcontainer/name%20with%20spaces.gz");
 
             Assert.AreEqual("bigcontainer", containerName);
             Assert.AreEqual("name with spaces.gz", blobName);
@@ -144,7 +144,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var serviceUri = new Uri("https://myacct.blob.core.windows.net/");
 
-            Assert.ThrowsExactly<NotSupportedException>(() => Orchestration.SplitBlobUrl(serviceUri, "https://myacct.blob.core.windows.net/loose-blob"));
+            Assert.ThrowsExactly<NotSupportedException>(() => LargeMessageBlobs.SplitBlobUrl(serviceUri, "https://myacct.blob.core.windows.net/loose-blob"));
         }
 
         [TestMethod]

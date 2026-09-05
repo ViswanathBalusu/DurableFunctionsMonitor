@@ -98,7 +98,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
 
         [TestMethod]
-        public void AllModifyingFunctionsAreMarkedAsOperationKindWrite()
+        public void AllModifyingFunctionsAreMarkedAsOperationKindWriteOrDangerous()
         {
             // Arrange
 
@@ -121,6 +121,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 nameof(Orchestration.DfmGetOrchestrationFunction),
                 nameof(Orchestration.DfmGetOrchestrationHistoryFunction),
                 nameof(Orchestration.DfmGetOrchestrationTabMarkupFunction),
+                nameof(InputEvents.DfmGetInputEventsFunction),
                 nameof(Orchestrations.DfmGetOrchestrationsFunction),
                 nameof(TaskHubNames.DfmGetTaskHubNamesFunction)
             };
@@ -137,7 +138,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             var allMarkedWithOperationKindWrite = allWritingMethods
                 .All(m => m.CustomAttributes.Any(a => 
                     a.AttributeType == typeof(OperationKindAttribute) &&
-                    (OperationKind)a.NamedArguments.Single().TypedValue.Value == OperationKind.Write
+                    (OperationKind)a.NamedArguments.Single().TypedValue.Value != OperationKind.Read
                 ));
 
             // Assert

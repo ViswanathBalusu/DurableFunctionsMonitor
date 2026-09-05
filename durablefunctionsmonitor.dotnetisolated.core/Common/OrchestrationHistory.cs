@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+using System.Globalization;
 using Microsoft.DurableTask.Client;
 using Azure.Data.Tables;
 using Newtonsoft.Json.Linq;
@@ -80,7 +81,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                                 evt.Name,
                                 correlatedEvt.EventType == "GenericEvent" ? evt.EventType : null,
                                 evt.InstanceId,
-                                evt.Input
+                                evt.Input,
+                                // The merged event is addressed by the row that scheduled it
+                                evt.SequenceNumber
                             );
                         }
                         else
@@ -116,15 +119,17 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
         }
 
-        private static HistoryEvent ToHistoryEvent(this HistoryEntity evt, 
-            DateTimeOffset? scheduledTime = null, 
-            string functionName = null, 
+        private static HistoryEvent ToHistoryEvent(this HistoryEntity evt,
+            DateTimeOffset? scheduledTime = null,
+            string functionName = null,
             string eventType = null,
             string subOrchestrationId = null,
-            string input = null)
+            string input = null,
+            long? sequenceNumber = null)
         {
             return new HistoryEvent
             {
+                SequenceNumber = sequenceNumber ?? evt.SequenceNumber,
                 Timestamp = evt._Timestamp.ToUniversalTime(),
                 EventType = eventType ?? evt.EventType,
                 EventId = evt.TaskScheduledId,
@@ -153,6 +158,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             return new HistoryEvent
             {
+                SequenceNumber = dynamicToken.SequenceNumber,
                 Timestamp = dynamicToken.Timestamp,
                 EventType = dynamicToken.EventType,
                 EventId = dynamicToken.EventId,
@@ -179,10 +185,34 @@ namespace DurableFunctionsMonitor.DotNetIsolated
     }
 
     /// <summary>
+    /// Names of the history event types DfMon reasons about
+    /// </summary>
+    public static class HistoryEventTypes
+    {
+        /// <summary>The first event of an execution, carrying the orchestrator's input</summary>
+        public const string ExecutionStarted = "ExecutionStarted";
+
+        /// <summary>An external event, carrying its payload</summary>
+        public const string EventRaised = "EventRaised";
+
+        /// <summary>Marks the start of an episode (one replay of the orchestrator)</summary>
+        public const string OrchestratorStarted = "OrchestratorStarted";
+
+        /// <summary>Marks the end of an episode</summary>
+        public const string OrchestratorCompleted = "OrchestratorCompleted";
+    }
+
+    /// <summary>
     /// Represents a record in orchestration's history
     /// </summary>
     public class HistoryEvent
     {
+        /// <summary>
+        /// Position of the event in the instance's history, as the storage provider numbers it.
+        /// This is how the input-events endpoints address an event. Null if the provider does not report it.
+        /// For a scheduled task or sub-orchestration merged with its completion, it is the position of the scheduling record.
+        /// </summary>
+        public long? SequenceNumber { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public string EventType { get; set; }
         public int? EventId { get; set; }
@@ -202,11 +232,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
     // Durable Task Framework writes alongside the system-managed "Timestamp".
     class HistoryEntity
     {
+        // The row's sequence number, decoded from its RowKey (16 upper-case hex digits). Null for the 'sentinel' row.
+        public long? SequenceNumber { get; set; }
         public string InstanceId { get; set; }
         public string EventType { get; set; }
         public string Name { get; set; }
         public DateTimeOffset _Timestamp { get; set; }
         public string Input { get; set; }
+        // Set instead of Input when the Durable Task Framework offloaded a large input into the '{taskhub}-largemessages' container
+        public string InputBlobName { get; set; }
         public string Result { get; set; }
         public string Details { get; set; }
         public string FailureDetails { get; set; }
@@ -217,17 +251,28 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             return new HistoryEntity
             {
+                SequenceNumber = TryParseSequenceNumber(entity.RowKey),
                 InstanceId = entity.GetString("InstanceId"),
                 EventType = entity.GetString("EventType"),
                 Name = entity.GetString("Name"),
                 _Timestamp = entity.GetDateTimeOffset("_Timestamp") ?? default,
                 Input = entity.GetString("Input"),
+                InputBlobName = entity.GetString("InputBlobName"),
                 Result = entity.GetString("Result"),
                 Details = entity.GetString("Details"),
                 FailureDetails = entity.GetString("FailureDetails"),
                 EventId = entity.GetInt32("EventId") ?? default,
                 TaskScheduledId = entity.GetInt32("TaskScheduledId")
             };
+        }
+
+        /// <summary>
+        /// Decodes the sequence number the Durable Task Framework encodes into a history row's RowKey
+        /// (sequenceNumber.ToString("X16")). Returns null for anything else, such as the 'sentinel' row.
+        /// </summary>
+        internal static long? TryParseSequenceNumber(string rowKey)
+        {
+            return long.TryParse(rowKey, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out long sequenceNumber) ? sequenceNumber : null;
         }
     }
 }
