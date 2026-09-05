@@ -409,6 +409,9 @@ describe('Entities', () => {
   it('knows the difference between not loaded and nothing matching', async () => {
     const { entities } = makeEntities({ answer: async () => entitiesFixture({ entities: [] }) });
 
+    // Nothing has been asked yet, so there is nothing to say about what matches
+    expect(entities.isEmpty).toBe(false);
+
     await entities.reload();
 
     expect(entities.isEmpty).toBe(true);

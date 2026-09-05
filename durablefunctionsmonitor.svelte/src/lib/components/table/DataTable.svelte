@@ -166,6 +166,13 @@
     return Array.isArray(highlightKey) ? highlightKey.includes(key) : highlightKey === key;
   }
 
+  /** The width the mockup set on the column, plus the alignment it asked for. */
+  function headerStyle(column: ColumnDef<Row>): string | undefined {
+    const parts = [column.width ? `width:${column.width}` : '', column.align === 'right' ? 'text-align:right' : ''];
+
+    return parts.filter(Boolean).join(';') || undefined;
+  }
+
   function cellValue(column: ColumnDef<Row>, row: Row): string {
     const value = column.accessor?.(row);
     return value === null || value === undefined ? '' : String(value);
@@ -199,7 +206,7 @@
           {#each shown as column (column.id)}
             <th
               class={sortClass(sort, column.id)}
-              style={column.width ? `width:${column.width}` : undefined}
+              style={headerStyle(column)}
               aria-sort={sort?.id === column.id ? (sort.dir === 'asc' ? 'ascending' : 'descending') : undefined}
             >
               {#if column.sortable && onSort}
@@ -247,6 +254,7 @@
           {#each shown as column (column.id)}
             <td
               class={cn(column.mono ? 'mono' : '', column.trunc ? 'trunc' : '')}
+              style={column.align === 'right' ? 'text-align:right' : undefined}
               data-label={column.header}
               data-row-index={index}
             >

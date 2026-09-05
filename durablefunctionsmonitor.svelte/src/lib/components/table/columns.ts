@@ -14,6 +14,8 @@ export interface ColumnDef<Row = Record<string, unknown>> {
   mono?: boolean;
   /** Truncates with an ellipsis instead of widening the table (`.trunc`). */
   trunc?: boolean;
+  /** Right-aligns the header and every cell: the actions column of ScreenEntities.dc.html L39. */
+  align?: 'left' | 'right';
   sortable?: boolean;
   /** Hidden unless the user turns it on (the column chooser starts from this). */
   hidden?: boolean;

@@ -135,6 +135,9 @@ export class Entities {
 
   loading = $state(false);
 
+  /** Whether a load has ever answered; until one has, an empty table is unasked, not empty. */
+  loaded = $state(false);
+
   error = $state<string | null>(null);
 
   /** Every entity name the window holds, from /stats; empty without that capability. */
@@ -227,9 +230,13 @@ export class Entities {
     return this.#app.capabilities.entities;
   }
 
-  /** Answered, and nothing matches. */
+  /**
+   * Answered, and nothing matches. A reload does not take it back: the rows on screen stay while the
+   * next answer is on its way, and an empty screen that keeps flicking to an empty table and back is
+   * worse than one that simply says nothing matched.
+   */
   get isEmpty(): boolean {
-    return !this.loading && this.rows.length === 0;
+    return this.loaded && this.rows.length === 0;
   }
 
   /** Whether anything is narrowing the list, which is what the empty state offers to undo. */
@@ -383,6 +390,7 @@ export class Entities {
       this.#fetched = skip + page.fetched;
       this.rows = byUpdatedDesc(options.append ? [...this.rows, ...page.rows] : page.rows);
       this.hasMore = page.hasMore;
+      this.loaded = true;
       this.error = null;
       this.#reported = false;
     } catch (error) {
