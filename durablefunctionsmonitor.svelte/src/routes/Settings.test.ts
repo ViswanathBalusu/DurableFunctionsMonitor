@@ -32,6 +32,9 @@ describe('Settings screen', () => {
       'Hub administration',
     ]);
 
-    expect(grids[1].querySelector('.panel > .panel-h > h2')?.textContent).toBe('Appearance');
+    expect(Array.from(grids[1].querySelectorAll('.panel > .panel-h > h2')).map((h) => h.textContent)).toEqual([
+      'Appearance',
+      'Feature flags',
+    ]);
   });
 });

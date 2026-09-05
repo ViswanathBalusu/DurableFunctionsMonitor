@@ -4,6 +4,7 @@
   import PageTitle from '$lib/components/PageTitle.svelte';
   import AppearancePanel from '$lib/settings/AppearancePanel.svelte';
   import ConnectionPanel from '$lib/settings/ConnectionPanel.svelte';
+  import FeatureFlagsPanel from '$lib/settings/FeatureFlagsPanel.svelte';
   import HubAdminPanel from '$lib/settings/HubAdminPanel.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
 
@@ -27,7 +28,8 @@
   <div class="two wide-left">
     <AppearancePanel />
     <div class="stack" style="gap:16px">
-      <!-- Feature flags: E6-S4-T1 · Templates: E6-S4-T2 -->
+      <FeatureFlagsPanel />
+      <!-- Templates: E6-S4-T2 -->
     </div>
   </div>
 </Page>
