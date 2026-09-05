@@ -32,6 +32,16 @@ export interface AppStateOptions {
   prefs?: Prefs;
 }
 
+/** What a screen needs of the Start new instance dialog to open it (E4-S7-T1). */
+export interface StartNewInstanceDialogApi {
+  readonly open: boolean;
+  openWith(prefill?: { orchestrator?: string; instanceId?: string; input?: unknown }): void;
+}
+
+export interface AppDialogs {
+  startNewInstance: StartNewInstanceDialogApi | null;
+}
+
 export class AppState {
   readonly host: Host;
   readonly client: BackendClient;
@@ -116,6 +126,13 @@ export class AppState {
   setAuthHeaders(provider: () => Record<string, string> | Promise<Record<string, string>>): void {
     this.#authHeaders = provider;
   }
+
+  /**
+   * Dialogs any screen can open. The screen that renders one puts it here while it is mounted, so
+   * the Overview's empty state and the workspace's recovery dialog can open the same Start new
+   * instance dialog the Instances screen owns.
+   */
+  readonly dialogs = $state<AppDialogs>({ startNewInstance: null });
 
   /** The shared time range, read from the current route's query (contracts §4). */
   get timeRange(): TimeRange {

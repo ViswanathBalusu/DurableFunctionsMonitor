@@ -14,19 +14,21 @@
   import { bulkToast, runBulk } from '$lib/instances/bulk';
   import HistogramView from '$lib/instances/HistogramView.svelte';
   import SavedViewsMenu from '$lib/instances/SavedViewsMenu.svelte';
+  import StartNewInstanceDialog from '$lib/instances/StartNewInstanceDialog.svelte';
   import TimelineView from '$lib/instances/TimelineView.svelte';
   import ViewStrip from '$lib/instances/ViewStrip.svelte';
   import { label as rangeLabel } from '$lib/filters/time-range';
   import type { BatchResultItem } from '$lib/api/types';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Instances } from '$lib/state/instances.svelte';
+  import { StartInstance } from '$lib/state/start-instance.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
   const instances = new Instances({ app });
 
-  /** The Start new instance dialog (E4-S7), which `?start=1` and the palette both ask for. */
-  let startOpen = $state(false);
+  /** The Start new instance dialog, which `?start=1`, the palette and other screens all ask for. */
+  const start = new StartInstance({ app });
 
   /** `?selectAll=1` from VS Code: the rows are not there yet when the flag is read. */
   let selectAllPending = $state(false);
@@ -71,8 +73,14 @@
   }
 
   onMount(() => {
-    startOpen = instances.takeFlag('start');
+    if (instances.takeFlag('start')) {
+      start.openWith();
+    }
+
     selectAllPending = instances.takeFlag('selectAll');
+
+    // While this screen is on, it is the one that renders the dialog (contracts §7)
+    app.dialogs.startNewInstance = start;
 
     void instances.reload();
 
@@ -84,6 +92,7 @@
     return () => {
       instances.stopAutoRefresh();
       stopRefresh();
+      app.dialogs.startNewInstance = null;
     };
   });
 
@@ -127,13 +136,12 @@
     <div class="row" style="margin-left:auto;gap:10px">
       <SavedViewsMenu {instances} />
 
-      <!-- The dialog itself is E4-S7; the flag it opens from is the one ?start=1 already sets -->
       <Button
         variant="primary"
         disabled={app.readOnly}
         aria-haspopup="dialog"
-        aria-expanded={startOpen}
-        onclick={() => (startOpen = true)}
+        aria-expanded={start.open}
+        onclick={() => start.openWith()}
       >
         Start new instance
       </Button>
@@ -152,7 +160,7 @@
     >
       {#snippet actions()}
         <Button onclick={() => instances.clearAll()}>Clear filters</Button>
-        <Button variant="primary" disabled={app.readOnly} onclick={() => (startOpen = true)}>Start new instance</Button>
+        <Button variant="primary" disabled={app.readOnly} onclick={() => start.openWith()}>Start new instance</Button>
       {/snippet}
     </EmptyState>
   {:else}
@@ -167,6 +175,10 @@
         <HistogramView {instances} />
       {/if}
     </div>
+  {/if}
+
+  {#if start.open}
+    <StartNewInstanceDialog {start} />
   {/if}
 
   <BulkActionBar

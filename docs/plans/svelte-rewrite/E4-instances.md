@@ -241,6 +241,14 @@ Accept:
 - [ ] Success toast contains the returned instance id.
 Test: as above.
 
+**Deviation, E4-S7-T1 (2026-09-05).** `app.dialogs` did not exist - this is the first task that needs
+it - so `AppState` gains it: a registry of the dialogs any screen can open, holding
+`startNewInstance` while the screen that renders it is mounted (`null` otherwise, which is what a
+caller has to check). The Instances screen registers it; when E5 and E7 open it from elsewhere it
+moves to the shell, beside `ActionDialogs`. Whether the JSON is valid is read from the text rather
+than from the editor's parse report (`isJsonInput`, beside `parseInput`): the two agree in text mode,
+and this way an input the dialog was *opened* with is judged before it has been touched.
+
 ### E4-S8 Long JSON dialog
 
 #### E4-S8-T1 Cell JSON dialogs
