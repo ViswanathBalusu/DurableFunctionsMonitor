@@ -40,3 +40,6 @@ npm-debug.log*
 __azurite_db*.json
 __blobstorage__/
 __queuestorage__/
+
+# Per-agent git worktrees created by the rewrite harness
+.claude/worktrees/
