@@ -24,6 +24,10 @@ export type SortDirection = 'asc' | 'desc';
 /** Rows per page, as React asked for them. */
 export const PAGE_SIZE = 50;
 
+/** The order the list opens in: newest first (contracts §6). */
+export const DEFAULT_ORDER_BY = 'createdTime';
+export const DEFAULT_DIR: SortDirection = 'desc';
+
 /** How long the orchestrator names of the facet stay fresh (decision D10's window). */
 export const NAME_CACHE_MS = 30_000;
 
@@ -406,8 +410,8 @@ export class Instances {
     this.applied = value;
     this.includeEntities = read('entities') === '1';
     this.view = view === 'timeline' || view === 'histogram' ? view : 'table';
-    this.orderBy = orderBy || 'createdTime';
-    this.dir = dir === 'asc' ? 'asc' : 'desc';
+    this.orderBy = orderBy || DEFAULT_ORDER_BY;
+    this.dir = dir === 'asc' ? 'asc' : DEFAULT_DIR;
     this.hiddenColumns = hidden ? hidden.split('|').filter(Boolean) : [...DEFAULT_HIDDEN_COLUMNS];
   }
 

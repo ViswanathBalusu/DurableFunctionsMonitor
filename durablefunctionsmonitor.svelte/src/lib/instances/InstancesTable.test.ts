@@ -182,6 +182,25 @@ describe('InstancesTable', () => {
     await waitFor(() => expect(onQuery.mock.calls.at(-1)?.[0].orderBy).toBe('createdTime desc'));
   });
 
+  it('flips the column it is sorted by, which has no unsorted state to fall back to', async () => {
+    const onQuery = vi.fn();
+    mount({ onQuery });
+
+    await waitFor(() => expect(onQuery).toHaveBeenCalledOnce());
+    expect(onQuery.mock.calls[0][0].orderBy).toBe('createdTime desc');
+
+    const header = screen.getByRole('button', { name: 'createdTime' });
+
+    await fireEvent.click(header);
+    await waitFor(() => expect(onQuery.mock.calls.at(-1)?.[0].orderBy).toBe('createdTime'));
+
+    await fireEvent.click(header);
+    await waitFor(() => expect(onQuery.mock.calls.at(-1)?.[0].orderBy).toBe('createdTime desc'));
+
+    await fireEvent.click(header);
+    await waitFor(() => expect(onQuery.mock.calls.at(-1)?.[0].orderBy).toBe('createdTime'));
+  });
+
   it('selects rows without opening anything', async () => {
     const { component } = mount();
     const app = (component as unknown as { appState: () => AppState }).appState();

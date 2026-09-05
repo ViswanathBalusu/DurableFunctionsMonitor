@@ -16,7 +16,7 @@
   import { fmtInt } from '$lib/format/number';
   import { fmtDateTime } from '$lib/format/time';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
-  import type { Instances } from '$lib/state/instances.svelte';
+  import { DEFAULT_DIR, DEFAULT_ORDER_BY, type Instances } from '$lib/state/instances.svelte';
   import { baseColumns, displayName, durationOf, toPeekItem } from './columns';
 
   interface Props {
@@ -144,8 +144,20 @@
   function sortBy(id: string): void {
     const next = nextSort(sort, id);
 
-    // Unsorted is not something the backend can be asked for; falling back to the default order is
-    instances.setOrder(next?.id ?? 'createdTime', next?.dir ?? 'desc');
+    if (next) {
+      instances.setOrder(next.id, next.dir);
+      return;
+    }
+
+    // "Unsorted" is not something the backend can be asked for, so the third click falls back to the
+    // default order - except on the default column itself, which has no order to fall back to and
+    // would be stuck facing one way for ever. There it flips instead.
+    if (id === DEFAULT_ORDER_BY) {
+      instances.setOrder(id, 'asc');
+      return;
+    }
+
+    instances.setOrder(DEFAULT_ORDER_BY, DEFAULT_DIR);
   }
 </script>
 
