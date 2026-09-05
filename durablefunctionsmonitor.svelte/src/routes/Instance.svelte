@@ -5,13 +5,14 @@
   import InstanceActions from '$lib/instance/InstanceActions.svelte';
   import InputsTab from '$lib/instance/InputsTab.svelte';
   import InstanceHeader from '$lib/instance/InstanceHeader.svelte';
+  import LiquidTab from '$lib/instance/LiquidTab.svelte';
   import RawTab from '$lib/instance/RawTab.svelte';
   import RecoveryDialog from '$lib/instance/RecoveryDialog.svelte';
   import WorkspaceTabs from '$lib/instance/WorkspaceTabs.svelte';
   import { outcomeAction, type Recovery } from '$lib/instance/input-outcomes';
   import StartNewInstanceDialog from '$lib/instances/StartNewInstanceDialog.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
-  import { InstanceState } from '$lib/state/instance.svelte';
+  import { customTabName, InstanceState } from '$lib/state/instance.svelte';
   import { Inputs, type InputOpOutcome } from '$lib/state/inputs.svelte';
   import { StartInstance } from '$lib/state/start-instance.svelte';
 
@@ -117,6 +118,11 @@
         <InputsTab {instance} {inputs} onOutcome={(outcome) => void handleOutcome(outcome)} />
       {:else if tab === 'raw'}
         <RawTab {instance} />
+      {:else if customTabName(tab)}
+        <!-- Keyed by the tab, so switching between two custom tabs loads the new one -->
+        {#key tab}
+          <LiquidTab {instance} name={customTabName(tab) as string} />
+        {/key}
       {:else}
         <p class="meta">The {tab} tab is not built yet.</p>
       {/if}
