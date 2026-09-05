@@ -38,7 +38,8 @@ from here, or from the DFM components in `src/lib/components/` that wrap them.
 | `tabs`                     | list                                         | `tabs`                                                           |
 |                            | trigger                                      | `tab` (selected state is `aria-selected`, which the CSS keys on) |
 | `tooltip`                  | content                                      | `pop meta`                                                       |
-| `sheet`                    | content `side="right"`                       | `peek`                                                           |
+| `sheet`                    | overlay                                      | `overlay` (+ `clear` through `overlayClass`)                     |
+|                            | content `side="right"`                       | `peek`                                                           |
 |                            | content `side="bottom"`                      | `sheet`                                                          |
 | `table`                    | container / table                            | `tbl-wrap` / `tbl`                                               |
 

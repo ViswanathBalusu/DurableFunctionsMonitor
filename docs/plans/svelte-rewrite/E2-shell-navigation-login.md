@@ -109,6 +109,16 @@ Accept:
 - [ ] Entity peek shows the state pretty-printed.
 Test: as above.
 
+**Deviations, E2-S4-T1 (2026-09-05).** Two things this task needed had no owner yet.
+`src/lib/format/duration.ts` (contracts §10) is one of them - the Summary row shows a duration, and
+no earlier task created the file - so it lands here with `fmtDuration`, `fmtDurationClock` and
+`fmtDurationCompact` and its own tests. The other is `selection.svelte.ts` (E4-S6-T1), which the
+acceptance criterion names: `tests/unit/harnesses/PeekHarness.svelte` stands in for it with a plain
+list, and the assertion is the one that matters - the panel is a portal outside the list, so opening
+it leaves the rows, the selection and the scroll position exactly as they were. The action row is
+drawn only when an `onAction` handler is passed, because the confirm dialogs behind it are E5's:
+a button that cannot do what it says is worse than no button. E5 passes `app.actions` from `Shell`.
+
 ### E2-S5 Command palette and keyboard
 
 #### E2-S5-T1 Keyboard map

@@ -14,6 +14,7 @@ import { DEFAULT_TIME_RANGE, parseTimeRange, toQuery, type TimeRange } from '../
 import { host as defaultHost, type Host } from '../host.svelte';
 import { Router } from '../router.svelte';
 import { ViewStateStorage } from '../storage/view-state-storage';
+import { Peek } from './peek.svelte';
 import { Prefs } from './prefs.svelte';
 
 /** The context key every component uses: `getContext<AppState>(APP_CONTEXT_KEY)`. */
@@ -33,6 +34,9 @@ export class AppState {
   readonly endpoints: Endpoints;
   readonly router: Router;
   readonly prefs: Prefs;
+
+  /** The peeked row of whatever list is on screen (E2-S4); the panel lives in the shell. */
+  readonly peek = new Peek();
 
   /** What `/about` answered, or null until it has. */
   about = $state<About | null>(null);

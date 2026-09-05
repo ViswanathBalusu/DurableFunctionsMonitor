@@ -7,6 +7,7 @@
   let {
     ref = $bindable(null),
     class: className,
+    overlayClass,
     portalProps,
     side = 'right',
     children,
@@ -14,6 +15,8 @@
   }: WithoutChildrenOrChild<SheetPrimitive.ContentProps> & {
     portalProps?: SheetPrimitive.PortalProps;
     side?: 'top' | 'right' | 'bottom' | 'left';
+    /** `clear` for the peek panel, whose overlay only catches the outside click (dfm-ui.css L244). */
+    overlayClass?: string;
     children: Snippet;
   } = $props();
 
@@ -23,7 +26,7 @@
 </script>
 
 <SheetPrimitive.Portal {...portalProps}>
-  <SheetOverlay />
+  <SheetOverlay class={overlayClass} />
   <SheetPrimitive.Content
     bind:ref
     data-slot="sheet-content"
