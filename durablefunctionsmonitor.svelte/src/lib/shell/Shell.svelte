@@ -3,6 +3,8 @@
   import ProgressBar from '$lib/components/ProgressBar.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import Outlet from './Outlet.svelte';
+  import BottomNav from './BottomNav.svelte';
+  import MoreSheet from './MoreSheet.svelte';
   import SideNav from './SideNav.svelte';
   import TopBar from './TopBar.svelte';
 
@@ -17,6 +19,7 @@
   let { failuresCount = 0, onOpenPalette, onSignOut }: Props = $props();
 
   let topBar = $state<TopBar | null>(null);
+  let moreOpen = $state(false);
 
   /** The keyboard map (E2-S5) focuses the instance jump through the shell. */
   export function focusJump(): void {
@@ -48,4 +51,8 @@
       <Outlet />
     </main>
   </div>
+
+  <BottomNav {failuresCount} {moreOpen} onToggleMore={() => (moreOpen = !moreOpen)} />
 </div>
+
+<MoreSheet bind:open={moreOpen} {onOpenPalette} />
