@@ -163,6 +163,40 @@ describe('AppState', () => {
     expect(app.busy).toBe(false);
   });
 
+  it('counts a promise it is handed, and comes back down on a rejection', async () => {
+    const app = appWith();
+
+    const inFlight = app.track(Promise.reject(new Error('500 Internal Server Error')));
+
+    expect(app.busy).toBe(true);
+
+    await expect(inFlight).rejects.toThrow('500 Internal Server Error');
+
+    // The caller still sees the rejection; the bar does not stay up because of it
+    expect(app.busy).toBe(false);
+    expect(app.progress).toBe(0);
+  });
+
+  it('holds the bar up until the last of several requests is done', async () => {
+    const app = appWith();
+
+    let releaseFirst = () => {};
+    let releaseSecond = () => {};
+
+    const first = app.track(new Promise<void>((resolve) => (releaseFirst = resolve)));
+    const second = app.track(new Promise<void>((resolve) => (releaseSecond = resolve)));
+
+    expect(app.progress).toBe(2);
+
+    releaseFirst();
+    await first;
+    expect(app.busy).toBe(true);
+
+    releaseSecond();
+    await second;
+    expect(app.busy).toBe(false);
+  });
+
   it('never counts below zero', () => {
     const app = appWith();
 
@@ -195,6 +229,96 @@ describe('AppState', () => {
 
     expect(app.autoRefreshSeconds('instances')).toBe(15);
     expect(app.autoRefreshSeconds('instance')).toBe(0);
+  });
+
+  it('sets an auto-refresh interval through the preferences', () => {
+    const app = appWith();
+
+    app.setAutoRefresh('instance', 5);
+
+    expect(app.autoRefreshSeconds('instance')).toBe(5);
+    expect(app.prefs.autoRefresh.instance).toBe(5);
+  });
+
+  it('refreshes whatever the screen on show registered', () => {
+    const app = appWith();
+    const load = vi.fn();
+
+    const dispose = app.onRefresh(load);
+    app.refresh();
+    app.refresh();
+
+    expect(load).toHaveBeenCalledTimes(2);
+
+    dispose();
+    app.refresh();
+
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls every handler of the screen, in the order they registered', () => {
+    const app = appWith();
+    const order: string[] = [];
+
+    app.onRefresh(() => order.push('list'));
+    app.onRefresh(() => order.push('histogram'));
+
+    app.refresh();
+
+    expect(order).toEqual(['list', 'histogram']);
+  });
+
+  it('survives a handler that unregisters while it runs', () => {
+    const app = appWith();
+    const second = vi.fn();
+
+    const dispose = app.onRefresh(() => dispose());
+    app.onRefresh(second);
+
+    expect(() => app.refresh()).not.toThrow();
+    expect(second).toHaveBeenCalledOnce();
+  });
+
+  it('drops the handlers of the screen that is leaving, and keeps the arriving one', () => {
+    const app = appWith({ path: '/DurableFunctionsHub' });
+    const leaving = vi.fn();
+    const arriving = vi.fn();
+
+    app.onRefresh(leaving);
+
+    // Whichever way round the outgoing cleanup and the incoming registration run: the outlet names
+    // the screen it is unmounting, so the arriving screen's handler is never caught by it
+    app.router.navigate({ name: 'entities', hub: app.hub });
+    app.onRefresh(arriving);
+    app.clearRefreshHandlers('overview');
+    app.refresh();
+
+    expect(leaving).not.toHaveBeenCalled();
+    expect(arriving).toHaveBeenCalledOnce();
+  });
+
+  it('names the workspace of one instance apart from another', () => {
+    const app = appWith({ path: '/DurableFunctionsHub/instances/order-1' });
+
+    expect(app.screenKey).toBe('instance:order-1');
+
+    app.router.navigate({ name: 'instance', hub: app.hub, instanceId: 'order-2' });
+    expect(app.screenKey).toBe('instance:order-2');
+
+    // A filter or a range change is the same screen
+    app.setTimeRange({ preset: '7d' });
+    expect(app.screenKey).toBe('instance:order-2');
+  });
+
+  it('drops every handler when it is not told which screen', () => {
+    const app = appWith();
+    const load = vi.fn();
+
+    app.onRefresh(load);
+    app.clearRefreshHandlers();
+    app.refresh();
+
+    expect(load).not.toHaveBeenCalled();
   });
 
   it('reports the user name the host injected', () => {

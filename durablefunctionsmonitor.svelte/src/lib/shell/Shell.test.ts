@@ -3,6 +3,7 @@
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
+import type { AppState } from '$lib/state/app.svelte';
 import ShellHarness from '../../../tests/unit/harnesses/ShellHarness.svelte';
 
 describe('Shell', () => {
@@ -73,6 +74,21 @@ describe('Outlet', () => {
 
     expect(await screen.findByRole('heading', { name: 'Failures', level: 1 })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Overview', level: 1 })).toBeNull();
+  });
+
+  it('drops the refresh handlers of the screen it leaves', async () => {
+    const { component } = render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
+    const harness = component as unknown as { appState: () => AppState; go: (name: string) => void };
+
+    const load = vi.fn();
+    harness.appState().onRefresh(load);
+
+    harness.go('entities');
+    await screen.findByRole('heading', { name: 'Entities', level: 1 });
+
+    harness.appState().refresh();
+
+    expect(load).not.toHaveBeenCalled();
   });
 
   it('rewrites a legacy instance path to the canonical one', () => {

@@ -89,6 +89,10 @@
     return app.toast;
   }
 
+  export function appState() {
+    return app;
+  }
+
   export function peekState() {
     return app.peek;
   }

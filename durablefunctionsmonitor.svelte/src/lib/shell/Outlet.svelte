@@ -33,12 +33,15 @@
     }
   });
 
-  // A new screen starts at the top, as it would after a page load (DFM App.dc.html L287).
+  // A new screen starts at the top, as it would after a page load (DFM App.dc.html L287), and the
+  // refresh handlers of the screen that is leaving go with it (E2-S6-T2). Keyed on the screen and
+  // not on the route object, so a filter or a range change does neither.
   $effect(() => {
-    void route.name;
-    void ('instanceId' in route ? route.instanceId : '');
+    const screen = app.screenKey;
 
     globalThis.scrollTo?.(0, 0);
+
+    return () => app.clearRefreshHandlers(screen);
   });
 </script>
 

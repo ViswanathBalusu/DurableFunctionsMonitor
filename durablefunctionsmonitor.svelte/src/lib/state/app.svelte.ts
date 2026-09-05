@@ -15,11 +15,14 @@ import { host as defaultHost, type Host } from '../host.svelte';
 import { Router } from '../router.svelte';
 import { ViewStateStorage } from '../storage/view-state-storage';
 import { Peek } from './peek.svelte';
-import { Prefs } from './prefs.svelte';
+import { Prefs, type AutoRefreshSeconds } from './prefs.svelte';
 import { Toasts } from './toast.svelte';
 
 /** The context key every component uses: `getContext<AppState>(APP_CONTEXT_KEY)`. */
 export const APP_CONTEXT_KEY = 'dfm';
+
+/** Which of the two auto-refresh intervals a screen uses (contracts §8). */
+export type AutoRefreshScreen = keyof AutoRefreshSeconds;
 
 export interface AppStateOptions {
   host?: Host;
@@ -117,9 +120,59 @@ export class AppState {
   }
 
   /** Seconds between automatic reloads of one screen; 0 = never (prefs, contracts §8). */
-  autoRefreshSeconds(screen: 'instances' | 'instance'): number {
+  autoRefreshSeconds(screen: AutoRefreshScreen): number {
     return this.prefs.autoRefresh[screen];
   }
+
+  /** The list screens share one interval, the workspace has its own. */
+  setAutoRefresh(screen: AutoRefreshScreen, seconds: number): void {
+    this.prefs.setAutoRefresh(screen, seconds);
+  }
+
+  /**
+   * Registers the reload of the screen on show and returns the disposer for it. A screen registers
+   * from an effect, so the disposer runs when it unmounts; each handler also remembers the route it
+   * was registered on, which is what makes `clearRefreshHandlers` independent of the order in which
+   * the outgoing screen's cleanup and the incoming screen's registration happen to run.
+   */
+  onRefresh(handler: () => void): () => void {
+    const entry = { handler, screen: this.screenKey };
+
+    this.#refreshHandlers.push(entry);
+
+    return () => this.#remove((candidate) => candidate === entry);
+  }
+
+  /** Reloads whatever is on screen: the screen's Refresh button, the palette, VS Code. */
+  refresh(): void {
+    // A copy: a handler may unregister itself (or another) while this runs
+    for (const entry of [...this.#refreshHandlers]) {
+      entry.handler();
+    }
+  }
+
+  /**
+   * Called by the outlet when a screen goes away, with the screen it is unmounting. Naming it - the
+   * outlet knows it, having rendered it - is what makes this independent of when the cleanup runs
+   * relative to the arriving screen's registration. Without an argument, every handler goes.
+   */
+  clearRefreshHandlers(screen?: string): void {
+    this.#remove((entry) => screen === undefined || entry.screen === screen);
+  }
+
+  #remove(matches: (entry: { handler: () => void; screen: string }) => boolean): void {
+    for (let index = this.#refreshHandlers.length - 1; index >= 0; index--) {
+      if (matches(this.#refreshHandlers[index])) {
+        this.#refreshHandlers.splice(index, 1);
+      }
+    }
+  }
+
+  /**
+   * What `refresh()` calls: whatever the screen on show registered, and which screen that was.
+   * A plain array: nothing renders from it, so it is deliberately not reactive state.
+   */
+  readonly #refreshHandlers: { handler: () => void; screen: string }[] = [];
 
   begin(): void {
     this.progress += 1;
@@ -129,11 +182,15 @@ export class AppState {
     this.progress = Math.max(0, this.progress - 1);
   }
 
-  /** Runs one request with the progress counter held up for its duration. */
-  async track<T>(work: () => Promise<T>): Promise<T> {
+  /**
+   * Runs one request with the progress counter held up for its duration - a promise or the function
+   * that starts one - so the stripe under the top bar shows for as long as anything is in flight.
+   * The counter comes back down on a rejection too; the caller still sees the rejection.
+   */
+  async track<T>(work: Promise<T> | (() => Promise<T>)): Promise<T> {
     this.begin();
     try {
-      return await work();
+      return await (typeof work === 'function' ? work() : work);
     } finally {
       this.end();
     }
@@ -160,6 +217,17 @@ export class AppState {
       this.aboutError = error instanceof Error ? error.message : String(error);
       return null;
     }
+  }
+
+  /**
+   * Which screen is on, ignoring the query: the workspace of two different instances counts as two
+   * screens, and a filter change is the same screen (which is why it neither scrolls the outlet to
+   * the top nor drops the screen's refresh handlers).
+   */
+  get screenKey(): string {
+    const route = this.router.current;
+
+    return 'instanceId' in route ? `instance:${route.instanceId}` : route.name;
   }
 
   /** React parity: `Durable Functions Monitor (account/hub[, ReadOnly]) vX.Y.Z`. */
