@@ -9,6 +9,7 @@
   import JsonCell from '$lib/components/table/cells/JsonCell.svelte';
   import StatusCell from '$lib/components/table/cells/StatusCell.svelte';
   import { nextSort, type ColumnDef, type SortState } from '$lib/components/table/columns';
+  import { SvelteSet } from 'svelte/reactivity';
   import { isRouterClick } from '$lib/router.svelte';
   import { fmtDuration } from '$lib/format/duration';
   import { fmtInt } from '$lib/format/number';
@@ -32,6 +33,22 @@
   const sort = $derived<SortState>({ id: instances.orderBy, dir: instances.dir });
 
   const hiddenCount = $derived(instances.effectiveHiddenColumns.length);
+
+  /**
+   * The table works in plain sets of row keys; the selection store is what the bulk bar and the
+   * dialogs read, and it keeps the orchestrator name of every id beside it. The two are joined by a
+   * function binding rather than by handing the store's own set over: `DataTable` reassigns the set
+   * it is given, which a store cannot be told about.
+   */
+  const selectedKeys = $derived(new SvelteSet(instances.selection.ids));
+
+  function selectKeys(keys: Set<string>): void {
+    instances.selection.set(
+      instances.rows
+        .filter((row) => keys.has(row.instanceId))
+        .map((row) => ({ instanceId: row.instanceId, name: displayName(row) })),
+    );
+  }
 
   const columns = $derived<ColumnDef<OrchestrationStatus>[]>(
     baseColumns().map((column) => ({
@@ -167,7 +184,7 @@
   rowKey={(row) => row.instanceId}
   rowStatus={(row) => row.runtimeStatus}
   selectable
-  selected={instances.selection.ids}
+  bind:selected={() => selectedKeys, selectKeys}
   hiddenColumns={instances.effectiveHiddenColumns}
   {sort}
   ariaLabel="Instances"

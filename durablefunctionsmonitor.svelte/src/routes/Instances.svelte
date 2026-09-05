@@ -7,11 +7,13 @@
   import FilterChips from '$lib/instances/FilterChips.svelte';
   import FilterRail from '$lib/instances/FilterRail.svelte';
   import InstancesTable from '$lib/instances/InstancesTable.svelte';
+  import BulkActionBar from '$lib/instances/BulkActionBar.svelte';
   import HistogramView from '$lib/instances/HistogramView.svelte';
   import SavedViewsMenu from '$lib/instances/SavedViewsMenu.svelte';
   import TimelineView from '$lib/instances/TimelineView.svelte';
   import ViewStrip from '$lib/instances/ViewStrip.svelte';
   import { label as rangeLabel } from '$lib/filters/time-range';
+  import type { BatchAction } from '$lib/api/types';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Instances } from '$lib/state/instances.svelte';
 
@@ -24,6 +26,9 @@
 
   /** `?selectAll=1` from VS Code: the rows are not there yet when the flag is read. */
   let selectAllPending = $state(false);
+
+  /** The bulk action waiting to be confirmed; its dialog is E4-S6-T3. */
+  let bulkAction = $state<BatchAction | null>(null);
 
   onMount(() => {
     startOpen = instances.takeFlag('start');
@@ -122,5 +127,15 @@
         <HistogramView {instances} />
       {/if}
     </div>
+  {/if}
+
+  <BulkActionBar
+    count={instances.selection.count}
+    onAction={(action) => (bulkAction = action)}
+    onClear={() => instances.selection.clear()}
+  />
+
+  {#if bulkAction}
+    <!-- The confirm dialogs are E4-S6-T3, and the runner behind them E4-S6-T4 -->
   {/if}
 </Page>

@@ -196,6 +196,14 @@ Accept:
 - [ ] Appears with one selected row; `×` hides it.
 Test: as above.
 
+**Deviation, E4-S6-T2 (2026-09-05).** The vocabulary is `BatchAction` from contracts §6, which
+already names the six (`raise-event`, not `raise`); the bar carries only their labels. Landing it
+found the gap it needed: `InstancesTable` passed the selection store's own set to `DataTable`, and
+`DataTable` reassigns that prop rather than mutating it, so nothing outside the table ever learned
+what was selected. The two are now joined by a function binding, which also gives the store the
+orchestrator name of every selected id - what the confirm dialogs list - and makes `?selectAll=1`
+show as ticked boxes.
+
 #### E4-S6-T3 Bulk confirm dialogs
 Files: `src/lib/instances/BulkConfirmDialog.svelte`, `src/lib/instances/bulk-defs.ts`, tests
 Depends: E1-S4-T2, E1-S6-T3
