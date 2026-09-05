@@ -57,7 +57,8 @@ describe('Outlet', () => {
   it.each([
     ['/DurableFunctionsHub', 'Overview'],
     ['/DurableFunctionsHub/instances', 'Instances'],
-    ['/DurableFunctionsHub/instances/order-1', 'Instance'],
+    // The workspace is titled by the instance it has open, not by the word "Instance"
+    ['/DurableFunctionsHub/instances/order-1', 'order-1'],
     ['/DurableFunctionsHub/failures', 'Failures'],
     ['/DurableFunctionsHub/entities', 'Entities'],
     ['/DurableFunctionsHub/functions', 'Functions'],
@@ -100,7 +101,7 @@ describe('Outlet', () => {
     render(ShellHarness, { props: { path: '/DurableFunctionsHub/durable-instances/order-1' } });
 
     // Decision D8: the alias resolves to the instance route, and the URL is rewritten to match
-    expect(screen.getByRole('heading', { name: 'Instance', level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'order-1', level: 1 })).toBeInTheDocument();
     expect(window.location.pathname).toBe('/DurableFunctionsHub/instances/order-1');
   });
 });
