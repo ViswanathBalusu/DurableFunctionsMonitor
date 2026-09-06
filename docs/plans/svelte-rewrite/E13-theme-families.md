@@ -36,8 +36,8 @@ Do:
 4. `chart-tokens.ts`: `glyphColor()` next to `inkColor()`; the SVG export resolves `--glyph` like any other token (it already reads computed values, nothing to do there beyond the test).
 5. `themes.spec.ts`: in the per-theme test, for `entry.family === 'brutal'` assert the computed `--glyph` equals the computed `--ink`.
 Accept:
-- [ ] In all five papers, both modes, `--glyph` computes to the same value as `--ink` (e2e), so no brutalist screen changes.
-- [ ] `styles-verbatim.test.ts` asserts `app.css` imports `families/base.css` after `dfm-ext.css`, and that `base.css` contains exactly one rule and it is the `--glyph` default.
+- [x] In all five papers, both modes, `--glyph` computes to the same value as `--ink` (e2e), so no brutalist screen changes.
+- [x] `styles-verbatim.test.ts` asserts `app.css` imports `families/base.css` after `dfm-ext.css`, and that `base.css` contains exactly one rule and it is the `--glyph` default.
 Test: unit + the e2e assertion above.
 
 #### E13-S1-T3 Family-aware tests
