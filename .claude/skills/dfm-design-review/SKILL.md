@@ -5,7 +5,7 @@ description: Review a DFM Svelte screen or component against its mockup (docs/ui
 
 # DFM design review
 
-Inputs: the task id (or screen name), the mockup file, `dfm-ui.css`, `dfm-design-system.md` §3–§8, `00-shared-contracts.md` §9–§14. Output: a numbered list of deviations, each with `where` (file:line), `expected` (mockup line or rule), `actual`, `severity` (blocker / should / nit). No prose beyond that.
+Inputs: the task id (or screen name), the mockup file, `dfm-ui.css`, `dfm-design-system.md` §3–§8, `00-shared-contracts.md` §9–§14 and §16 (which of the design system's rules hold in every theme family and which only in the papers). Output: a numbered list of deviations, each with `where` (file:line), `expected` (mockup line or rule), `actual`, `severity` (blocker / should / nit). No prose beyond that.
 
 ## Checklist
 
@@ -15,13 +15,24 @@ Structure and copy
 - [ ] Mockup-only affordances are absent (Mock outcome select, Mockup states panel, feature-flag switches as toggles).
 - [ ] Data that the backend does not provide is omitted or degraded exactly as the task says, not faked.
 
-Visual rules (design system §3–§8)
-- [ ] Solid status fills with ink outline and dark text; no alpha tints, no gradients, no soft shadows (only `--shadow-brutal*`).
-- [ ] One loud element per screen; tables carry the standard shadow on list screens, panels none, dialogs and peek the long shadow.
+Visual rules, universal (design system §3–§8 as contracts §16 splits them; every theme family)
+- [ ] Solid status fills with dark text that keep their hue; the status spine on every list row is the one loud thing in a table.
+- [ ] One loud element per screen; colour is a vocabulary (eight statuses, two kinds, seven node kinds, five series), never decoration.
 - [ ] Mono (`.mono`/`.data`/`.fine`) for ids, timestamps, durations, JSON, counters, function names; sans for everything that speaks.
 - [ ] Buttons: verb + object for destructive ones; icons never alone; `danger` variant (stripe) only for Dangerous operations; disabled = 50 % opacity with a `title` reason.
-- [ ] Focus ring visible on every interactive element; tab order follows the visual order.
+- [ ] Focus ring visible on every interactive element, as a colour and never as the line; tab order follows the visual order.
 - [ ] Status spine present on every list row (`data-st`); `data-label` on every cell for the mobile card layout.
+- [ ] Small marks (ticks, knobs, carets, sort triangles, arrowheads, the "now" line, hatches) are drawn in `--glyph`; outlines in `--ink`.
+- [ ] Motion only in answer to an action; `prefers-reduced-motion` removes it.
+
+Visual rules, brutalist (when the theme's family is `brutal`, which every paper is)
+- [ ] Ink outline on every control and container; no alpha tints, no gradients, no blur, no soft shadows (only `--shadow-brutal*`).
+- [ ] Tables carry the standard shadow on list screens, panels none, dialogs and peek the long shadow.
+- [ ] Behind the page only the theme's own paper pattern (halftone, dots, grid) or nothing.
+
+Family look (when the theme's family is not `brutal`; the look is specified in E14 and E15)
+- [ ] Glass: one `backdrop-filter` per surface class (`.snav`, `.topbar`, `.panel`, `.card`, `.tbl-wrap`, `.pop`, `.dialog`, `.peek`, `.palette`…), never on rows, chips or buttons; the backdrop blobs only on the page (`body::before`); a strong `--glyph` over a soft `--ink`; `prefers-reduced-transparency` makes the surfaces opaque.
+- [ ] Neu: one material for page, card and input; elevation from the light/shade shadow pair; inputs, pressed buttons, pressed segments and the selected tab inset (`--shadow-inset`); panels raised; no visible line, and `prefers-contrast: more` gives every surface an edge.
 
 Behaviour
 - [ ] Row click opens the peek; id link opens the page; Ctrl/⌘ click opens a new tab/panel.
@@ -32,7 +43,7 @@ Behaviour
 - [ ] Escape closes the innermost layer; menus close on outside click and return focus.
 
 Theme and responsive
-- [ ] Switching all five themes and both modes shows no un-tokenised colour (grep the diff for `#` colours and `rgba(`).
+- [ ] Switching every theme in `THEMES` and both modes shows no un-tokenised colour (grep the diff for `#` colours and `rgba(`).
 - [ ] At 1100 px the rail wraps and Summary becomes a tab; at 768 px bottom nav, stacked cards, peek as a bottom sheet.
 
 Tests
@@ -41,5 +52,5 @@ Tests
 ## How to run the review
 
 1. Read the task and the mockup lines it cites; open the implementation files.
-2. Run the app against the seeded hub (`dfm-e2e-harness`) and look at the screen in Poster light, Blueprint dark, and at 1024 px and 390 px. Take screenshots with Playwright when in doubt (`npx playwright test tests/e2e/themes.spec.ts` once E12-S3-T3 exists, or an ad-hoc script).
+2. Run the app against the seeded hub (`dfm-e2e-harness`) and look at the screen in Poster light, Blueprint dark, and at 1024 px and 390 px - and, when the task is an E14/E15 one, in the family's own theme in both modes. Take screenshots with Playwright when in doubt (`npx playwright test tests/e2e/themes.spec.ts` shoots every theme and mode; `npm run preview:styles` shoots the design-system preview page with the family sheets).
 3. Fill the deviation list. A missing or wrong copy string is a `should`; a missing element, wrong data source, fake data, or a broken rule from the design system's "never/always" list is a `blocker`.

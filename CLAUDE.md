@@ -12,7 +12,7 @@ Monitoring UI for Azure Durable Functions. Backend: .NET 10 isolated Azure Funct
 
 ## Frozen paths (a hook refuses edits)
 
-`docs/ui-plans-artifacts/**` (design source), any `DfmStatics/**` (build output; produce it with `npm run build-and-copy`), `durablefunctionsmonitor.svelte/src/styles/dfm-ui.css` and `dfm-tokens.css` (verbatim copies; additions go to `dfm-ext.css`).
+`docs/ui-plans-artifacts/**` (design source), any `DfmStatics/**` (build output; produce it with `npm run build-and-copy`), `durablefunctionsmonitor.svelte/src/styles/dfm-ui.css` and `dfm-tokens.css` (verbatim copies; additions go to `dfm-ext.css`; theme families go to `src/styles/families/` (contracts §16)).
 
 ## Commands
 

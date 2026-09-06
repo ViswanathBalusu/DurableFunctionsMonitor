@@ -9,7 +9,7 @@ Read once per task: `docs/plans/svelte-rewrite/00-shared-contracts.md` §1 (layo
 
 ## The three laws
 
-1. Markup uses the mockup's classes from `src/styles/dfm-ui.css` (`btn`, `chip`, `tbl`, `panel`, `pop`, `mi`, `dialog`…). Never write CSS for something the stylesheet already styles. App-specific additions go to `src/styles/dfm-ext.css` only. Tailwind utilities are for layout (`flex`, `grid`, `gap-*`, `min-w-0`) and one-off spacing.
+1. Markup uses the mockup's classes from `src/styles/dfm-ui.css` (`btn`, `chip`, `tbl`, `panel`, `pop`, `mi`, `dialog`…). Never write CSS for something the stylesheet already styles. App-specific additions go to `src/styles/dfm-ext.css` only. Family sheets under `src/styles/families/` are the one place allowed to override `dfm-ui.css`, scoped to their theme (contracts §16). Tailwind utilities are for layout (`flex`, `grid`, `gap-*`, `min-w-0`) and one-off spacing.
 2. Every JSON value the user sees is `formatJson(value)`: pretty-printed with two spaces and fully expanded. Viewers call `expand([], () => true)`. The only exception is a one-line `previewJson` inside a table cell that opens the full viewer.
 3. Behaviour comes from the backend: capabilities from `/about`, eligibility from `input-events`, counts from `/stats`. Do not hard-code provider names or invent data. Degrade as the task says.
 

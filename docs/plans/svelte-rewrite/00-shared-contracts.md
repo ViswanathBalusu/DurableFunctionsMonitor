@@ -18,6 +18,9 @@ durablefunctionsmonitor.svelte/
     app.css                       # @import "tailwindcss"; tokens; @import "./styles/dfm-ui.css"
     styles/dfm-tokens.css         # verbatim copy of docs/ui-plans-artifacts/uploads/files/dfm-tokens.css
     styles/dfm-ui.css             # verbatim copy of docs/ui-plans-artifacts/dfm-ui.css minus its reset lines (E1-S1-T2 says which)
+    styles/dfm-ext.css            # the app's additions; never overrides a dfm-ui.css rule
+    styles/families/base.css      # theme families (§16): what every family shares - the `--glyph` default - imported after dfm-ext.css
+    styles/families/<key>.css     # one plain-CSS sheet per non-brutalist theme, every rule scoped to its own [data-theme] (§16)
     lib/
       host.svelte.ts              # the only file that reads the injected globals (§3)
       router.svelte.ts            # §4
@@ -408,7 +411,7 @@ Two storages, both behind `ITypedLocalStorage<T>` (`setItem`, `setItems`, `getIt
 - `PrefsStorage`: localStorage in the browser (`dfm.theme`, `dfm.mode`, `dfm.density`, `dfm.showTimeAs`, `dfm.nav`, `dfm.thresholds`, `dfm.savedViews`, `dfm.autoRefresh.instances`, `dfm.autoRefresh.instance`), `PersistState` with key `prefs` in VS Code. Never written to the URL.
 - `ViewStateStorage`: URL query first, then localStorage `dfm.view.<screen>::<field>` (browser) or `PersistState` key `view.<screen>` (VS Code). Used for filters, tab, ordering, hidden columns so links are shareable and the state survives reload.
 
-Precedence for mode: user choice → `clientConfig.theme` → `prefers-color-scheme`. For theme: user choice → `clientConfig.dfmTheme` → `poster`. Density: `compact` unless chosen. Time display: user choice → `clientConfig.showTimeAs` → `UTC`.
+Precedence for mode: user choice → `clientConfig.theme` → `prefers-color-scheme`. For theme: user choice → `clientConfig.dfmTheme` → `poster`; a value counts when it is one of the keys of `THEMES` (`src/lib/themes.ts`), which is the one list of themes in the app - the tests and the docs derive theirs from it (§16). Density: `compact` unless chosen. Time display: user choice → `clientConfig.showTimeAs` → `UTC`.
 
 Applying: `document.documentElement.dataset.theme = theme`, `classList.toggle('dark', mode === 'dark')`, `dataset.density = density`. Use `mode-watcher` for the dark class and system preference; set the attribute yourself.
 
@@ -518,8 +521,10 @@ Graph node kinds: `orchestrator`, `activity`, `entity`, `suborchestrator`, `http
 | | `npm run lint` | eslint + prettier check |
 | | `npm test` | vitest run |
 | | `npm run test:e2e` | playwright (needs Azurite + host, see E3) |
+| | `npm run preview:styles` | the design-system preview page with the family sheets, photographed per theme and mode (§16) |
 | repo root | `node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build` | build contract check |
 | | `node scripts/harness/plan-status.mjs [next|E4]` | next open task / epic status |
+| | `node scripts/harness/style-preview.mjs [--shoot]` | builds `durablefunctionsmonitor.svelte/build/style-preview/index.html`; `--shoot` photographs it |
 | | `dotnet build DurableFunctionsMonitor.slnx` | everything, including the esproj (runs npm build) |
 | | `dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.tests` | backend unit tests |
 | | `dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests` | Azurite tests (Inconclusive without Azurite) |
@@ -538,3 +543,37 @@ Local host environment for development and e2e (`local.settings.json`, gitignore
 ```
 
 `DFM_NONCE=i_sure_know_what_i_am_doing` disables authentication; `easyauth-config` then returns no `clientId` and the UI skips MSAL.
+
+## §16 Theme families (E13; README D12–D14)
+
+A theme has a `family` (`ThemeDescriptor.family` in `src/lib/themes.ts`): `brutal` for the papers, `glass` and `neu` for the two soft families. The family is a property of the theme and never a second preference: `dfm.theme`, `dfmTheme`, the menu, the Settings tiles and the palette list themes, and nothing in the app branches on the family except the tests and the metrics label.
+
+A family is one plain-CSS sheet, `src/styles/families/<key>.css`, imported from `app.css` after `families/base.css`, which comes after `dfm-ext.css`:
+
+- every rule is scoped under `[data-theme="<key>"]`, `.dark[data-theme="<key>"]`, `html[data-theme="<key>"]` or `html.dark[data-theme="<key>"]`, or sits inside `@media (prefers-reduced-transparency: reduce)` / `@media (prefers-contrast: more)` with the same scoping, so nothing of it reaches the papers;
+- it declares every token `[data-theme="poster"]` declares in its light block, every token `.dark[data-theme="poster"]` declares in its dark block, and `--glyph` in both - a token left out would silently inherit Poster's value;
+- it is plain CSS the browser loads without Tailwind (no `@utility`, `@theme`, `@custom-variant`, `@apply`, no Tailwind classes), which is how `node scripts/harness/style-preview.mjs` loads it;
+- a family sheet may override a `dfm-ui.css` rule for its own theme; nothing else may. `base.css` holds only what every family shares (today one rule, `:root { --glyph: var(--ink); }`), `dfm-ext.css` holds nothing family-related, and `dfm-tokens.css` and `dfm-ui.css` stay verbatim.
+
+`tests/unit/family-sheets.test.ts` enforces the first three for every non-brutal entry of `THEMES`; `tests/e2e/themes.spec.ts` asserts each theme by its family and photographs the seven-screen matrix for all of them; `tests/e2e/a11y.spec.ts` runs one theme per family.
+
+`--glyph` is the colour of a small solid mark: the checkbox tick, the switch knob, the select caret, the sort triangle, an arrowhead, the "now" line, the orchestration bar, a hatch. In the papers it is `--ink`; a soft family sets it to a strong colour while its `--ink` goes soft, so a line can fade without the marks drawn in it disappearing. Components that draw marks themselves read it (`glyphColor()` in `chart-tokens.ts`, `var(--glyph)` in `dfm-ext.css` and the histogram brush); outlines - segment strokes, node frames, participant boxes - stay `--ink`.
+
+The design system's §3 rules split in two (D14). Universal, in every family:
+
+- status is a solid fill with dark text and keeps its hue; the status spine stays on every list row;
+- colour is a vocabulary - eight statuses, two kinds, seven node kinds, five series - and a theme changes the hue, never the meaning;
+- one loud element per screen;
+- sentence case; verb + object on destructive buttons; icons never alone;
+- the focus ring is a colour, never the line;
+- motion only in answer to an action, and `prefers-reduced-motion` removes it;
+- dark mode is a second face of the theme, not an inversion.
+
+Brutalist only (`family === 'brutal'`; the "papers are flat and hard" test in `themes.spec.ts` reads them from computed styles):
+
+- the ink outline as the line of every control and container;
+- the hard offset shadow, never blur;
+- no alpha, no gradients, no backdrop filter;
+- the paper patterns.
+
+What a soft family looks like is its own epic's business: E14 for Glass (one blur per surface, never on rows, chips or buttons; a strong glyph; the backdrop only on the page), E15 for Neu (one material, raised surfaces, inset inputs and pressed states, no visible line).

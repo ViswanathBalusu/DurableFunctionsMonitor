@@ -211,8 +211,11 @@ An operation this backend does not implement is a row that is there and disabled
 
 ## Themes, and the small screen
 
-Five themes, each in light and dark. The top bar's swatch switches both, `Ctrl`/`Cmd` `K` finds them
-by name, and the choice is kept per user.
+The themes in the menu come in families, and every theme has a light and a dark face. The papers -
+Poster, Riso, Memphis, Blueprint, Hazard - share the neo-brutalist look: an ink line, a hard offset
+shadow, flat colour. A theme of another family changes the paper, the line and the shadow, and the
+status colours keep their meaning in every one of them. The top bar's swatch switches theme and mode,
+`Ctrl`/`Cmd` `K` finds them by name, and the choice is kept per user.
 
 | | |
 |---|---|
@@ -331,7 +334,7 @@ storage keys, in the VS Code webview as one `prefs` blob in the webview's persis
 | Key | Values |
 |---|---|
 | `dfm.mode` | `light`, `dark`, `system` |
-| `dfm.theme` | the five theme names |
+| `dfm.theme` | the key of one of the themes in the menu |
 | `dfm.showTimeAs` | `UTC`, `Local` |
 | `dfm.density` | `compact`, `comfortable` |
 | `dfm.nav` | `collapsed`, `expanded` |
