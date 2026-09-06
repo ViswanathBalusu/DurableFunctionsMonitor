@@ -16,17 +16,10 @@
   import EmptyState from '$lib/components/EmptyState.svelte';
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
-  import Select, { type SelectOption } from '$lib/components/Select.svelte';
+  import TimeRangeSelect from '$lib/components/TimeRangeSelect.svelte';
   import FailureActionDialog, { type FailureActionKind } from '$lib/failures/FailureActionDialog.svelte';
   import FailureGroup from '$lib/failures/FailureGroup.svelte';
-  import {
-    TIME_RANGE_LABELS,
-    TIME_RANGE_PRESETS,
-    isPreset,
-    label as rangeLabel,
-    toQuery,
-    type TimeRangePreset,
-  } from '$lib/filters/time-range';
+  import { label as rangeLabel, toQuery } from '$lib/filters/time-range';
   import { fmtInt } from '$lib/format/number';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Failures } from '$lib/state/failures.svelte';
@@ -37,14 +30,6 @@
 
   /** What a row or a group button asked for; the dialog runs it and reloads the screen. */
   let pending = $state<{ kind: FailureActionKind; ids: string[] } | null>(null);
-
-  /** The five presets of the mockup's select, plus a custom window while one is on. */
-  const rangeOptions = $derived<SelectOption[]>([
-    ...TIME_RANGE_PRESETS.map((preset) => ({ value: preset, label: TIME_RANGE_LABELS[preset] })),
-    ...(isPreset(app.timeRange) ? [] : [{ value: 'custom', label: rangeLabel(app.timeRange) }]),
-  ]);
-
-  const rangeValue = $derived(isPreset(app.timeRange) ? app.timeRange.preset : 'custom');
 
   /** "last 24 hours", as the empty state reads it back to the user. */
   const rangeLower = $derived(rangeLabel(app.timeRange).toLowerCase());
@@ -85,12 +70,6 @@
     queueMicrotask(() => void failures.load());
   });
 
-  function pickRange(next: string): void {
-    if (next !== 'custom') {
-      app.setTimeRange({ preset: next as TimeRangePreset });
-    }
-  }
-
   function confirm(kind: FailureActionKind, ids: string[]): void {
     pending = { kind, ids };
   }
@@ -102,14 +81,7 @@
 -->
 <Page data-screen-label="Failures">
   <PageTitle title="Failures">
-    <Select
-      options={rangeOptions}
-      value={rangeValue}
-      ariaLabel="Time range"
-      size="sm"
-      width="auto"
-      onchange={pickRange}
-    />
+    <TimeRangeSelect />
 
     <!-- The chip carries the number; `summary` is the same sentence in one piece, for a reader -->
     <span class="meta" aria-label={failures.summary}>

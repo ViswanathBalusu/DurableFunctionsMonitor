@@ -24,6 +24,13 @@ unknown sub-path under a hub renders the Overview rather than a 404. In the VS C
 no address bar, so the same router runs in memory and the route is persisted with the rest of the
 view state.
 
+Overview, Instances, Failures, Functions and Activity share one **time range**, which is why it is in
+the URL (`range` for a preset, `from`/`to` for an exact window): set it on one of them and the others
+follow. The select offers the five presets — last 15 minutes, hour, 24 hours, 7 days, 30 days — and
+`Custom range…`, which opens a picker seeded with the window in force, in whichever clock the top bar
+is showing (UTC or local). Brushing the Overview's throughput chart or the Instances histogram sets
+the same kind of window, and the control then names it.
+
 ### Login and hub picker — `/`
 
 Outside the hub segment: sign in (Easy Auth / AAD, when the backend asks for it) and pick a task hub
@@ -301,6 +308,7 @@ Backend (app settings of the Function App, or `local.settings.json`):
 | `DFM_AUDIT_ENABLED` | `true` records every write and dangerous call into the `{hub}DfmAudit` table, which the Activity screen reads |
 | `DFM_STATS_CAP` | how many rows `/stats` and `/failures` scan before answering `partial` (default 50000) |
 | `DFM_AGGREGATION_CACHE_SECONDS` | how long `/stats`, `/failures` and `/storage` keep an answer (default 30, clamped to 0…3600, `0` disables it) |
+| `DFM_CUSTOM_TEMPLATES_FOLDER` | a folder to read custom Liquid tab templates, Function Maps and the custom meta tag from, instead of the storage account. A plain name (`dfm-templates`) is resolved next to the running app; an absolute path is taken as is |
 | `DFM_MODE` | exactly `ReadOnly` turns every write action into a disabled button |
 | `DFM_INGRESS_ROUTE_PREFIX` | the prefix a reverse proxy puts in front of the app |
 | `DFM_ALLOWED_USER_NAMES`, `DFM_ALLOWED_APP_ROLES`, `DFM_ALLOWED_FULL_ACCESS_APP_ROLES`, `DFM_ALLOWED_READ_ONLY_APP_ROLES` | who may sign in, and who may write; the three role lists may not overlap |

@@ -28,16 +28,9 @@
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import Segmented from '$lib/components/Segmented.svelte';
-  import Select, { type SelectOption } from '$lib/components/Select.svelte';
+  import TimeRangeSelect from '$lib/components/TimeRangeSelect.svelte';
   import FunctionsTable from '$lib/functions/FunctionsTable.svelte';
   import FunctionGraph from '$lib/graph/FunctionGraph.svelte';
-  import {
-    TIME_RANGE_LABELS,
-    TIME_RANGE_PRESETS,
-    isPreset,
-    label as rangeLabel,
-    type TimeRangePreset,
-  } from '$lib/filters/time-range';
   import { AZ_FUNC_AS_A_GRAPH_URL } from '$lib/instance/GraphTab.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Functions } from '$lib/state/functions.svelte';
@@ -50,13 +43,6 @@
 
   /** The extension's function-graph view: this screen alone, without the shell (contracts §3). */
   const graphOnly = $derived(app.host.viewMode === 1);
-
-  const rangeOptions = $derived<SelectOption[]>([
-    ...TIME_RANGE_PRESETS.map((preset) => ({ value: preset, label: TIME_RANGE_LABELS[preset] })),
-    ...(isPreset(app.timeRange) ? [] : [{ value: 'custom', label: rangeLabel(app.timeRange) }]),
-  ]);
-
-  const rangeValue = $derived(isPreset(app.timeRange) ? app.timeRange.preset : 'custom');
 
   onMount(() => {
     const stopRefresh = app.onRefresh(() => void functions.load());
@@ -83,12 +69,6 @@
 
     queueMicrotask(() => void functions.load());
   });
-
-  function pickRange(next: string): void {
-    if (next !== 'custom') {
-      app.setTimeRange({ preset: next as TimeRangePreset });
-    }
-  }
 
   async function save(): Promise<void> {
     const svg = graph?.toSvg();
@@ -119,14 +99,7 @@
 -->
 <Page data-screen-label="Functions">
   <PageTitle title="Functions">
-    <Select
-      options={rangeOptions}
-      value={rangeValue}
-      ariaLabel="Time range"
-      size="sm"
-      width="auto"
-      onchange={pickRange}
-    />
+    <TimeRangeSelect />
 
     {#if !graphOnly && functions.hasStats && functions.hasGraph}
       <div style="margin-left:auto">

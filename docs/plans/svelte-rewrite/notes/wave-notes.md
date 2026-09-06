@@ -317,3 +317,29 @@ The same folder holds `tab-templates/` (Liquid tab templates) and `custom-meta-t
 
 - `npx playwright test` starts the host itself through `webServer` (`reuseExistingServer: !CI`), which runs `dotnet build` in Debug. It needs `func` on PATH - the step before it installs the Core Tools globally - and it writes `local.settings.json` if the repo has none, which CI will not.
 - The VS Code extension step still runs its own `npm install -g azure-functions-core-tools@4`; it is now redundant but harmless, and pruning it belongs to E12.
+
+## Out-of-plan changes
+
+### Custom time range picker, and `DFM_CUSTOM_TEMPLATES_FOLDER` (2026-09-06)
+
+Two changes asked for outside the plan; both deviate from a note above, so they are recorded here.
+
+**The range select has a sixth entry.** The mockups' select is five presets (`DFM App.dc.html` L336) and a
+custom window could only be set by brushing a chart or by typing `from`/`to` into the URL. It now also
+offers `Custom range…`, which opens a `ConfirmDialog` with two `DateTimeField`s seeded from the window in
+force. That entry is an action, not a range: it is put straight back, so a cancelled dialog leaves the
+trigger naming the window that is actually in force. Nothing else about the control changed - the five
+preset labels, their order, and the custom window as a sixth entry while one is on are all as specified
+(contracts §4).
+
+The five copies of that select (Overview, Instances' `RangeChip`, Failures, Functions, Activity) are now
+one component, `$lib/components/TimeRangeSelect.svelte`. A design review of any of those screens will see
+one option the mockup does not have; that is this, and it is deliberate. The command palette still lists
+only the five presets.
+
+**`DFM_CUSTOM_TEMPLATES_FOLDER` now exists**, so the E3-S2-T1 note above ("a flag writing some
+`DFM_CUSTOM_TEMPLATES_FOLDER` variable would be read by nothing") no longer holds: `DfmSettings` reads it
+like every other setting, and `--custom-templates=<folder>` could now be added to the harness runner.
+`CustomTemplates` also resolves a relative folder against `AppContext.BaseDirectory` instead of prepending
+`..` to the assembly's own folder, which is what the isolated layout needs - a plain `dfm-templates` now
+means the folder next to the app, and an absolute path is taken as is.

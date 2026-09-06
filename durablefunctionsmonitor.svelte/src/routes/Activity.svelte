@@ -25,27 +25,13 @@
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import Select, { type SelectOption } from '$lib/components/Select.svelte';
-  import {
-    TIME_RANGE_LABELS,
-    TIME_RANGE_PRESETS,
-    isPreset,
-    label as rangeLabel,
-    type TimeRangePreset,
-  } from '$lib/filters/time-range';
+  import TimeRangeSelect from '$lib/components/TimeRangeSelect.svelte';
   import { ALL_OPERATIONS, Activity, OPERATIONS } from '$lib/state/activity.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
   const activity = new Activity({ app });
-
-  /** The five presets of the mockup's select, plus a custom window while one is on. */
-  const rangeOptions = $derived<SelectOption[]>([
-    ...TIME_RANGE_PRESETS.map((preset) => ({ value: preset, label: TIME_RANGE_LABELS[preset] })),
-    ...(isPreset(app.timeRange) ? [] : [{ value: 'custom', label: rangeLabel(app.timeRange) }]),
-  ]);
-
-  const rangeValue = $derived(isPreset(app.timeRange) ? app.timeRange.preset : 'custom');
 
   /** Every name the middleware can write, and the entry that means "do not filter at all". */
   const operationOptions: SelectOption[] = [ALL_OPERATIONS, ...OPERATIONS].map((operation) => ({
@@ -82,12 +68,6 @@
 
     queueMicrotask(() => void activity.load());
   });
-
-  function pickRange(next: string): void {
-    if (next !== 'custom') {
-      app.setTimeRange({ preset: next as TimeRangePreset });
-    }
-  }
 </script>
 
 <!--
@@ -96,14 +76,7 @@
 -->
 <Page data-screen-label="Activity">
   <PageTitle title="Activity">
-    <Select
-      options={rangeOptions}
-      value={rangeValue}
-      ariaLabel="Time range"
-      size="sm"
-      width="auto"
-      onchange={pickRange}
-    />
+    <TimeRangeSelect />
 
     <Select
       options={operationOptions}

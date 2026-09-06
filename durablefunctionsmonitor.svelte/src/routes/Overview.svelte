@@ -6,14 +6,8 @@
   import EmptyState from '$lib/components/EmptyState.svelte';
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
-  import Select, { type SelectOption } from '$lib/components/Select.svelte';
-  import {
-    TIME_RANGE_LABELS,
-    TIME_RANGE_PRESETS,
-    isPreset,
-    label as rangeLabel,
-    type TimeRangePreset,
-  } from '$lib/filters/time-range';
+  import TimeRangeSelect from '$lib/components/TimeRangeSelect.svelte';
+  import { isPreset, label as rangeLabel } from '$lib/filters/time-range';
   import { fmtInt } from '$lib/format/number';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import BacklogPanel from '$lib/overview/BacklogPanel.svelte';
@@ -27,14 +21,6 @@
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
   const overview = new Overview({ app });
-
-  /** The five presets of the mockup's select; a brushed window is a sixth entry while it is on. */
-  const rangeOptions = $derived<SelectOption[]>([
-    ...TIME_RANGE_PRESETS.map((preset) => ({ value: preset, label: TIME_RANGE_LABELS[preset] })),
-    ...(isPreset(app.timeRange) ? [] : [{ value: 'custom', label: rangeLabel(app.timeRange) }]),
-  ]);
-
-  const rangeValue = $derived(isPreset(app.timeRange) ? app.timeRange.preset : 'custom');
 
   /** "last 24 hours", as the empty state reads it back to the user. */
   const rangeLower = $derived(rangeLabel(app.timeRange).toLowerCase());
@@ -88,12 +74,6 @@
     queueMicrotask(() => void overview.load());
   });
 
-  function pickRange(next: string): void {
-    if (next !== 'custom') {
-      app.setTimeRange({ preset: next as TimeRangePreset });
-    }
-  }
-
   /**
    * The Instances screen owns the Start new instance dialog and registers it while it is on. From
    * here it is not, so this goes there and asks for it - which is what the mockup does too
@@ -122,14 +102,7 @@
 -->
 <Page data-screen-label="Overview">
   <PageTitle title="Overview">
-    <Select
-      options={rangeOptions}
-      value={rangeValue}
-      ariaLabel="Time range"
-      size="sm"
-      width="auto"
-      onchange={pickRange}
-    />
+    <TimeRangeSelect />
 
     <Button variant="ghost" style="height:32px" onclick={() => app.refresh()}>Refresh</Button>
 
