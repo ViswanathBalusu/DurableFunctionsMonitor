@@ -22,8 +22,8 @@ Do:
 2. `prefs.svelte.ts`: `themeNames` is derived from `THEMES` (`THEMES.map((entry) => entry.key)`) so the list exists once. `host.svelte.ts` keeps the `ThemeName` union (the families add their key there); nothing else changes.
 3. `ThemeMenu.svelte` and `AppearancePanel.svelte` need no change: they iterate `THEMES`. Confirm by reading them, do not touch them.
 Accept:
-- [ ] `THEMES.every((entry) => entry.family === 'brutal')` today; `family('neon')` is `'brutal'`.
-- [ ] `themeNames` equals `THEMES.map(key)`; the prefs tests that read an unknown stored theme still fall back to `poster`.
+- [x] `THEMES.every((entry) => entry.family === 'brutal')` today; `family('neon')` is `'brutal'`.
+- [x] `themeNames` equals `THEMES.map(key)`; the prefs tests that read an unknown stored theme still fall back to `poster`.
 Test: unit (`menus.test.ts` asserts the family on the five; `prefs.test.ts` unchanged and green).
 
 #### E13-S1-T2 The `--glyph` token
