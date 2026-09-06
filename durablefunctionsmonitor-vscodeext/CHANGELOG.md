@@ -1,5 +1,9 @@
 # Change Log
 
+# Unreleased
+
+- **Glass theme**: a sixth theme in the theme menu, on the Settings screen and in the command palette - frosted, translucent panes over a soft colour backdrop, in light and dark, selectable like the five papers and accepted by `DFM_CLIENT_CONFIG` as `"dfmTheme": "glass"`.
+
 # Version 6.10.2
 
 - The extension is now displayed as **Durable Functions Monitor Reimagined**. The VsCode Marketplace requires `displayName` to be unique across every publisher, exactly as it requires `name` to be - 6.10.1 renamed only the latter and was rejected with "This extension display name is taken". Nothing about the extension itself changes.

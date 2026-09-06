@@ -78,5 +78,5 @@ Do:
 2. Core README: `DFM_CLIENT_CONFIG` example mentions the value; nothing else.
 3. Extension CHANGELOG: an "Unreleased" entry "Glass theme" in one sentence. The version bump itself is a release task, not this one.
 Accept:
-- [ ] `grep -n glass docs/ui.md` shows the value list and the screenshot row.
+- [x] `grep -n glass docs/ui.md` shows the value list and the screenshot row.
 Test: docs.
