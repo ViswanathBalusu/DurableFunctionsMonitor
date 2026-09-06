@@ -54,8 +54,8 @@ Do:
 2. Defects go to a token, a rule in `neu.css`, or a component; the component rule of E14-S2-T1 step 2 applies unchanged.
 3. Notes file as `E12-theme-qa.md`.
 Accept:
-- [ ] No screen of the matrix and no overlay breaks the look (an outline, a hard shadow, a flat panel among raised ones, an input that is not sunk, a mark that vanished).
-- [ ] The five papers' `themes.spec.ts` cases and the brutalist computed-style test are unchanged and green.
+- [x] No screen of the matrix and no overlay breaks the look (an outline, a hard shadow, a flat panel among raised ones, an input that is not sunk, a mark that vanished).
+- [x] The five papers' `themes.spec.ts` cases and the brutalist computed-style test are unchanged and green.
 Test: e2e; the notes file.
 
 #### E15-S2-T2 Accessibility in Neu

@@ -229,11 +229,31 @@ html[data-theme="neu"] body {
   box-shadow: -8px 0 20px var(--neu-dark);
 }
 
+/* The two surfaces that exist only on a narrow screen rise from the bottom edge and cast upward;
+   dfm-ui.css gives them a line and nothing else, which on this material is a flat strip among
+   raised ones. */
+[data-theme="neu"] .bottom-nav,
+[data-theme="neu"] .sheet {
+  box-shadow: 0 -6px 16px var(--neu-dark);
+}
+
 /* (5) The sunk surfaces: an input, an editor, the palette's search field. The table's header row is
    the material too - its rule is the muted step, since a 6 % line vanishes at night - and the modal
    veil is a plain tint; the clear overlay under the peek panel stays clear. */
 [data-theme="neu"] :is(.input, .ed, .palette > input) {
   box-shadow: var(--shadow-inset);
+}
+
+/* The JSON viewer and editor paint no background of their own, so the inset pair shows through
+   their content: through `.ed` around an editor, and on the viewer's own host where nothing wraps
+   it (the Raw tab, the JSON dialog), which is sunk like `.ed` is. */
+[data-theme="neu"] .jse-theme-dfm {
+  --jse-background-color: transparent;
+}
+
+[data-theme="neu"] :not(.ed) > .jse-theme-dfm {
+  box-shadow: var(--shadow-inset);
+  border-radius: var(--radius);
 }
 
 [data-theme="neu"] .tbl th {
