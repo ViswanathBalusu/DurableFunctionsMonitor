@@ -10,8 +10,8 @@
      same scoping, so that nothing of it leaks into the papers;
    - it declares every token `[data-theme="poster"]` declares, in a light block and again in a dark
      block, because a token it leaves out would silently inherit Poster's value;
-   - it is plain CSS a browser can load on its own (the style preview harness does): no `@utility`,
-     `@theme`, `@custom-variant`, `@apply`, no Tailwind classes;
+   - it is plain CSS a browser can load on its own (the style preview harness does): none of
+     Tailwind's at-rules (utility, theme, custom-variant, apply) and no Tailwind classes;
    - it may override a dfm-ui.css rule for its own theme, and is the only place that may. This file
      may not: it holds what every family shares, which is the one token below.
 

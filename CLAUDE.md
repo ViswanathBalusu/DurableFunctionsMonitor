@@ -16,8 +16,8 @@ Monitoring UI for Azure Durable Functions. Backend: .NET 10 isolated Azure Funct
 
 ## Commands
 
-- UI (`durablefunctionsmonitor.svelte/`): `npm ci`, `npm run dev` (:3000, proxies to :7072), `npm run build`, `npm run build-and-copy`, `npm run check`, `npm run lint`, `npm test`, `npm run test:e2e`, `npm run verify` (build contract).
-- Harness (repo root): `node scripts/harness/plan-status.mjs [next|E4|--sync|--done id hash|--blocked id why]`, `node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build`, `node scripts/harness/verify-nuspec-dependencies.mjs`, `node scripts/harness/write-local-settings.mjs`, `node scripts/harness/start-host.mjs`.
+- UI (`durablefunctionsmonitor.svelte/`): `npm ci`, `npm run dev` (:3000, proxies to :7072), `npm run build`, `npm run build-and-copy`, `npm run check`, `npm run lint`, `npm test`, `npm run test:e2e`, `npm run verify` (build contract), `npm run preview:styles` (the design-system preview page with the family sheets, photographed per theme and mode into `test-results/style-preview/`).
+- Harness (repo root): `node scripts/harness/plan-status.mjs [next|E4|--sync|--done id hash|--blocked id why]`, `node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build`, `node scripts/harness/verify-nuspec-dependencies.mjs`, `node scripts/harness/write-local-settings.mjs`, `node scripts/harness/start-host.mjs`, `node scripts/harness/style-preview.mjs [--shoot]` (builds `durablefunctionsmonitor.svelte/build/style-preview/index.html`).
 - Backend: `dotnet build DurableFunctionsMonitor.slnx`, `dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.tests`, `npx azurite --silent --location .azurite` then `dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests`.
 - Host: `func host start --port 7072` in `durablefunctionsmonitor.dotnetisolated/bin/Debug/net10.0` (needs `local.settings.json`; the harness writes it with auth disabled through `DFM_NONCE`).
 

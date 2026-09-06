@@ -20,7 +20,8 @@
     "seed": "node tests/e2e/seed/seed-hub.mjs",
     "host": "node ../scripts/harness/start-host.mjs",
     "test:e2e:local": "npm run seed && playwright test",
-    "verify": "node ../scripts/harness/verify-build-contract.mjs build"
+    "verify": "node ../scripts/harness/verify-build-contract.mjs build",
+    "preview:styles": "node ../scripts/harness/style-preview.mjs --shoot"
   },
   "dependencies": {
     "@azure/msal-browser": "5.21.0",
