@@ -5,6 +5,10 @@ was deleted in E12-S2-T1 (2026-09-05) and lives on only in the history. This pla
 record of what was built and why: every task carries the deviations the backend or the host forced,
 which is the part no commit message holds. `STATUS.md` is the board it was executed from.
 
+**Open work (2026-09-06).** E13, E14 and E15 add two theme families, Glass and Neu, on top of the
+finished rewrite. They are the only unticked epics on the board; `notes/theme-families-investigation.md`
+is the investigation they came out of.
+
 This folder is the execution plan for replacing `durablefunctionsmonitor.react` with `durablefunctionsmonitor.svelte`, built to match the clickable mockups in `docs/ui-plans-artifacts/` exactly, plus the backend endpoints those mockups read.
 
 It is written for agents that execute one task at a time. Every task names its files, what to do, how to verify it, and which mockup lines it reproduces. Read `00-shared-contracts.md` before any task; it holds every cross-cutting rule so tasks do not repeat them.
@@ -34,6 +38,9 @@ When a mockup and a design document disagree, the mockup wins for visuals and co
 | D9 | Capability driven UI. Nav items, actions and panels appear according to `/about.capabilities`, never according to a provider name. Where a capability is missing, the UI degrades (fallback or hidden) as each task specifies. | Lets UI epics ship before or without their backend epic, and keeps MSSQL and Netherite honest. |
 | D10 | Backend aggregation endpoints are cached in memory for 30 s per hub and query, with in-flight de-duplication, and scans are capped at 50,000 rows with `partial: true` in the response. | Table Storage has no server-side counts. |
 | D11 | Mockup-only affordances are removed: Settings › Mockup states, the Inputs tab "Mock outcome" select, and the feature-flag switches (they become read-only chips). The Login "connection string" form is omitted because the backend has no endpoint for it. | Not part of the product. |
+| D12 | A theme has a `family` (`brutal`, `glass`, `neu`). The five papers are `brutal`; Glassmorphism and Neumorphism are one theme each (`glass`, `neu`), with a light and a dark face like every other theme. There is no second preference. | Seven themes × two modes to QA instead of five papers × three families × two modes; `dfm.theme`, `dfmTheme`, the menu, the tiles and the palette stay exactly as they are. |
+| D13 | A family is one plain-CSS sheet, `src/styles/families/<key>.css`, every rule scoped under its own `[data-theme]`, declaring every token Poster declares in both modes. It may override `dfm-ui.css` rules for its theme; nothing else may, and the two frozen stylesheets stay verbatim. Shared plumbing (the `--glyph` token) lives in `families/base.css`. | The frozen stylesheets are the contract with the mockups; a soft look needs a few overrides (hover motion, table backgrounds, the overlay) that `dfm-ext.css` is forbidden to make. |
+| D14 | The design system's §3 rules split in two. Universal, every family: status is a solid fill with dark text and keeps its hue; colour is a vocabulary; one loud element per screen; sentence case; verb + object on destructive buttons; icons never alone; the focus ring is a colour, never the line; motion only in answer to an action. Brutalist only: ink outline, hard offset shadow, no alpha, no gradients, no blur, paper patterns. `--glyph` is the colour of a small solid mark; it is `--ink` in the papers and a strong colour in the soft families. | Glass needs translucency and blur, Neu needs soft dual shadows and no line; the rules that carry meaning survive, the ones that describe the brutalist look do not. |
 
 ## Package versions (resolved 2026-09-04, pin these)
 
@@ -89,6 +96,9 @@ B3 failures/batch ──► E9 failures + bulk wiring
 B4 storage/entities ► E10 entities + storage
 B5 audit ───────────► E11 activity
 E12 ci/docker/cleanup/polish (last)
+
+E13 theme families ──► E14 glass
+                   └─► E15 neu        (E14 and E15 are independent of each other)
 ```
 
 Backend epics B0 to B5 have no UI dependency and can run in parallel with E1 to E6. The UI epics that need them (E7 to E11) gate their panels on capabilities, so they can be built against a backend that has the endpoint and skipped gracefully against one that does not.
@@ -121,6 +131,9 @@ Steps E0 to E6 replace the React app one for one. Everything after is new value.
 | `E10-entities-and-storage.md` | Entities screen with state peek, Storage screen |
 | `E11-activity.md` | Activity screen and the Overview recent-activity panel |
 | `E12-ci-docker-cleanup-polish.md` | CI on the Svelte build, Docker stages, VS Code packaging, React removal, self-hosted fonts, accessibility and reduced motion pass, theme QA |
+| `E13-theme-families.md` | `family` on the theme model, the `--glyph` token, family-aware tests, the style preview harness, contracts §16 and the review checklist split |
+| `E14-glass-theme.md` | The Glass theme (`glass`): frosted translucent surfaces over a colour backdrop, light and dark, QA and a11y in the app, docs |
+| `E15-neu-theme.md` | The Neu theme (`neu`): one soft material with dual shadows and sunk inputs, light and dark, QA and a11y in the app, docs |
 | `B0-about-capabilities-conditional-get.md` | `/about` provider and capabilities, capability flags for admin operations, `ETag`/`If-None-Match` on details and history, `static/media` in `ServeStatics` |
 | `B1-stats-and-children.md` | `GET /stats`, `GET orchestrations('{id}')/children`, aggregation cache, scan cap |
 | `B2-spans.md` | `GET orchestrations('{id}')/spans`, episode markers, timer pairing |

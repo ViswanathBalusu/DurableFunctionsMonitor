@@ -1,0 +1,321 @@
+/* SPIKE - candidate family sheets for Glass and Neu, loaded after the frozen tokens + dfm-ui rules.
+   Purpose: prove that a soft family can be expressed as (a) a full token block per mode, (b) a handful
+   of per-selector overrides scoped under [data-theme], with dfm-ui.css and dfm-tokens.css untouched. */
+
+/* ---------- shared: the glyph token (strong colour for marks that dfm-ui.css paints with --ink) ---------- */
+:root { --glyph: var(--ink); }
+
+/* ================================================================ Glass ================ */
+[data-theme="glass"] {
+  --radius: 14px;
+  --border-width: 1px;
+  --shadow-offset: 0px;
+  --shadow-offset-lg: 0px;
+  --pattern: none;
+  --background: #EEF1F8;
+  --foreground: #101828;
+  --card: rgba(255, 255, 255, 0.55);
+  --card-foreground: #101828;
+  --popover: rgba(255, 255, 255, 0.82);
+  --popover-foreground: #101828;
+  --primary: #4F46E5;
+  --primary-foreground: #FFFFFF;
+  --secondary: rgba(255, 255, 255, 0.7);
+  --secondary-foreground: #101828;
+  --accent: #BFE3FF;
+  --accent-foreground: #0B2A45;
+  --muted: rgba(16, 24, 40, 0.06);
+  --muted-foreground: #475467;
+  --destructive: #E5484D;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(255, 255, 255, 0.7);
+  --input: rgba(255, 255, 255, 0.5);
+  --ring: #7C3AED;
+  --ink: rgba(255, 255, 255, 0.7);
+  --glyph: #101828;
+  --paper: #EEF1F8;
+  --shadow-ink: rgba(31, 38, 135, 0.14);
+  --on-poster: #FFFFFF;
+  --sidebar: rgba(255, 255, 255, 0.45);
+  --sidebar-foreground: #101828;
+  --sidebar-primary: #4F46E5;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #BFE3FF;
+  --sidebar-accent-foreground: #0B2A45;
+  --sidebar-border: rgba(255, 255, 255, 0.7);
+  --sidebar-ring: #7C3AED;
+  --poster-1: #4F46E5; --poster-2: #EC4899; --poster-3: #06B6D4; --poster-4: #22C55E; --poster-5: #F59E0B; --poster-6: #8B5CF6;
+  --chart-1: #4F46E5; --chart-2: #EC4899; --chart-3: #06B6D4; --chart-4: #22C55E; --chart-5: #F59E0B;
+  --status-completed: #34D399; --status-completed-foreground: #052E16;
+  --status-running: #FBBF24; --status-running-foreground: #1F1300;
+  --status-failed: #F87171; --status-failed-foreground: #2A0505;
+  --status-pending: #67E8F9; --status-pending-foreground: #083344;
+  --status-terminated: #CBD5E1; --status-terminated-foreground: #0F172A;
+  --status-canceled: #E2E8F0; --status-canceled-foreground: #0F172A;
+  --status-continued: #C4B5FD; --status-continued-foreground: #2E1065;
+  --status-suspended: #FDBA74; --status-suspended-foreground: #431407;
+  --kind-orchestration: rgba(255, 255, 255, 0.6); --kind-orchestration-foreground: #101828;
+  --kind-entity: #EC4899; --kind-entity-foreground: #FFFFFF;
+  --node-orchestrator: #A5B4FC; --node-activity: #67E8F9; --node-entity: #F9A8D4; --node-suborchestrator: #C4B5FD;
+  --node-http: #86EFAC; --node-timer: #FDBA74; --node-queue: #CBD5E1; --node-other: rgba(255, 255, 255, 0.6); --node-foreground: #101828;
+  --json-key: #101828; --json-string: #BE185D; --json-number: #0E7490; --json-boolean: #6D28D9; --json-null: #475467; --json-punctuation: #475467;
+
+  --shadow-brutal: 0 8px 24px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --shadow-brutal-sm: 0 2px 8px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --shadow-brutal-lg: 0 24px 64px rgba(31, 38, 135, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --shadow-brutal-hover: 0 12px 32px rgba(31, 38, 135, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --stripe: repeating-linear-gradient(45deg, var(--primary) 0 12px, var(--glyph) 12px 24px);
+  --glass-blur: 16px;
+  --glass-overlay: rgba(8, 10, 20, 0.35);
+}
+.dark[data-theme="glass"] {
+  --background: #0B1020;
+  --foreground: #EEF2FF;
+  --card: rgba(255, 255, 255, 0.08);
+  --card-foreground: #EEF2FF;
+  --popover: rgba(22, 26, 44, 0.88);
+  --popover-foreground: #EEF2FF;
+  --primary: #818CF8;
+  --primary-foreground: #0B1020;
+  --secondary: rgba(255, 255, 255, 0.12);
+  --secondary-foreground: #EEF2FF;
+  --accent: #38BDF8;
+  --accent-foreground: #0B1020;
+  --muted: rgba(255, 255, 255, 0.07);
+  --muted-foreground: #A5B4CF;
+  --destructive: #F87171;
+  --destructive-foreground: #2A0505;
+  --border: rgba(255, 255, 255, 0.16);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #A78BFA;
+  --ink: rgba(255, 255, 255, 0.16);
+  --glyph: #EEF2FF;
+  --paper: #0B1020;
+  --shadow-ink: rgba(0, 0, 0, 0.45);
+  --on-poster: #0B1020;
+  --sidebar: rgba(255, 255, 255, 0.06);
+  --sidebar-foreground: #EEF2FF;
+  --sidebar-primary: #818CF8;
+  --sidebar-primary-foreground: #0B1020;
+  --sidebar-accent: #38BDF8;
+  --sidebar-accent-foreground: #0B1020;
+  --sidebar-border: rgba(255, 255, 255, 0.16);
+  --sidebar-ring: #A78BFA;
+  --poster-1: #818CF8; --poster-2: #F472B6; --poster-3: #22D3EE; --poster-4: #4ADE80; --poster-5: #FBBF24; --poster-6: #A78BFA;
+  --chart-1: #818CF8; --chart-2: #F472B6; --chart-3: #22D3EE; --chart-4: #4ADE80; --chart-5: #FBBF24;
+  --status-completed: #34D399; --status-completed-foreground: #052E16;
+  --status-running: #FBBF24; --status-running-foreground: #1F1300;
+  --status-failed: #F87171; --status-failed-foreground: #2A0505;
+  --status-pending: #67E8F9; --status-pending-foreground: #083344;
+  --status-terminated: #64748B; --status-terminated-foreground: #F8FAFC;
+  --status-canceled: #475569; --status-canceled-foreground: #F8FAFC;
+  --status-continued: #C4B5FD; --status-continued-foreground: #2E1065;
+  --status-suspended: #FDBA74; --status-suspended-foreground: #431407;
+  --kind-orchestration: rgba(255, 255, 255, 0.1); --kind-orchestration-foreground: #EEF2FF;
+  --kind-entity: #F472B6; --kind-entity-foreground: #0B1020;
+  --node-orchestrator: #818CF8; --node-activity: #22D3EE; --node-entity: #F472B6; --node-suborchestrator: #A78BFA;
+  --node-http: #4ADE80; --node-timer: #FBBF24; --node-queue: #64748B; --node-other: rgba(255, 255, 255, 0.1); --node-foreground: #0B1020;
+  --json-key: #EEF2FF; --json-string: #F9A8D4; --json-number: #67E8F9; --json-boolean: #C4B5FD; --json-null: #A5B4CF; --json-punctuation: #A5B4CF;
+
+  --shadow-brutal: 0 8px 32px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --shadow-brutal-sm: 0 2px 10px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-brutal-lg: 0 24px 72px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --shadow-brutal-hover: 0 12px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --glass-overlay: rgba(0, 0, 0, 0.5);
+}
+
+/* the backdrop the panes are frosted over */
+html[data-theme="glass"] body { background: var(--background); background-image: none; }
+html[data-theme="glass"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 52% at 12% 8%, rgba(99, 102, 241, 0.38), transparent 62%),
+    radial-gradient(36% 46% at 88% 18%, rgba(236, 72, 153, 0.3), transparent 62%),
+    radial-gradient(46% 56% at 62% 92%, rgba(6, 182, 212, 0.32), transparent 62%);
+}
+html.dark[data-theme="glass"] body::before {
+  background:
+    radial-gradient(42% 52% at 12% 8%, rgba(99, 102, 241, 0.45), transparent 62%),
+    radial-gradient(36% 46% at 88% 18%, rgba(236, 72, 153, 0.32), transparent 62%),
+    radial-gradient(46% 56% at 62% 92%, rgba(20, 184, 166, 0.35), transparent 62%);
+}
+
+/* the frosted surfaces: one blur per surface, never on rows, chips or buttons */
+[data-theme="glass"] :is(.snav, .topbar, .panel, .card, .tbl-wrap, .pop, .dialog, .peek, .palette, .bulk, .sheet, .bottom-nav, .empty, .group, .hero, .banner, .note, .swim, .seq, .graph, .ed) {
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+}
+[data-theme="glass"] .tbl, [data-theme="glass"] .tfoot { background: transparent; }
+[data-theme="glass"] .overlay { background: var(--glass-overlay); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+/* motion: a lift, not a slide */
+[data-theme="glass"] :is(.btn, .stat-tile):hover { transform: translateY(-1px); }
+[data-theme="glass"] :is(.btn, .stat-tile):active { transform: translateY(0); box-shadow: var(--shadow-brutal-sm); }
+
+/* marks that dfm-ui.css paints with the line colour keep a strong colour here */
+[data-theme="glass"] .box.on::after, [data-theme="glass"] .switch::after, [data-theme="glass"] .wbar i.orch, [data-theme="glass"] .bar.orch, [data-theme="glass"] .arrow::after, [data-theme="glass"] .gcanvas rect { background: var(--glyph); fill: var(--glyph); }
+[data-theme="glass"] .tri { border-left-color: var(--glyph); }
+[data-theme="glass"] .sel::after { border-top-color: var(--glyph); }
+[data-theme="glass"] .tbl th.sort::after { border-bottom-color: var(--glyph); }
+[data-theme="glass"] .tbl th.sort.desc::after { border-top-color: var(--glyph); }
+[data-theme="glass"] .jse-bar { background: var(--glyph); color: var(--paper); }
+[data-theme="glass"] .now, [data-theme="glass"] .life { border-left-color: var(--glyph); }
+[data-theme="glass"] .arrow { border-top-color: var(--glyph); }
+[data-theme="glass"] .gcanvas polyline { stroke: var(--glyph); }
+[data-theme="glass"] .wbar i.wait, [data-theme="glass"] .brush { background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 7px); }
+[data-theme="glass"] .seg-b, [data-theme="glass"] .legend i, [data-theme="glass"] .swq, [data-theme="glass"] .mini, [data-theme="glass"] .tag, [data-theme="glass"] .prow .kbd, [data-theme="glass"] .fchip .x, [data-theme="glass"] .meter i, [data-theme="glass"] .ttile .sw i, [data-theme="glass"] .avatar { border-width: 1px; }
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-theme="glass"] { --card: #FFFFFF; --popover: #FFFFFF; --sidebar: #FFFFFF; --input: #FFFFFF; }
+  .dark[data-theme="glass"] { --card: #161A2C; --popover: #161A2C; --sidebar: #161A2C; --input: #10142A; }
+  [data-theme="glass"] * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+}
+
+/* ================================================================ Neu ================== */
+[data-theme="neu"] {
+  --radius: 16px;
+  --border-width: 1px;
+  --shadow-offset: 0px;
+  --shadow-offset-lg: 0px;
+  --pattern: none;
+  --background: #E3E8F0;
+  --foreground: #1F2937;
+  --card: #E3E8F0;
+  --card-foreground: #1F2937;
+  --popover: #E9EDF4;
+  --popover-foreground: #1F2937;
+  --primary: #5B5BD6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E3E8F0;
+  --secondary-foreground: #1F2937;
+  --accent: #C7D2FE;
+  --accent-foreground: #1E1B4B;
+  --muted: #D6DCE7;
+  --muted-foreground: #4B5563;
+  --destructive: #E5484D;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(163, 177, 198, 0.35);
+  --input: #E3E8F0;
+  --ring: #7C3AED;
+  --ink: rgba(163, 177, 198, 0.35);
+  --glyph: #1F2937;
+  --paper: #E3E8F0;
+  --shadow-ink: #A3B1C6;
+  --on-poster: #FFFFFF;
+  --sidebar: #E3E8F0;
+  --sidebar-foreground: #1F2937;
+  --sidebar-primary: #5B5BD6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #C7D2FE;
+  --sidebar-accent-foreground: #1E1B4B;
+  --sidebar-border: rgba(163, 177, 198, 0.35);
+  --sidebar-ring: #7C3AED;
+  --poster-1: #5B5BD6; --poster-2: #DB2777; --poster-3: #0891B2; --poster-4: #16A34A; --poster-5: #D97706; --poster-6: #7C3AED;
+  --chart-1: #5B5BD6; --chart-2: #DB2777; --chart-3: #0891B2; --chart-4: #16A34A; --chart-5: #D97706;
+  --status-completed: #86EFAC; --status-completed-foreground: #052E16;
+  --status-running: #FDE68A; --status-running-foreground: #1F1300;
+  --status-failed: #FCA5A5; --status-failed-foreground: #450A0A;
+  --status-pending: #A5F3FC; --status-pending-foreground: #083344;
+  --status-terminated: #CBD5E1; --status-terminated-foreground: #0F172A;
+  --status-canceled: #D9DFE8; --status-canceled-foreground: #0F172A;
+  --status-continued: #DDD6FE; --status-continued-foreground: #2E1065;
+  --status-suspended: #FED7AA; --status-suspended-foreground: #431407;
+  --kind-orchestration: #E3E8F0; --kind-orchestration-foreground: #1F2937;
+  --kind-entity: #F9A8D4; --kind-entity-foreground: #500724;
+  --node-orchestrator: #C7D2FE; --node-activity: #A5F3FC; --node-entity: #F9A8D4; --node-suborchestrator: #DDD6FE;
+  --node-http: #BBF7D0; --node-timer: #FED7AA; --node-queue: #CBD5E1; --node-other: #E3E8F0; --node-foreground: #1F2937;
+  --json-key: #1F2937; --json-string: #BE185D; --json-number: #0E7490; --json-boolean: #6D28D9; --json-null: #4B5563; --json-punctuation: #4B5563;
+
+  --neu-light: rgba(255, 255, 255, 0.85);
+  --neu-dark: rgba(163, 177, 198, 0.55);
+  --shadow-brutal: 6px 6px 14px var(--neu-dark), -6px -6px 14px var(--neu-light);
+  --shadow-brutal-sm: 3px 3px 8px var(--neu-dark), -3px -3px 8px var(--neu-light);
+  --shadow-brutal-lg: 12px 12px 28px var(--neu-dark), -12px -12px 28px var(--neu-light);
+  --shadow-brutal-hover: 9px 9px 20px var(--neu-dark), -9px -9px 20px var(--neu-light);
+  --shadow-inset: inset 4px 4px 10px var(--neu-dark), inset -4px -4px 10px var(--neu-light);
+  --stripe: repeating-linear-gradient(45deg, var(--primary) 0 12px, var(--glyph) 12px 24px);
+}
+.dark[data-theme="neu"] {
+  --background: #2A2E37;
+  --foreground: #E5E7EB;
+  --card: #2A2E37;
+  --card-foreground: #E5E7EB;
+  --popover: #30353F;
+  --popover-foreground: #E5E7EB;
+  --primary: #818CF8;
+  --primary-foreground: #0B1020;
+  --secondary: #2A2E37;
+  --secondary-foreground: #E5E7EB;
+  --accent: #4338CA;
+  --accent-foreground: #EEF2FF;
+  --muted: #363B46;
+  --muted-foreground: #A3A9B5;
+  --destructive: #F87171;
+  --destructive-foreground: #2A0505;
+  --border: rgba(255, 255, 255, 0.06);
+  --input: #2A2E37;
+  --ring: #A78BFA;
+  --ink: rgba(255, 255, 255, 0.06);
+  --glyph: #E5E7EB;
+  --paper: #2A2E37;
+  --shadow-ink: #14171D;
+  --on-poster: #0B1020;
+  --sidebar: #2A2E37;
+  --sidebar-foreground: #E5E7EB;
+  --sidebar-primary: #818CF8;
+  --sidebar-primary-foreground: #0B1020;
+  --sidebar-accent: #4338CA;
+  --sidebar-accent-foreground: #EEF2FF;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #A78BFA;
+  --poster-1: #818CF8; --poster-2: #F472B6; --poster-3: #22D3EE; --poster-4: #4ADE80; --poster-5: #FBBF24; --poster-6: #A78BFA;
+  --chart-1: #818CF8; --chart-2: #F472B6; --chart-3: #22D3EE; --chart-4: #4ADE80; --chart-5: #FBBF24;
+  --status-completed: #34D399; --status-completed-foreground: #052E16;
+  --status-running: #FBBF24; --status-running-foreground: #1F1300;
+  --status-failed: #F87171; --status-failed-foreground: #2A0505;
+  --status-pending: #67E8F9; --status-pending-foreground: #083344;
+  --status-terminated: #64748B; --status-terminated-foreground: #F8FAFC;
+  --status-canceled: #475569; --status-canceled-foreground: #F8FAFC;
+  --status-continued: #C4B5FD; --status-continued-foreground: #2E1065;
+  --status-suspended: #FDBA74; --status-suspended-foreground: #431407;
+  --kind-orchestration: #2A2E37; --kind-orchestration-foreground: #E5E7EB;
+  --kind-entity: #F472B6; --kind-entity-foreground: #0B1020;
+  --node-orchestrator: #818CF8; --node-activity: #22D3EE; --node-entity: #F472B6; --node-suborchestrator: #A78BFA;
+  --node-http: #4ADE80; --node-timer: #FBBF24; --node-queue: #64748B; --node-other: #30353F; --node-foreground: #0B1020;
+  --json-key: #E5E7EB; --json-string: #F9A8D4; --json-number: #67E8F9; --json-boolean: #C4B5FD; --json-null: #A3A9B5; --json-punctuation: #A3A9B5;
+
+  --neu-light: rgba(62, 68, 80, 0.7);
+  --neu-dark: rgba(15, 17, 22, 0.75);
+}
+
+html[data-theme="neu"] body { background: var(--background); background-image: none; }
+
+/* everything is one material: the panels and the shell are extruded, inputs are pressed in */
+[data-theme="neu"] :is(.panel, .swim, .seq, .graph, .note, .banner) { box-shadow: var(--shadow-brutal); }
+[data-theme="neu"] .snav { box-shadow: 8px 0 20px var(--neu-dark); }
+[data-theme="neu"] .topbar { box-shadow: 0 6px 16px var(--neu-dark); }
+[data-theme="neu"] :is(.input, .ed, .palette > input) { box-shadow: var(--shadow-inset); }
+[data-theme="neu"] .tbl th { background: transparent; }
+[data-theme="neu"] .overlay { background: rgba(20, 24, 32, 0.3); }
+
+/* motion: hover raises, press sinks into the surface, nothing slides */
+[data-theme="neu"] :is(.btn, .stat-tile):hover { transform: none; }
+[data-theme="neu"] :is(.btn, .stat-tile):active { transform: none; box-shadow: var(--shadow-inset); }
+[data-theme="neu"] .seg button[aria-pressed="true"], [data-theme="neu"] .tab[aria-selected="true"] { box-shadow: var(--shadow-inset); }
+
+/* marks that dfm-ui.css paints with the line colour keep a strong colour here */
+[data-theme="neu"] .box.on::after, [data-theme="neu"] .switch::after, [data-theme="neu"] .wbar i.orch, [data-theme="neu"] .bar.orch, [data-theme="neu"] .arrow::after, [data-theme="neu"] .gcanvas rect { background: var(--glyph); fill: var(--glyph); }
+[data-theme="neu"] .tri { border-left-color: var(--glyph); }
+[data-theme="neu"] .sel::after { border-top-color: var(--glyph); }
+[data-theme="neu"] .tbl th.sort::after { border-bottom-color: var(--glyph); }
+[data-theme="neu"] .tbl th.sort.desc::after { border-top-color: var(--glyph); }
+[data-theme="neu"] .jse-bar { background: var(--glyph); color: var(--paper); }
+[data-theme="neu"] .now, [data-theme="neu"] .life { border-left-color: var(--glyph); }
+[data-theme="neu"] .arrow { border-top-color: var(--glyph); }
+[data-theme="neu"] .gcanvas polyline { stroke: var(--glyph); }
+[data-theme="neu"] .wbar i.wait, [data-theme="neu"] .brush { background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 7px); }
+[data-theme="neu"] .seg-b, [data-theme="neu"] .legend i, [data-theme="neu"] .swq, [data-theme="neu"] .mini, [data-theme="neu"] .tag, [data-theme="neu"] .prow .kbd, [data-theme="neu"] .fchip .x, [data-theme="neu"] .meter i, [data-theme="neu"] .ttile .sw i, [data-theme="neu"] .avatar { border-width: 1px; }

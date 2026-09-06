@@ -1,5 +1,9 @@
 # Change Log
 
+# Version 6.10.2
+
+- The extension is now displayed as **Durable Functions Monitor Reimagined**. The VsCode Marketplace requires `displayName` to be unique across every publisher, exactly as it requires `name` to be - 6.10.1 renamed only the latter and was rejected with "This extension display name is taken". Nothing about the extension itself changes.
+
 # Version 6.10.1
 
 - The extension now publishes under the Marketplace id `durablefunctionsmonitor-reimagined`. The VsCode Marketplace requires an extension name to be unique across every publisher, not only within one, so this fork could not publish under the upstream `durablefunctionsmonitor` name - the 6.10.0 Marketplace publish was rejected with "The extension durablefunctionsmonitor already exists in the Marketplace". The displayed name, the commands and the settings are all unchanged; only the id you would use with `code --install-extension` differs.

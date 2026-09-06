@@ -255,6 +255,8 @@ jobs:
         # one, so publishing the upstream name from a fork is rejected with "The extension
         # durablefunctionsmonitor already exists in the Marketplace" - which is how v6.10.0 failed.
         # Do not restore it. The .vsix is named after it, so the globs below stay extension-agnostic.
+        # The same uniqueness rule applies to "displayName" - 6.10.1 renamed only "name" and was
+        # rejected with "This extension display name is taken". Both have to differ from upstream.
         if [ -n "${VSCE_PUBLISHER}" ]; then
           node -e "const f='package.json',j=require('./'+f);j.publisher=process.env.VSCE_PUBLISHER;require('fs').writeFileSync(f,JSON.stringify(j,null,4)+'\n')"
         fi
