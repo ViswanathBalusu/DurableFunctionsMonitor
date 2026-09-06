@@ -51,8 +51,8 @@ Do:
 5. `settings.spec.ts` L196: `toHaveCount(THEMES.length)`. `menus.test.ts` and `palette.test.ts`: the expected lists are built from `THEMES` rather than written out, so adding a family does not touch them again.
 6. `a11y.spec.ts`: the screen loop runs for every entry of a `FAMILY_SAMPLES` list = one theme per family in both modes (`poster` today; E14/E15 append). Keep the run time in mind: the loop is the expensive part, so it is per family, not per theme.
 Accept:
-- [ ] All suites green with five brutal themes and no family sheet; `family-sheets.test.ts` reports zero families checked.
-- [ ] Removing `--status-failed` from one theme block of a scratch copy of the tokens file makes `build-css.test.ts` fail (do this by hand once; do not commit it).
+- [x] All suites green with five brutal themes and no family sheet; `family-sheets.test.ts` reports zero families checked.
+- [x] Removing `--status-failed` from one theme block of a scratch copy of the tokens file makes `build-css.test.ts` fail (do this by hand once; do not commit it).
 Test: themselves.
 
 ### E13-S2 Preview harness and the rules
