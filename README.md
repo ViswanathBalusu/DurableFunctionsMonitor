@@ -8,11 +8,11 @@ A monitoring/debugging UI tool for Azure Durable Functions
 [<img alt="Nuget" src="https://img.shields.io/nuget/v/DurableFunctionsMonitor.DotNetIsolated?label=current%20version">](https://www.nuget.org/profiles/durablefunctionsmonitor)  [![main-build](https://github.com/microsoft/DurableFunctionsMonitor/actions/workflows/main-build.yml/badge.svg)](https://github.com/microsoft/DurableFunctionsMonitor/actions/workflows/main-build.yml)
 
 
-[<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/microsoft/durablefunctionsmonitor?label=GitHub%20stars">](https://github.com/microsoft/DurableFunctionsMonitor/stargazers) [<img alt="Visual Studio Marketplace Rating" src="https://img.shields.io/visual-studio-marketplace/r/DurableFunctionsMonitor.durablefunctionsmonitor?label=VsCode%20extension%20rating">
-](https://marketplace.visualstudio.com/items?itemName=DurableFunctionsMonitor.durablefunctionsmonitor)
+[<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/ViswanathBalusu/DurableFunctionsMonitor?label=GitHub%20stars">](https://github.com/ViswanathBalusu/DurableFunctionsMonitor/stargazers) [<img alt="Visual Studio Marketplace Rating" src="https://img.shields.io/visual-studio-marketplace/r/ChandraBalusu.durablefunctionsmonitor-reimagined?label=VsCode%20extension%20rating">
+](https://marketplace.visualstudio.com/items?itemName=ChandraBalusu.durablefunctionsmonitor-reimagined)
 
 
-[<img alt="Visual Studio Marketplace Installs" src="https://img.shields.io/visual-studio-marketplace/i/DurableFunctionsMonitor.DurableFunctionsMonitor?label=VsCode%20extension%20installs">](https://marketplace.visualstudio.com/items?itemName=DurableFunctionsMonitor.durablefunctionsmonitor) [<img src="https://img.shields.io/docker/pulls/scaletone/durablefunctionsmonitor"/>](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) [<img alt="Nuget" src="https://img.shields.io/nuget/dt/DurableFunctionsMonitor.DotNetIsolated?label=NuGet%20downloads">](https://www.nuget.org/profiles/durablefunctionsmonitor)
+[<img alt="Visual Studio Marketplace Installs" src="https://img.shields.io/visual-studio-marketplace/i/ChandraBalusu.durablefunctionsmonitor-reimagined?label=VsCode%20extension%20installs">](https://marketplace.visualstudio.com/items?itemName=ChandraBalusu.durablefunctionsmonitor-reimagined) [<img src="https://img.shields.io/docker/pulls/scaletone/durablefunctionsmonitor"/>](https://hub.docker.com/r/scaletone/durablefunctionsmonitor) [<img alt="Nuget" src="https://img.shields.io/nuget/dt/DurableFunctionsMonitor.DotNetIsolated?label=NuGet%20downloads">](https://www.nuget.org/profiles/durablefunctionsmonitor)
 
 ## What it does
 
@@ -122,7 +122,7 @@ More screens, the keyboard map, the capability matrix and every setting: [docs/u
 ## How to use
 
 You can run this tool: 
-* [as a VsCode extension](https://marketplace.visualstudio.com/items?itemName=DurableFunctionsMonitor.durablefunctionsmonitor).
+* [as a VsCode extension](https://marketplace.visualstudio.com/items?itemName=ChandraBalusu.durablefunctionsmonitor-reimagined).
 * [as a Standalone service](https://github.com/microsoft/DurableFunctionsMonitor/wiki/How-to-run-DfMon-in-Standalone-mode).
 * ["Injected" into your .NET Isolated Function](durablefunctionsmonitor.dotnetisolated.core#durablefunctionsmonitordotnetisolatedcore).
 
