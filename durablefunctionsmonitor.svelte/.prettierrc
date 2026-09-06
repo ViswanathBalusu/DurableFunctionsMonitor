@@ -12,6 +12,12 @@
       "options": {
         "parser": "svelte"
       }
+    },
+    {
+      "files": "src/styles/families/*.css",
+      "options": {
+        "singleQuote": false
+      }
     }
   ],
   "endOfLine": "auto"

@@ -89,6 +89,19 @@ export const THEMES: readonly ThemeDescriptor[] = [
     primary: '#FFC800',
     dark: '#23262C',
   },
+  // The soft families (E14, E15): `ink` is the colour of a mark, `--glyph`, which is what the swatch
+  // shows - the line itself is a rim too faint to stand for the theme
+  {
+    key: 'glass',
+    family: 'glass',
+    label: 'Glass',
+    idea: 'frosted panes over colour',
+    metrics: '14 px · 1 px · blur 16',
+    paper: '#EEF1F8',
+    ink: '#101828',
+    primary: '#4F46E5',
+    dark: '#0B1020',
+  },
 ];
 
 export function theme(key: ThemeName): ThemeDescriptor {

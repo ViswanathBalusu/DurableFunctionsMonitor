@@ -27,9 +27,9 @@ Do:
 3. `themes.ts`: append `{ key: 'glass', family: 'glass', label: 'Glass', idea: 'frosted panes over colour', metrics: '14 px · 1 px · blur 16', paper: '#EEF1F8', ink: '#101828', primary: '#4F46E5', dark: '#0B1020' }` - `ink` is the glyph colour here (E13-S1-T3 asserts `--glyph` against it). `host.svelte.ts`: `'glass'` joins the `ThemeName` union.
 4. Run `npm run preview:styles` and look at the six crops; adjust tokens until the description above holds. Keep the shots out of git.
 Accept:
-- [ ] `family-sheets.test.ts` now checks one family and passes: scoping, the full token set in both blocks, `--glyph`, no Tailwind directives.
-- [ ] `npm run build && npm run verify` pass; `build-css.test.ts` counts 12 `--status-failed`.
-- [ ] `themes.spec.ts` for `Glass light` and `Glass dark` passes the family assertions and shoots the seven screens.
+- [x] `family-sheets.test.ts` now checks one family and passes: scoping, the full token set in both blocks, `--glyph`, no Tailwind directives.
+- [x] `npm run build && npm run verify` pass; `build-css.test.ts` counts 12 `--status-failed`.
+- [x] `themes.spec.ts` for `Glass light` and `Glass dark` passes the family assertions and shoots the seven screens.
 Test: the unit tests named; the two e2e cases.
 
 #### E14-S1-T2 Preview review

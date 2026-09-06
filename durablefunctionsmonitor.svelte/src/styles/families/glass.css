@@ -1,0 +1,414 @@
+/* Glass (E14; README D12-D14; contracts §16): frosted, translucent panes over a soft colour backdrop,
+   a thin light rim instead of an ink outline, one blur per surface, strong marks. A theme like the
+   five papers - the choice is `data-theme="glass"` and nothing more - so every rule here is scoped
+   to it, and every token Poster declares is declared again, in both modes, so that nothing inherits
+   Poster's value by accident (tests/unit/family-sheets.test.ts).
+
+   The line and the mark come apart in this family: `--ink` is a white rim at low alpha and `--glyph`
+   is the text colour, so a tick, a caret, a sort triangle or an arrowhead stays strong while the
+   outline around it fades. Outlines stay `--ink`. */
+
+/* (1) The light tokens: pale paper, panes of white at low alpha, indigo primary, jewel statuses.
+   Every fill that carries text keeps dark text (README D14), so the poster fills and the entity
+   kind are the family's 400 tints rather than its chart hues; the destructive fill is the one
+   coral deep enough for white. */
+[data-theme="glass"] {
+  --radius: 14px;
+  --border-width: 1px;
+  --shadow-offset: 0px;
+  --shadow-offset-lg: 0px;
+  --pattern: none;
+  --background: #eef1f8;
+  --foreground: #101828;
+  --card: rgba(255, 255, 255, 0.55);
+  --card-foreground: #101828;
+  --popover: rgba(255, 255, 255, 0.82);
+  --popover-foreground: #101828;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.7);
+  --secondary-foreground: #101828;
+  --accent: #bfe3ff;
+  --accent-foreground: #0b2a45;
+  --muted: rgba(16, 24, 40, 0.06);
+  --muted-foreground: #475467;
+  --destructive: #d0343a;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.7);
+  --input: rgba(255, 255, 255, 0.5);
+  --ring: #7c3aed;
+  --ink: rgba(255, 255, 255, 0.7);
+  --paper: #eef1f8;
+  --shadow-ink: rgba(31, 38, 135, 0.14);
+  --on-poster: #101828;
+  --sidebar: rgba(255, 255, 255, 0.45);
+  --sidebar-foreground: #101828;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #bfe3ff;
+  --sidebar-accent-foreground: #0b2a45;
+  --sidebar-border: rgba(255, 255, 255, 0.7);
+  --sidebar-ring: #7c3aed;
+  --poster-1: #818cf8;
+  --poster-2: #f472b6;
+  --poster-3: #22d3ee;
+  --poster-4: #4ade80;
+  --poster-5: #fbbf24;
+  --poster-6: #a78bfa;
+  --chart-1: #4f46e5;
+  --chart-2: #ec4899;
+  --chart-3: #06b6d4;
+  --chart-4: #22c55e;
+  --chart-5: #f59e0b;
+  --status-completed: #34d399;
+  --status-completed-foreground: #052e16;
+  --status-running: #fbbf24;
+  --status-running-foreground: #1f1300;
+  --status-failed: #f87171;
+  --status-failed-foreground: #2a0505;
+  --status-pending: #67e8f9;
+  --status-pending-foreground: #083344;
+  --status-terminated: #cbd5e1;
+  --status-terminated-foreground: #0f172a;
+  --status-canceled: #e2e8f0;
+  --status-canceled-foreground: #0f172a;
+  --status-continued: #c4b5fd;
+  --status-continued-foreground: #2e1065;
+  --status-suspended: #fdba74;
+  --status-suspended-foreground: #431407;
+  --kind-orchestration: rgba(255, 255, 255, 0.6);
+  --kind-orchestration-foreground: #101828;
+  --kind-entity: #f472b6;
+  --kind-entity-foreground: #500724;
+  --node-orchestrator: #a5b4fc;
+  --node-activity: #67e8f9;
+  --node-entity: #f9a8d4;
+  --node-suborchestrator: #c4b5fd;
+  --node-http: #86efac;
+  --node-timer: #fdba74;
+  --node-queue: #cbd5e1;
+  --node-other: rgba(255, 255, 255, 0.6);
+  --node-foreground: #101828;
+  --json-key: #101828;
+  --json-string: #be185d;
+  --json-number: #0e7490;
+  --json-boolean: #6d28d9;
+  --json-null: #475467;
+  --json-punctuation: #475467;
+
+  /* The family's own: the mark, the blur, the modal veil, the soft shadows and the stripe */
+  --glyph: #101828;
+  --glass-blur: 16px;
+  --glass-overlay: rgba(8, 10, 20, 0.35);
+  --shadow-brutal: 0 8px 24px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --shadow-brutal-sm: 0 2px 8px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --shadow-brutal-lg: 0 24px 64px rgba(31, 38, 135, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --shadow-brutal-hover: 0 12px 32px rgba(31, 38, 135, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --stripe: repeating-linear-gradient(45deg, var(--primary) 0 12px, var(--glyph) 12px 24px);
+}
+
+/* (2) The dark tokens: night paper, panes of white at a lower alpha still, the same eight statuses.
+   The primary stays the light mode's indigo, as every theme's accent does across modes; its
+   lighter tint is kept for the first chart series, which sits on the night paper. */
+.dark[data-theme="glass"] {
+  --background: #0b1020;
+  --foreground: #eef2ff;
+  --card: rgba(255, 255, 255, 0.08);
+  --card-foreground: #eef2ff;
+  --popover: rgba(22, 26, 44, 0.88);
+  --popover-foreground: #eef2ff;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.12);
+  --secondary-foreground: #eef2ff;
+  --accent: #38bdf8;
+  --accent-foreground: #0b1020;
+  --muted: rgba(255, 255, 255, 0.07);
+  --muted-foreground: #a5b4cf;
+  --destructive: #f87171;
+  --destructive-foreground: #2a0505;
+  --border: rgba(255, 255, 255, 0.16);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: #a78bfa;
+  --ink: rgba(255, 255, 255, 0.16);
+  --paper: #0b1020;
+  --shadow-ink: rgba(0, 0, 0, 0.45);
+  --on-poster: #0b1020;
+  --sidebar: rgba(255, 255, 255, 0.06);
+  --sidebar-foreground: #eef2ff;
+  --sidebar-primary: #4f46e5;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #38bdf8;
+  --sidebar-accent-foreground: #0b1020;
+  --sidebar-border: rgba(255, 255, 255, 0.16);
+  --sidebar-ring: #a78bfa;
+  --poster-1: #818cf8;
+  --poster-2: #f472b6;
+  --poster-3: #22d3ee;
+  --poster-4: #4ade80;
+  --poster-5: #fbbf24;
+  --poster-6: #a78bfa;
+  --chart-1: #818cf8;
+  --chart-2: #f472b6;
+  --chart-3: #22d3ee;
+  --chart-4: #4ade80;
+  --chart-5: #fbbf24;
+  --status-completed: #34d399;
+  --status-completed-foreground: #052e16;
+  --status-running: #fbbf24;
+  --status-running-foreground: #1f1300;
+  --status-failed: #f87171;
+  --status-failed-foreground: #2a0505;
+  --status-pending: #67e8f9;
+  --status-pending-foreground: #083344;
+  --status-terminated: #64748b;
+  --status-terminated-foreground: #f8fafc;
+  --status-canceled: #475569;
+  --status-canceled-foreground: #f8fafc;
+  --status-continued: #c4b5fd;
+  --status-continued-foreground: #2e1065;
+  --status-suspended: #fdba74;
+  --status-suspended-foreground: #431407;
+  --kind-orchestration: rgba(255, 255, 255, 0.1);
+  --kind-orchestration-foreground: #eef2ff;
+  --kind-entity: #f472b6;
+  --kind-entity-foreground: #0b1020;
+  --node-orchestrator: #818cf8;
+  --node-activity: #22d3ee;
+  --node-entity: #f472b6;
+  --node-suborchestrator: #a78bfa;
+  --node-http: #4ade80;
+  --node-timer: #fbbf24;
+  --node-queue: #64748b;
+  --node-other: rgba(255, 255, 255, 0.1);
+  --node-foreground: #0b1020;
+  --json-key: #eef2ff;
+  --json-string: #f9a8d4;
+  --json-number: #67e8f9;
+  --json-boolean: #c4b5fd;
+  --json-null: #a5b4cf;
+  --json-punctuation: #a5b4cf;
+
+  --glyph: #eef2ff;
+  --glass-overlay: rgba(0, 0, 0, 0.5);
+  --shadow-brutal: 0 8px 32px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --shadow-brutal-sm: 0 2px 10px var(--shadow-ink), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-brutal-lg: 0 24px 72px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  --shadow-brutal-hover: 0 12px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+/* (3) The backdrop the panes are frosted over: the paper, and three colour blobs fixed behind
+   everything - indigo top-left, pink top-right, cyan (teal at night) bottom. */
+html[data-theme="glass"] body {
+  background: var(--background);
+  background-image: none;
+}
+
+html[data-theme="glass"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 52% at 12% 8%, rgba(99, 102, 241, 0.38), transparent 62%),
+    radial-gradient(36% 46% at 88% 18%, rgba(236, 72, 153, 0.3), transparent 62%),
+    radial-gradient(46% 56% at 62% 92%, rgba(6, 182, 212, 0.32), transparent 62%);
+}
+
+html.dark[data-theme="glass"] body::before {
+  background:
+    radial-gradient(42% 52% at 12% 8%, rgba(99, 102, 241, 0.45), transparent 62%),
+    radial-gradient(36% 46% at 88% 18%, rgba(236, 72, 153, 0.32), transparent 62%),
+    radial-gradient(46% 56% at 62% 92%, rgba(20, 184, 166, 0.35), transparent 62%);
+}
+
+/* (4) The frosted surfaces: one blur per surface, never on a row, a chip, a button or an input. */
+[data-theme="glass"]
+  :is(
+    .snav,
+    .topbar,
+    .panel,
+    .card,
+    .tbl-wrap,
+    .pop,
+    .dialog,
+    .peek,
+    .palette,
+    .bulk,
+    .sheet,
+    .bottom-nav,
+    .empty,
+    .group,
+    .hero,
+    .banner,
+    .note,
+    .swim,
+    .seq,
+    .graph,
+    .ed
+  ) {
+  backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+}
+
+/* (5) The table is frosted once, by its frame; the modal veil is a tinted blur. */
+[data-theme="glass"] .tbl,
+[data-theme="glass"] .tfoot {
+  background: transparent;
+}
+
+[data-theme="glass"] .overlay {
+  background: var(--glass-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* (6) Motion: a lift, not a slide. Hover rises by a pixel and the shadow token deepens; a press
+   settles back with the small shadow. Ghost, flat and disabled buttons stay still, as they do in
+   the papers. */
+[data-theme="glass"] :is(.btn:not(.ghost, .flat, :disabled, [aria-disabled="true"]), .stat-tile, .brutal-press):hover {
+  transform: translateY(-1px);
+}
+
+[data-theme="glass"] :is(.btn:not(.ghost, .flat, :disabled, [aria-disabled="true"]), .stat-tile, .brutal-press):active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-brutal-sm);
+}
+
+/* (7) The marks dfm-ui.css paints with the line colour keep a strong colour here: the tick, the
+   knob, the carets, the sort triangle, the editor bar, the orchestration bar, the "now" line, the
+   lifelines, the arrows, the graph edges and the hatches. */
+[data-theme="glass"] .box.on::after,
+[data-theme="glass"] .switch::after,
+[data-theme="glass"] .wbar i.orch,
+[data-theme="glass"] .bar.orch,
+[data-theme="glass"] .arrow::after {
+  background: var(--glyph);
+}
+
+[data-theme="glass"] .tri {
+  border-left-color: var(--glyph);
+}
+
+[data-theme="glass"] .sel::after {
+  border-top-color: var(--glyph);
+}
+
+[data-theme="glass"] .tbl th.sort::after {
+  border-bottom-color: var(--glyph);
+}
+
+[data-theme="glass"] .tbl th.sort.desc::after {
+  border-top-color: var(--glyph);
+}
+
+[data-theme="glass"] .jse-bar {
+  background: var(--glyph);
+  color: var(--paper);
+}
+
+[data-theme="glass"] .jse-bar span.on {
+  color: var(--glyph);
+}
+
+[data-theme="glass"] .now,
+[data-theme="glass"] .life {
+  border-left-color: var(--glyph);
+}
+
+[data-theme="glass"] .arrow:not(.failed) {
+  border-top-color: var(--glyph);
+}
+
+[data-theme="glass"] .gcanvas polyline:not(.active) {
+  stroke: var(--glyph);
+}
+
+[data-theme="glass"] .gcanvas rect:not(.active) {
+  fill: var(--glyph);
+}
+
+[data-theme="glass"] .wbar i.wait {
+  background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 7px);
+}
+
+[data-theme="glass"] .brush {
+  background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 8px);
+}
+
+/* (8) The lines dfm-ui.css draws at a hard-coded 2 px follow the family's 1 px. */
+[data-theme="glass"] .seg-b,
+[data-theme="glass"] .legend i,
+[data-theme="glass"] .swq,
+[data-theme="glass"] .mini,
+[data-theme="glass"] .tag,
+[data-theme="glass"] .prow .kbd,
+[data-theme="glass"] .fchip .x,
+[data-theme="glass"] .meter i,
+[data-theme="glass"] .ttile .sw i,
+[data-theme="glass"] .avatar,
+[data-theme="glass"] .bottom-nav .bcnt {
+  border-width: 1px;
+}
+
+[data-theme="glass"] .seg-b {
+  margin-top: -1px;
+}
+
+[data-theme="glass"] .ttile .sw i {
+  margin-right: -1px;
+}
+
+/* (9) A reader who asked for less transparency gets opaque panes and no blur; the theme still
+   reads as itself through the radius, the rim and the shadow. */
+@media (prefers-reduced-transparency: reduce) {
+  [data-theme="glass"] {
+    --card: #ffffff;
+    --popover: #ffffff;
+    --sidebar: #ffffff;
+    --input: #ffffff;
+    --secondary: #ffffff;
+    --kind-orchestration: #ffffff;
+    --node-other: #ffffff;
+  }
+
+  .dark[data-theme="glass"] {
+    --card: #161a2c;
+    --popover: #161a2c;
+    --sidebar: #161a2c;
+    --input: #10142a;
+    --secondary: #1e2338;
+    --kind-orchestration: #1e2338;
+    --node-other: #1e2338;
+  }
+
+  [data-theme="glass"]
+    :is(
+      .snav,
+      .topbar,
+      .panel,
+      .card,
+      .tbl-wrap,
+      .pop,
+      .dialog,
+      .peek,
+      .palette,
+      .bulk,
+      .sheet,
+      .bottom-nav,
+      .empty,
+      .group,
+      .hero,
+      .banner,
+      .note,
+      .swim,
+      .seq,
+      .graph,
+      .ed,
+      .overlay
+    ) {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
