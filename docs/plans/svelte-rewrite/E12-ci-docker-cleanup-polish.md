@@ -184,3 +184,26 @@ Do:
 Accept:
 - [ ] Checklist fully ticked in the notes file with the extension version tested.
 Test: manual.
+
+**Deviation, E12-S4-T1 (2026-09-05).** **The check found a defect and it is fixed here, and the
+checklist is not fully ticked.** Point 1 was done by reading both sides against each other rather
+than by pressing F5 - everything a machine can settle is settled and written up in
+`notes/E12-release.md` with the file references; the eleven checks that genuinely need an extension
+host are listed there as the remaining manual pass, together with the reason F5 on an unrefreshed
+working tree still loads the React bundle (`backend/DfmStatics` is gitignored build output).
+
+The defect: in the webview `AppState` built the memory-mode router without a hub, so `loadAbout()`
+returned early and the whole UI ran with no capabilities and `readOnly` true. The extension now puts
+`hubName` into `DfmClientConfig`, `ClientConfig.hubName` is declared in `host.svelte.ts`, and the
+memory-mode router defaults its hub to it - the same way it already defaults the instance id.
+Restoring a persisted route keeps the screen and takes the hub from the host. Three cases in
+`router.test.ts` and the `DfmClientConfig` assertion in `MonitorView.test.ts` cover it. This is also
+what E0-S5-T2 needs, so that task is worth re-running once someone has an extension host.
+
+Points 2 and 3 are done, and beyond what the task asked for: `docs/ui.md` carries a screenshot per
+screen, the root README a feature tour over the same set, and the extension a "The monitoring UI"
+section. Every claim in both documents was read back against the code first; the drift that turned up
+(no built-in "Everything" tab, six bulk actions rather than eight, update-input-and-rewind is not a
+dangerous operation, `/children` is not cached, `DFM_STATS_CAP` defaults to 50000, `dfm.*` are the
+local-storage keys and not the `DFM_CLIENT_CONFIG` names) is corrected in the same pass. The
+React-era screenshots under `readme/screenshots` were deleted.

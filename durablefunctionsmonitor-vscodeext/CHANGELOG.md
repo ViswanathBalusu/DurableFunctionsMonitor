@@ -1,5 +1,21 @@
 # Change Log
 
+# Version 6.9.0
+
+- **The UI is new.** The React app was replaced by a Svelte 5 one, served the same way from the packaged backend's `DfmStatics`. What it adds, in the webview as well as in the browser:
+
+    - an **Overview** screen: status tiles, throughput over the range with a brush that sets the range everywhere, "needs attention" against your own thresholds, the busiest orchestrators with p50, p95 and failure rate, and - where the storage provider serves them - the queue backlog and the audit trail.
+    - **Instances** as a table, a timeline or a histogram, sharing one filter that lives in the URL and can be kept as a saved view.
+    - **bulk actions**: terminate, suspend, resume, rewind, raise event or purge up to 200 selected instances in one call, with a per-instance result.
+    - an **instance workspace** with tabs - Timeline (a swimlane of activities, sub-orchestrations, timers and external events), History, Inputs, Sequence, Graph, Raw, Everything, plus any custom Liquid tab the hub publishes.
+    - **Failures** grouped by orchestrator and by a normalised error signature, so instances that hit the same bug are one row that can be rewound or purged together.
+    - **Storage** and **Activity** screens: the task hub's tables, queues and partitions, and every write anyone made through the monitor when `DFM_AUDIT_ENABLED` is on.
+    - **five themes** in light and dark, a `Ctrl`/`Cmd` `K` command palette, full keyboard operation and an axe check on every build.
+    - every JSON payload pretty-printed and fully expanded, everywhere.
+
+- Screens and buttons are now driven by the capabilities the backend reports from `/about`, so a custom backend (MSSQL, Netherite) hides what its provider cannot do instead of failing the call.
+- The full tour, the keyboard map, the capability matrix and every setting: [docs/ui.md](https://github.com/ViswanathBalusu/DurableFunctionsMonitor/blob/main/docs/ui.md).
+
 # Version 6.8.1
 
 - Improved handling of unauthorized requests to backend API ([#313](https://github.com/microsoft/DurableFunctionsMonitor/issues/313)). Thanks [@EvanSchallerer](https://github.com/EvanSchallerer) for this contribution!

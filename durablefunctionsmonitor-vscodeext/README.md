@@ -18,6 +18,20 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 
 See the [complete list of features in our wiki](https://github.com/microsoft/DurableFunctionsMonitor/wiki#features).
 
+## The monitoring UI
+
+<img src="https://raw.githubusercontent.com/ViswanathBalusu/DurableFunctionsMonitor/main/readme/screenshots/dfm-instances.png" width="800px" style="display:block; margin:auto"/>
+
+The webview hosts the same UI the standalone and "injected" backends serve: an Overview of the hub,
+Instances as a table, a timeline or a histogram with bulk actions over the selection, a per-instance
+workspace (timeline, history, inputs, sequence, function graph, raw), Failures grouped by error
+signature, Entities, Storage, the audit trail, five themes in light and dark, and a `Ctrl`/`Cmd` `K`
+command palette. Screens and buttons follow the capabilities the connected backend reports, so a
+Task Hub on MSSQL or Netherite shows what that provider can actually do.
+
+The full tour, the keyboard map, the capability matrix and every setting are in
+[docs/ui.md](https://github.com/ViswanathBalusu/DurableFunctionsMonitor/blob/main/docs/ui.md).
+
 ## How to run
 
 After installing this extension from the Marketplace or from a VSIX-file the **DURABLE FUNCTIONS** tab should appear on **AZURE** view container:
