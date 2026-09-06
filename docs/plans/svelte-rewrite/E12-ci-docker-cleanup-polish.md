@@ -157,6 +157,21 @@ Accept:
 - [ ] Every theme/mode pair matches its token table; no alpha tints or soft shadows anywhere (grep the built CSS for `rgba(` and `blur(` outside the overlay rule).
 Test: the spec + manual review.
 
+**Done, E12-S3-T3 (2026-09-05).** 78 shots under `test-results/themes/`, and the token table is
+asserted rather than eyeballed: paper, accent, ink (the theme's in light, a light one in dark, since
+the pair inverts), ink-on-paper over 7:1, the `radius · line · shadow` metrics the Settings screen
+prints, a shadow that is a hard offset and not a blur, and the paper's pattern per theme. The bundle
+carries no `rgba(` at all; its only `blur(` is Tailwind's unused `.blur` utility definition, and its
+only translucent surface is `.overlay` - the other `color-mix` is Tailwind's placeholder rule, which
+paints text.
+
+The narrow widths are shot in Poster, the theme the mockups are drawn in, rather than in all five:
+1024 px and 390 px are about layout, and the token half is already covered ten times over.
+
+No §7 or §13 deviation was found; `notes/E12-theme-qa.md` records what was read and against what. The
+two colour defects this pass turned up came from axe, not from the eye, and are fixed under
+E12-S3-T2 - both compositions of frozen rules rather than wrong tokens.
+
 ### E12-S4 Release checklist and docs
 
 #### E12-S4-T1 VS Code extension check and docs
