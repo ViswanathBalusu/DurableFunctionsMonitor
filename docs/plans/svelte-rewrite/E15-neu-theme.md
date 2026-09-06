@@ -40,8 +40,8 @@ Do:
 2. Contrast, both modes: foreground on background, muted-foreground on background, every status foreground on its pastel or jewel fill, primary-foreground on primary, destructive-foreground on destructive, ring on background - and, specific to this family, the *edge* of a raised surface: the luminance difference between `--neu-dark` composited over the paper and the paper itself is written down, so a reviewer can say whether the elevation reads on a cheap screen. Text pairs 4.5:1, ring 3:1.
 3. Fix the sheet; re-shoot.
 Accept:
-- [ ] The notes file lists every pair with its ratio and none is under the threshold.
-- [ ] Both modes of the preview page have no section the review still marks wrong.
+- [x] The notes file lists every pair with its ratio and none is under the threshold.
+- [x] Both modes of the preview page have no section the review still marks wrong.
 Test: manual review, recorded; `themes.spec.ts` green.
 
 ### E15-S2 In the app
