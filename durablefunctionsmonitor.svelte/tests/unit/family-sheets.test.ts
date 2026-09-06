@@ -322,6 +322,22 @@ describe('the family sheets', () => {
           expect(css, directive).not.toContain(directive);
         }
       });
+
+      if (entry.family === 'neu') {
+        it('answers prefers-contrast: more with a line, in both modes', () => {
+          // Playwright cannot emulate the media feature, so the block is held to here (E15-S2-T2):
+          // a family with no visible line has to give every surface an edge when asked
+          const more = rules(sheet).filter((rule) => rule.media === '@media (prefers-contrast: more)');
+          const inkIn = (selector: string) =>
+            more.some(
+              (rule) => rule.selector.replace(/\s+/g, '') === selector && /(?:^|[;\s])--ink\s*:/.test(rule.body),
+            );
+
+          expect(more.length, 'rules under prefers-contrast: more').toBeGreaterThan(0);
+          expect(inkIn(`[data-theme="${entry.key}"]`), '--ink in the light block').toBe(true);
+          expect(inkIn(`.dark[data-theme="${entry.key}"]`), '--ink in the dark block').toBe(true);
+        });
+      }
     });
   }
 });

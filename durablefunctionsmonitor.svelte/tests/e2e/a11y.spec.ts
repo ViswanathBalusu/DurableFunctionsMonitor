@@ -19,7 +19,7 @@ import { ENTITY_INSTANCE_ID, RUNNING_INSTANCE_ID } from './seed/fixtures.mjs';
  * One theme per family, in both modes (E13-S1-T3): the axe loop over every screen is the expensive
  * part of this file, and what it measures - contrast, names, roles - is decided by the family's
  * sheet, not by which paper is on. The first theme of each family stands for it: Poster for the
- * papers, Glass for its own (E14-S2-T2), and each further family by its own key once it lands.
+ * papers, Glass (E14-S2-T2) and Neu (E15-S2-T2) for their own.
  */
 const FAMILY_SAMPLES = THEMES.filter(
   (entry, index) => THEMES.findIndex((other) => other.family === entry.family) === index,

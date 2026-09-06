@@ -66,8 +66,8 @@ Do:
 2. `themes.spec.ts`, for `family === 'neu'`: assert the computed `box-shadow` of a `.btn` and of `.tbl-wrap` on the Instances screen has two components and that neither is `none` in either mode; assert the focus ring on a focused `.btn` (`outline-color`) is 3:1 or better against the paper.
 3. `prefers-contrast: more` cannot be emulated by Playwright; assert in `family-sheets.test.ts` that the block exists and re-declares `--ink`.
 Accept:
-- [ ] `a11y.spec.ts` green for Poster, Glass (if E14 has landed) and Neu, both modes.
-- [ ] The shadow and ring checks pass in both modes.
+- [x] `a11y.spec.ts` green for Poster, Glass (if E14 has landed) and Neu, both modes.
+- [x] The shadow and ring checks pass in both modes.
 Test: itself.
 
 #### E15-S2-T3 Docs and release

@@ -6,7 +6,9 @@
 // hold on to, the tokens each theme claims are asserted against what the stylesheet really computes.
 // What is asserted depends on the theme's family (themes.ts): the papers are held to the design
 // system's brutalist rules, a soft family to the universal ones, to its own metrics, and to the
-// contrast of its text over its translucent panes, which axe leaves "incomplete" (E14-S2-T2).
+// contrast of its text over its translucent panes, which axe leaves "incomplete" (E14-S2-T2), and
+// Neu to the two things its look rests on that axe does not measure: an edge made of shadow and a
+// focus ring on a surface with no line (E15-S2-T2).
 //
 // The screenshots go to `test-results/themes/` and are not committed; CI keeps them as an artifact.
 // `notes/E12-theme-qa.md` is the checklist they were reviewed against.
@@ -177,6 +179,54 @@ async function sampled(page: Page, text: string, surface: string): Promise<Sampl
   );
 }
 
+/** The components of a computed `box-shadow`: the commas inside `rgba()` are not separators. */
+function shadowParts(value: string): string[] {
+  return value.split(/,(?![^(]*\))/).map((part) => part.trim());
+}
+
+/** `rgb(124, 58, 237)` as the browser reports a computed colour, to the hex the contrast maths reads. */
+function rgbToHex(value: string): string {
+  const parts = /^rgba?\((\d+), (\d+), (\d+)/.exec(value);
+
+  if (!parts) {
+    throw new Error(`not an rgb colour: ${value}`);
+  }
+
+  return `#${parts
+    .slice(1)
+    .map((channel) => Number(channel).toString(16).padStart(2, '0'))
+    .join('')}`;
+}
+
+/**
+ * Tabs through the page until a `.btn` holds the focus, the way a keyboard user reaches one, and
+ * returns the outline the browser painted on it. Programmatic focus does not always count as
+ * focus-visible; a Tab always does.
+ */
+async function focusRingOnButton(page: Page): Promise<{ style: string; width: string; color: string }> {
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press('Tab');
+
+    const ring = await page.evaluate(() => {
+      const el = document.activeElement;
+
+      if (!(el instanceof HTMLElement) || !el.classList.contains('btn')) {
+        return null;
+      }
+
+      const style = getComputedStyle(el);
+
+      return { style: style.outlineStyle, width: style.outlineWidth, color: style.outlineColor };
+    });
+
+    if (ring) {
+      return ring;
+    }
+  }
+
+  throw new Error('no .btn took the focus in 40 Tabs');
+}
+
 async function shoot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `${SHOTS}/${name}.png` });
 }
@@ -244,6 +294,33 @@ for (const entry of THEMES) {
         expect(contrast(cell.color, cell.background), 'table text on the frame').toBeGreaterThan(4.5);
         expect(contrast(read.ring, cell.background), 'focus ring on the frame').toBeGreaterThan(3);
         expect(contrast(read.ring, read.background), 'focus ring on the paper').toBeGreaterThan(3);
+      }
+
+      if (entry.family === 'neu') {
+        // Neu has no line: what says "surface" is a pair of shadows, one of shade and one of light,
+        // and axe measures neither. A button and the table frame have to carry both components in
+        // both modes, or the surface is gone and only text is left on the material.
+        const raised = await surfaces(page, ['.btn:not(.ghost):not(.flat)', '.tbl-wrap']);
+
+        for (const [selector, style] of Object.entries(raised)) {
+          expect(style, selector).not.toBeNull();
+
+          const parts = shadowParts(style?.boxShadow ?? 'none');
+
+          expect(parts, `${selector} shadow pair`).toHaveLength(2);
+          expect(
+            parts.every((part) => part !== 'none' && /\d+px/.test(part)),
+            `${selector} shadow parts`,
+          ).toBe(true);
+        }
+
+        // ...and the focus ring is the one hard edge a keyboard user gets: painted, and 3:1 on the
+        // paper, which is also the colour of every surface
+        const ring = await focusRingOnButton(page);
+
+        expect(ring.style, 'focus outline style').toBe('solid');
+        expect(parseInt(ring.width, 10), 'focus outline width').toBeGreaterThanOrEqual(2);
+        expect(contrast(rgbToHex(ring.color), read.background), 'focus ring on the paper').toBeGreaterThan(3);
       }
 
       // The matrix itself: seven screens, in this theme and this mode
