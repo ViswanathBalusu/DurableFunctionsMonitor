@@ -402,13 +402,24 @@ export class MonitorView
         return slashPos < 0 ? hub : hub.substring(slashPos + 1);
     }
 
-    // Embeds the current color theme
+    // Embeds the current color theme, the time zone setting and the Task Hub this view is bound to.
+    // The hub matters: a webview has no URL to carry the hub segment, so without it the UI has no
+    // hub, and a UI with no hub never asks /about - which is what every capability is gated on.
     private embedThemeAndSettings(html: string): string {
 
         const theme = [2, 3].includes((vscode.window as any).activeColorTheme.kind) ? 'dark' : 'light';
 
+        const clientConfig = {
+            theme,
+            showTimeAs: Settings().showTimeAs,
+            hubName: this.hubNameWithoutSchema
+        };
+
+        // `<` is escaped so that a hub name can never close the script tag it is embedded in
+        const json = JSON.stringify(clientConfig).replace(/</g, '\\u003c');
+
         return html.replace('<script>var DfmClientConfig={}</script>',
-            `<script>var DfmClientConfig={'theme':'${theme}','showTimeAs':'${Settings().showTimeAs}'}</script>`);
+            `<script>var DfmClientConfig=${json}</script>`);
     }
 
     // Embeds the orchestrationId in the HTML served

@@ -405,7 +405,7 @@ describe('Router in memory mode', () => {
 });
 
 describe('Router in the VS Code host', () => {
-  const GLOBALS = ['acquireVsCodeApi', 'OrchestrationIdFromVsCode'] as const;
+  const GLOBALS = ['acquireVsCodeApi', 'OrchestrationIdFromVsCode', 'DfmClientConfig'] as const;
 
   function clearGlobals() {
     for (const key of GLOBALS) {
@@ -422,6 +422,7 @@ describe('Router in the VS Code host', () => {
     clearGlobals();
     (globalThis as Record<string, unknown>).acquireVsCodeApi = () => ({ postMessage: vi.fn() });
     (globalThis as Record<string, unknown>).OrchestrationIdFromVsCode = 'order-2026-09-04-000913';
+    (globalThis as Record<string, unknown>).DfmClientConfig = { hubName: HUB };
     vi.resetModules();
 
     const { Router: VsCodeRouter } = await import('./router.svelte');
@@ -431,11 +432,48 @@ describe('Router in the VS Code host', () => {
     expect(router.mode).toBe('memory');
     expect(router.current).toEqual({
       name: 'instance',
-      hub: '',
+      hub: HUB,
       instanceId: 'order-2026-09-04-000913',
       query: new URLSearchParams(),
     } satisfies Route);
     expect(pushState).not.toHaveBeenCalled();
+  });
+
+  // The webview has no URL, so the hub can only come from the host. Without it the app has no hub,
+  // and an app with no hub never asks /about - which every capability is gated on.
+  it('takes the hub from the injected client config', async () => {
+    clearGlobals();
+    (globalThis as Record<string, unknown>).acquireVsCodeApi = () => ({ postMessage: vi.fn() });
+    (globalThis as Record<string, unknown>).DfmClientConfig = { theme: 'dark', hubName: HUB };
+    vi.resetModules();
+
+    const { Router: VsCodeRouter } = await import('./router.svelte');
+    const router = new VsCodeRouter();
+
+    expect(router.current).toEqual({ name: 'overview', hub: HUB, query: new URLSearchParams() } satisfies Route);
+  });
+
+  it('restores the persisted screen under this hub, whatever hub the path names', async () => {
+    clearGlobals();
+    (globalThis as Record<string, unknown>).acquireVsCodeApi = () => ({ postMessage: vi.fn() });
+    (globalThis as Record<string, unknown>).DfmClientConfig = { hubName: HUB };
+    vi.resetModules();
+
+    const { Router: VsCodeRouter } = await import('./router.svelte');
+
+    expect(new VsCodeRouter({ storage: fakeStorage({ route: '/another-hub/instances/order-1' }) }).current).toEqual({
+      name: 'instance',
+      hub: HUB,
+      instanceId: 'order-1',
+      query: new URLSearchParams(),
+    } satisfies Route);
+
+    // `/` is what a hub-less overview persisted as; it parses to login, which no webview can show
+    expect(new VsCodeRouter({ storage: fakeStorage({ route: '/' }) }).current).toEqual({
+      name: 'overview',
+      hub: HUB,
+      query: new URLSearchParams(),
+    } satisfies Route);
   });
 
   it('runs in memory mode on overview when no instance id is injected', async () => {

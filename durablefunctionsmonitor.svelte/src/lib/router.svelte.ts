@@ -78,6 +78,12 @@ function splitPath(path: string): string[] {
   return path.split('/').filter((segment) => !!segment);
 }
 
+/** Memory mode has no URL, so the hub comes from the host's injected config (contracts §3). */
+function hubFromClientConfig(): string {
+  const hubName = host.clientConfig.hubName;
+  return typeof hubName === 'string' ? hubName : '';
+}
+
 function decodeSegments(segments: string[]): string {
   const raw = segments.join('/');
   if (!raw) {
@@ -232,14 +238,14 @@ export class Router {
       return;
     }
 
-    const hub = options.hub ?? '';
+    const hub = options.hub ?? hubFromClientConfig();
     const instanceId = options.instanceId ?? host.orchestrationIdFromVsCode;
     if (instanceId) {
       this.current = { name: 'instance', hub, instanceId, query: new URLSearchParams() };
       return;
     }
 
-    this.current = this.#restore() ?? { name: 'overview', hub, query: new URLSearchParams() };
+    this.current = this.#restore(hub) ?? { name: 'overview', hub, query: new URLSearchParams() };
   }
 
   /** The hub segment of the current route, `''` on the login route. */
@@ -335,13 +341,22 @@ export class Router {
     ]);
   }
 
-  #restore(): Route | null {
+  #restore(hub: string): Route | null {
     const path = this.#storage?.getItem('route');
     if (!path) {
       return null;
     }
     const parsed = parsePath(path, this.routePrefix);
     const query = new URLSearchParams(this.#storage?.getItem('query') ?? '');
-    return { ...toTarget(parsed), query } as Route;
+    const restored = { ...toTarget(parsed), query } as Route;
+
+    if (!hub) {
+      return restored;
+    }
+
+    // This view is bound to one hub, so the hub of the path it persisted is never the interesting
+    // part - and a path written before the host knew its hub has the wrong one, or none, which
+    // parses to the login screen the webview cannot show. Keep the screen, take this hub.
+    return restored.name === 'login' ? { name: 'overview', hub, query } : { ...restored, hub };
   }
 }

@@ -13,6 +13,11 @@ export interface ClientConfig {
   theme?: 'light' | 'dark';
   showTimeAs?: 'Local' | 'UTC';
   dfmTheme?: ThemeName;
+  /**
+   * The hub the host bound this page to. The VS Code extension puts it here because its webview has
+   * no URL to carry a hub segment, and without it the app has no hub, so it never asks `/about`.
+   */
+  hubName?: string;
   [k: string]: unknown;
 }
 

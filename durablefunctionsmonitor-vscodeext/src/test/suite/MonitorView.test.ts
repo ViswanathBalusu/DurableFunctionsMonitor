@@ -73,7 +73,11 @@ suite('MonitorView Test Suite', () => {
 		const stateFromVsCodeScript = `<script>var OrchestrationIdFromVsCode="",StateFromVsCode=${JSON.stringify(webViewState)}</script>`;
 		assert.strictEqual(html.includes(stateFromVsCodeScript), true);
 
-		const dfmClientConfigScriptIncluded = html.match(`<script>var DfmClientConfig={'theme':'[^']+','showTimeAs':'UTC'}</script>`);
+		// The hub goes in here because the webview has no URL to carry it, and the UI asks /about
+		// only once it has one
+		const dfmClientConfigScriptIncluded = html.match(
+			/<script>var DfmClientConfig=\{"theme":"(light|dark)","showTimeAs":"UTC","hubName":"my-hub"\}<\/script>/
+		);
 		assert.strictEqual(!!dfmClientConfigScriptIncluded, true);
 		
 		const dfmViewModeScript = `<script>var DfmViewMode=0</script>`;
