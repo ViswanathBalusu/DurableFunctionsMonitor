@@ -1,5 +1,9 @@
 # Change Log
 
+# Version 6.10.0
+
+- The time range control - the one on Overview, Instances, Failures, Functions and Activity - now offers **Custom range…**, which opens a picker for the exact window instead of leaving a custom range to a chart brush or a hand-edited URL. It opens on the window in force, shows times in whichever clock you picked (UTC or local), and what you apply goes into the URL, so it holds across every screen and survives a copied link.
+
 # Version 6.9.0
 
 - **The UI is new.** The React app was replaced by a Svelte 5 one, served the same way from the packaged backend's `DfmStatics`. What it adds, in the webview as well as in the browser:

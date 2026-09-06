@@ -20,7 +20,7 @@
     That suffix is deliberately not one publish-nuget.yml accepts: previews live there.
   -->
   <PropertyGroup>
-    <VersionPrefix>6.9.1</VersionPrefix>
+    <VersionPrefix>6.10.0</VersionPrefix>
   </PropertyGroup>
 
   <!--
