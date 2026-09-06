@@ -8,9 +8,10 @@ import { setMode, systemPrefersMode } from 'mode-watcher';
 import { host as defaultHost, type ClientConfig, type Host, type ThemeName } from '../host.svelte';
 import { PrefsStorage, type PrefsFields } from '../storage/prefs-storage';
 import type { ITypedLocalStorage } from '../storage/typed-local-storage';
+import { THEMES } from '../themes';
 
-/** The five papers of the design system. */
-export const themeNames: ThemeName[] = ['poster', 'riso', 'memphis', 'blueprint', 'hazard'];
+/** The keys of the themes, in menu order. The list exists once, in `themes.ts`. */
+export const themeNames: ThemeName[] = THEMES.map((entry) => entry.key);
 
 /** 'system' means "follow the OS" in the browser and "follow VS Code" inside the webview. */
 export type ModePreference = 'light' | 'dark' | 'system';

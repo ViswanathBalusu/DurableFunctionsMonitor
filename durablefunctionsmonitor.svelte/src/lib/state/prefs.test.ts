@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Host } from '../host.svelte';
 import type { PrefsFields } from '../storage/prefs-storage';
 import type { ITypedLocalStorage } from '../storage/typed-local-storage';
-import { Prefs, defaultThresholds } from './prefs.svelte';
+import { THEMES } from '../themes';
+import { Prefs, defaultThresholds, themeNames } from './prefs.svelte';
 
 /** An in-memory ITypedLocalStorage, so a test can seed and read back what was persisted. */
 function fakeStorage(seed: Partial<Record<keyof PrefsFields, string>> = {}) {
@@ -101,10 +102,14 @@ describe('Prefs defaults', () => {
     expect(prefs.resolvedMode).toBe('light');
   });
 
-  it('ignores a stored value that is no longer one of the five papers', () => {
+  it('ignores a stored value that is no longer a theme', () => {
     const { storage } = fakeStorage({ theme: 'neon' });
 
     expect(new Prefs(fakeHost(), storage).theme).toBe('poster');
+  });
+
+  it('accepts exactly the keys of THEMES, in their order', () => {
+    expect(themeNames).toEqual(THEMES.map((entry) => entry.key));
   });
 
   it('takes showTimeAs from the host config when the user has not chosen', () => {

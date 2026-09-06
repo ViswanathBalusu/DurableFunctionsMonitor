@@ -3,7 +3,7 @@
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
-import { THEMES, theme } from '$lib/themes';
+import { THEMES, family, theme } from '$lib/themes';
 import ShellHarness from '../../../tests/unit/harnesses/ShellHarness.svelte';
 
 async function openMenu(name: RegExp | string) {
@@ -29,6 +29,12 @@ describe('themes.ts', () => {
   it('falls back to the first theme for a name it does not know', () => {
     expect(theme('riso').label).toBe('Riso');
     expect(theme('neon' as never).key).toBe('poster');
+  });
+
+  it('puts every paper in the brutalist family, and an unknown name with them', () => {
+    expect(THEMES.every((entry) => entry.family === 'brutal')).toBe(true);
+    expect(family('hazard')).toBe('brutal');
+    expect(family('neon' as never)).toBe('brutal');
   });
 });
 
