@@ -10,9 +10,34 @@
         <repository type="git" url="https://github.com/ViswanathBalusu/DurableFunctionsMonitor" />
         <license type="file">LICENSE.txt</license>
 
+        <!--
+            nuget pack infers nothing from a hand-written .nuspec: this list is the ONLY thing that
+            puts an assembly next to the lib/net10.0 DLLs below in a consumer's Function App. This
+            package ships durablefunctionsmonitor.dotnetisolated.core.dll too - the MSSQL provider only
+            replaces the DfmExtensionPoints routines, it does not replace the assembly - so everything
+            core.dll compiled against has to be declared here as well, even the Azure Storage clients
+            it never calls on this provider: an assembly reference that cannot be resolved is a
+            FileNotFoundException, and the runtime does not care that the code path is unreachable.
+
+            So it has to cover every <PackageReference> of every .csproj whose assembly is packed into
+            lib/ below, at a version no lower than the one that project builds against.
+            scripts/harness/verify-nuspec-dependencies.mjs enforces exactly that, in CI before packing.
+            Entries beyond that (the DurableTask.SqlServer provider) are what the consumer's own
+            Function App needs.
+        -->
         <dependencies>
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.SqlServer" version="1.8.1" />
             <dependency id="Microsoft.Data.SqlClient" version="7.0.2" />
+            <dependency id="Microsoft.Azure.Functions.Worker" version="2.52.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.19.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.Http" version="3.3.0" />
+            <dependency id="Azure.Data.Tables" version="12.12.0" />
+            <dependency id="Azure.Storage.Blobs" version="12.29.2" />
+            <dependency id="Azure.Storage.Queues" version="12.27.1" />
+            <dependency id="Azure.Identity" version="1.21.0" />
+            <dependency id="Microsoft.IdentityModel.Protocols.OpenIdConnect" version="8.22.0" />
+            <dependency id="Fluid.Core" version="2.40.0" />
+            <dependency id="Newtonsoft.Json" version="13.0.1" />
         </dependencies>
 
     </metadata>

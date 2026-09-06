@@ -64,6 +64,12 @@ jobs:
         cache: npm
         cache-dependency-path: durablefunctionsmonitor.svelte/package-lock.json
 
+    # nuget pack infers no dependencies from a hand-written .nuspec, so a PackageReference added to a
+    # library and not mirrored into its .nuspec ships a package that restores and builds fine and then
+    # throws FileNotFoundException in the consumer app. Checked here, ahead of the long build below.
+    - name: verify the NuGet packages declare every dependency their assemblies need
+      run: node scripts/harness/verify-nuspec-dependencies.mjs
+
     - name: npm ci durablefunctionsmonitor.svelte
       run: npm ci
       working-directory: durablefunctionsmonitor.svelte

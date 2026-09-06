@@ -12,5 +12,9 @@
     <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.22.0" />
     <PackageReference Include="Fluid.Core" Version="2.40.0" />
+    <!-- Used directly by 24 source files. It also arrives transitively through the DurableTask worker
+         extension, but a transitive arrival is not a contract: declared here so it is packed into every
+         .nuspec too (scripts/harness/verify-nuspec-dependencies.mjs). 13.0.1 is what already resolves. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 </Project>

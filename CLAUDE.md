@@ -17,7 +17,7 @@ Monitoring UI for Azure Durable Functions. Backend: .NET 10 isolated Azure Funct
 ## Commands
 
 - UI (`durablefunctionsmonitor.svelte/`): `npm ci`, `npm run dev` (:3000, proxies to :7072), `npm run build`, `npm run build-and-copy`, `npm run check`, `npm run lint`, `npm test`, `npm run test:e2e`, `npm run verify` (build contract).
-- Harness (repo root): `node scripts/harness/plan-status.mjs [next|E4|--sync|--done id hash|--blocked id why]`, `node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build`, `node scripts/harness/write-local-settings.mjs`, `node scripts/harness/start-host.mjs`.
+- Harness (repo root): `node scripts/harness/plan-status.mjs [next|E4|--sync|--done id hash|--blocked id why]`, `node scripts/harness/verify-build-contract.mjs durablefunctionsmonitor.svelte/build`, `node scripts/harness/verify-nuspec-dependencies.mjs`, `node scripts/harness/write-local-settings.mjs`, `node scripts/harness/start-host.mjs`.
 - Backend: `dotnet build DurableFunctionsMonitor.slnx`, `dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.tests`, `npx azurite --silent --location .azurite` then `dotnet test tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests`.
 - Host: `func host start --port 7072` in `durablefunctionsmonitor.dotnetisolated/bin/Debug/net10.0` (needs `local.settings.json`; the harness writes it with auth disabled through `DFM_NONCE`).
 
@@ -28,4 +28,5 @@ Monitoring UI for Azure Durable Functions. Backend: .NET 10 isolated Azure Funct
 - Build output contract (`00-shared-contracts.md` §2) must hold: one JS and one CSS bundle under `static/`, hex-hash names, root-absolute links in `index.html`, the seven placeholder tags verbatim, no inline scripts.
 - Pin package versions exactly as the plan README lists; TypeScript stays on 5.x.
 - Backend: every DfMon function has `[OperationKind]`; provider-specific storage goes through `DfmExtensionPoints`; MSSQL and Netherite packages must keep compiling.
+- Adding a `PackageReference` to a backend library means adding a matching `<dependency>` to every `nuspec.nuspec` that packs that assembly into `lib/`. `nuget pack` infers nothing from a hand-written nuspec, so a forgotten entry ships a package that restores cleanly and throws `FileNotFoundException` in the consumer app. `node scripts/harness/verify-nuspec-dependencies.mjs` enforces it and runs in CI.
 - Tests are part of every task; never skip, disable or loosen a test to get green.
