@@ -15,7 +15,9 @@ async function openMenu(name: RegExp | string) {
 
 describe('themes.ts', () => {
   it('has the five papers of the design system, with their swatches', () => {
-    expect(THEMES.map((entry) => entry.key)).toEqual(['poster', 'riso', 'memphis', 'blueprint', 'hazard']);
+    const papers = THEMES.filter((entry) => entry.family === 'brutal');
+
+    expect(papers.map((entry) => entry.key)).toEqual(['poster', 'riso', 'memphis', 'blueprint', 'hazard']);
 
     for (const entry of THEMES) {
       expect(entry.paper).toMatch(/^#[0-9A-F]{6}$/i);
@@ -31,8 +33,7 @@ describe('themes.ts', () => {
     expect(theme('neon' as never).key).toBe('poster');
   });
 
-  it('puts every paper in the brutalist family, and an unknown name with them', () => {
-    expect(THEMES.every((entry) => entry.family === 'brutal')).toBe(true);
+  it('answers the family of a theme, and of an unknown name with the first theme', () => {
     expect(family('hazard')).toBe('brutal');
     expect(family('neon' as never)).toBe('brutal');
   });
@@ -45,13 +46,13 @@ describe('ThemeMenu', () => {
     expect(await screen.findByRole('button', { name: /Poster · Light/ })).toBeInTheDocument();
   });
 
-  it('offers the five themes as radios, with the current one marked', async () => {
+  it('offers every theme as a radio, with the current one marked', async () => {
     render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
 
     await openMenu(/Poster · Light/);
 
     const tiles = screen.getAllByRole('menuitemradio');
-    expect(tiles).toHaveLength(5);
+    expect(tiles).toHaveLength(THEMES.length);
     expect(tiles[0].getAttribute('aria-checked')).toBe('true');
     expect(tiles[0]).toHaveClass('active');
 

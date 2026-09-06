@@ -1,11 +1,12 @@
 /// <reference types="node" />
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { THEMES } from '../../src/lib/themes';
 
 /**
  * Guards the emitted CSS bundle (contracts §2): exactly one file under `build/static/css`,
- * carrying `--status-failed` for all five themes in both modes. `build/` is gitignored, so this
- * suite only runs after `npm run build` and is skipped otherwise.
+ * carrying `--status-failed` for every theme of THEMES in both modes. `build/` is gitignored, so
+ * this suite only runs after `npm run build` and is skipped otherwise.
  *
  * Paths are relative to the vitest root, the `durablefunctionsmonitor.svelte` folder. The bundle
  * is minified, so attribute selectors lose their quotes (`[data-theme=riso]`) and the theme rule
@@ -13,7 +14,7 @@ import { describe, expect, it } from 'vitest';
  */
 const CSS_DIR = 'build/static/css';
 const built = existsSync(CSS_DIR);
-const themes = ['poster', 'riso', 'memphis', 'blueprint', 'hazard'];
+const themes = THEMES.map((entry) => entry.key);
 
 describe.skipIf(!built)('built CSS bundle', () => {
   const files = built ? readdirSync(CSS_DIR).sort() : [];
@@ -23,7 +24,7 @@ describe.skipIf(!built)('built CSS bundle', () => {
     expect(files[0]).toMatch(/^main\.[0-9a-f]+\.css$/);
   });
 
-  it('declares --status-failed for all five themes in light and dark', () => {
+  it('declares --status-failed for every theme in light and dark', () => {
     const css = readFileSync(`${CSS_DIR}/${files[0]}`, 'utf8');
 
     expect(css.match(/--status-failed:/g) ?? []).toHaveLength(themes.length * 2);

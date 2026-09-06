@@ -11,6 +11,7 @@
 
 import { expect, test, type Page } from '@playwright/test';
 import { expectToast, gotoHub, hub, hubPath } from './fixtures';
+import { THEMES } from '../../src/lib/themes';
 import { buildRetryInstance } from './seed/fixtures.mjs';
 import { deleteInstances, seedInstances } from './seed/seed-hub.mjs';
 
@@ -193,7 +194,7 @@ test('changes the theme from the tile that is picked', async ({ page }) => {
 
   const themes = page.getByRole('radiogroup', { name: 'Theme' });
 
-  await expect(themes.getByRole('radio')).toHaveCount(5);
+  await expect(themes.getByRole('radio')).toHaveCount(THEMES.length);
 
   await themes.getByRole('radio', { name: /^Memphis/ }).click();
 

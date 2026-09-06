@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// The accessibility pass (E12-S3-T2): axe-core over every screen, in both modes of the Poster theme,
-// and the keyboard paths a person who never touches a mouse has to be able to walk.
+// The accessibility pass (E12-S3-T2): axe-core over every screen, in both modes of one theme per
+// family, and the keyboard paths a person who never touches a mouse has to be able to walk.
 //
 // Only `serious` and `critical` violations fail the run. The two lighter levels are advisory and
 // full of things the design system decides on purpose (a chip that repeats a colour, a heading level
@@ -11,7 +11,18 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { gotoHub, gotoInstance, hubPath, palette, theme } from './fixtures';
+import { THEMES } from '../../src/lib/themes';
 import { ENTITY_INSTANCE_ID, RUNNING_INSTANCE_ID } from './seed/fixtures.mjs';
+
+/**
+ * One theme per family, in both modes (E13-S1-T3): the axe loop over every screen is the expensive
+ * part of this file, and what it measures - contrast, names, roles - is decided by the family's
+ * sheet, not by which paper is on. The first theme of each family stands for it: Poster for the
+ * papers, and each soft family by its own key once it lands.
+ */
+const FAMILY_SAMPLES = THEMES.filter(
+  (entry, index) => THEMES.findIndex((other) => other.family === entry.family) === index,
+);
 
 /** Every screen of the app, by the path under the hub segment that opens it. */
 const SCREENS: { name: string; path: string; ready: string }[] = [
@@ -36,24 +47,26 @@ async function serious(page: Page): Promise<string[]> {
   return describe(results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical'));
 }
 
-for (const mode of ['light', 'dark'] as const) {
-  test(`every screen passes axe in ${mode} mode`, async ({ page }) => {
-    await gotoHub(page, 'instances');
-    await theme(page, 'Poster', mode === 'dark');
+for (const sample of FAMILY_SAMPLES) {
+  for (const mode of ['light', 'dark'] as const) {
+    test(`every screen passes axe in ${sample.label} ${mode}`, async ({ page }) => {
+      await gotoHub(page, 'instances');
+      await theme(page, sample.label, mode === 'dark');
 
-    for (const screen of SCREENS) {
-      await page.goto(hubPath(screen.path));
-      await expect(page.locator(screen.ready).first()).toBeVisible();
+      for (const screen of SCREENS) {
+        await page.goto(hubPath(screen.path));
+        await expect(page.locator(screen.ready).first()).toBeVisible();
 
-      expect(await serious(page), `${screen.name} (${mode})`).toEqual([]);
-    }
+        expect(await serious(page), `${screen.name} (${sample.label} ${mode})`).toEqual([]);
+      }
 
-    // The workspace, which is the screen with the most on it: a hero, seven actions and six tabs
-    await gotoInstance(page, RUNNING_INSTANCE_ID);
-    await expect(page.locator('.hero')).toBeVisible();
+      // The workspace, which is the screen with the most on it: a hero, seven actions and six tabs
+      await gotoInstance(page, RUNNING_INSTANCE_ID);
+      await expect(page.locator('.hero')).toBeVisible();
 
-    expect(await serious(page), `Instance workspace (${mode})`).toEqual([]);
-  });
+      expect(await serious(page), `Instance workspace (${sample.label} ${mode})`).toEqual([]);
+    });
+  }
 }
 
 test('the overlays are reachable and announced', async ({ page }) => {

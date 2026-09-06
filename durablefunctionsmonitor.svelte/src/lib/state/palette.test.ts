@@ -10,6 +10,7 @@ import { Router } from '$lib/router.svelte';
 import { AppState } from '$lib/state/app.svelte';
 import { Prefs } from '$lib/state/prefs.svelte';
 import { Suggestions } from '$lib/state/suggestions.svelte';
+import { THEMES } from '$lib/themes';
 import { Palette, type PaletteOptions } from './palette.svelte';
 
 function makeApp(path = '/DurableFunctionsHub', capabilities: Partial<Capabilities> = {}) {
@@ -200,11 +201,7 @@ describe('Palette', () => {
 
     expect(labels(palette, 'Preferences')).toEqual([
       'Switch to dark mode',
-      'Theme: Poster',
-      'Theme: Riso',
-      'Theme: Memphis',
-      'Theme: Blueprint',
-      'Theme: Hazard',
+      ...THEMES.map((entry) => `Theme: ${entry.label}`),
       'Density: comfortable rows (44 px)',
       'Time range: Last 15 minutes',
       'Time range: Last hour',
