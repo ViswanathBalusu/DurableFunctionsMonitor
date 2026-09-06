@@ -150,6 +150,10 @@ test('narrows the trail to one operation', async ({ page }) => {
 test('shows the same newest rows on the Overview', async ({ page }) => {
   await gotoHub(page, 'activity');
 
+  // The trail is fetched after /about has answered, so for a moment there is no row to read at all.
+  // `allTextContents()` does not wait for one - it answers [] - so wait for the row here instead.
+  await expect(rows(page).first().locator('td[data-label="operation"]')).toBeVisible();
+
   const newest = await cellsOf(rows(page).first());
 
   await gotoHub(page, 'overview');
