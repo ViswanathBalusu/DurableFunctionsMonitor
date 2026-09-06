@@ -4,8 +4,20 @@ name: push-to-ghcr
 # GHCR needs no secrets of its own: GITHUB_TOKEN authenticates it, which is why this replaced the
 # Docker Hub workflow (it needed DOCKERHUB_USERNAME and DOCKERHUB_TOKEN to be set up first).
 #
+# Runs on every version tag, next to publish-nuget.yml, so that a release ships its images without
+# anyone remembering to dispatch this:
+#
+#   v6.9.0            -> images tagged 6.9.0 and latest
+#   v6.9.0-rc.1       -> images tagged 6.9.0-rc.1  ('latest' is left where it is)
+#   v6.9.0-develop.4  -> images tagged 6.9.0-develop.4
+#
+# It can still be dispatched by hand with an arbitrary tag, which is the only way to get an image
+# out of a branch that has no version tag.
+#
 # Each image builds the UI itself (the `ui` stage of every Dockerfile, E12-S1-T1), so nothing here
 # builds or copies statics; the .NET tests below are what this workflow adds on top of the images.
+# They run on tag pushes too, duplicating build.yml's: an image on ghcr.io can be deleted but not
+# un-pulled, so it is worth the few minutes to not publish one that fails its own tests.
 
 on:
   workflow_dispatch:
@@ -13,6 +25,9 @@ on:
       imageTag:
         description: Docker image tag to be applied
         required: true
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -20,7 +35,68 @@ permissions:
   packages: write
 
 jobs:
+  # Works out what to tag the images with before the build job spends ten minutes on tests whose
+  # result it would then have nowhere to put.
+  preflight:
+
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      latest: ${{ steps.v.outputs.latest }}
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: resolve the image tag
+      id: v
+      env:
+        # Never inline a dispatch input into the script itself
+        IMAGE_TAG: ${{ github.event.inputs.imageTag }}
+      run: |
+        set -euo pipefail
+
+        if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+          echo "version=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "latest=false" >> "$GITHUB_OUTPUT"
+          echo "Tagging the images '$IMAGE_TAG' (manual run - 'latest' is left where it is)"
+          exit 0
+        fi
+
+        TAG_VERSION="${GITHUB_REF_NAME#v}"
+        PREFIX=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props)
+
+        # The same shape publish-nuget.yml publishes, so a version cannot exist as a package
+        # without existing as an image, or the other way round.
+        if [[ ! "$TAG_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-(develop|rc)\.[0-9]+)?$ ]]; then
+          echo "::error::Tag $GITHUB_REF_NAME is not a version this workflow publishes."
+          echo "::error::Use v<x.y.z> for a release, or v<x.y.z>-rc.<n> / v<x.y.z>-develop.<n> for a prerelease."
+          exit 1
+        fi
+
+        RELEASE_PART="${BASH_REMATCH[1]}"
+        SUFFIX="${BASH_REMATCH[2]:-}"
+
+        if [ "$RELEASE_PART" != "$PREFIX" ]; then
+          echo "::error::Tag $GITHUB_REF_NAME is a version of '$RELEASE_PART', but Directory.Build.props says '$PREFIX'. Bump VersionPrefix and re-tag."
+          exit 1
+        fi
+
+        echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
+
+        # Only a release moves 'latest'. A prerelease that took it would hand it to every
+        # `docker pull` that does not name a tag.
+        if [ -z "$SUFFIX" ]; then
+          echo "latest=true" >> "$GITHUB_OUTPUT"
+          echo "Tagging the images '$TAG_VERSION' and 'latest'"
+        else
+          echo "latest=false" >> "$GITHUB_OUTPUT"
+          echo "Tagging the images '$TAG_VERSION' (a prerelease - 'latest' is left where it is)"
+        fi
+
   build:
+
+    needs: preflight
 
     runs-on: ubuntu-latest
 
@@ -82,10 +158,24 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    # An image name has to be lower case; a GitHub account name does not have to be
-    - name: image name prefix
-      id: prefix
-      run: echo "value=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+    # One newline-separated tag list per image. An image name has to be lower case; a GitHub
+    # account name does not have to be.
+    - name: image tags
+      id: tags
+      env:
+        VERSION: ${{ needs.preflight.outputs.version }}
+        LATEST: ${{ needs.preflight.outputs.latest }}
+      run: |
+        set -euo pipefail
+        REGISTRY="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}"
+        for name in durablefunctionsmonitor durablefunctionsmonitor.mssql durablefunctionsmonitor.netherite; do
+          {
+            echo "${name//./_}<<TAGS_EOF"
+            echo "$REGISTRY/$name:$VERSION"
+            if [ "$LATEST" = "true" ]; then echo "$REGISTRY/$name:latest"; fi
+            echo "TAGS_EOF"
+          } >> "$GITHUB_OUTPUT"
+        done
 
     # NOTE: build context is the repo root for all images, because the projects
     # reference durablefunctionsmonitor.dotnetisolated.core by project reference
@@ -96,7 +186,7 @@ jobs:
         context: .
         file: ./durablefunctionsmonitor.dotnetisolated/Dockerfile
         push: true
-        tags: ${{ steps.prefix.outputs.value }}/durablefunctionsmonitor:${{ github.event.inputs.imageTag }}
+        tags: ${{ steps.tags.outputs.durablefunctionsmonitor }}
 
     - name: build and push custom-backends/dotnetIsolated-mssql
       uses: docker/build-push-action@v6
@@ -104,7 +194,7 @@ jobs:
         context: .
         file: ./custom-backends/dotnetIsolated-mssql/Dockerfile
         push: true
-        tags: ${{ steps.prefix.outputs.value }}/durablefunctionsmonitor.mssql:${{ github.event.inputs.imageTag }}
+        tags: ${{ steps.tags.outputs.durablefunctionsmonitor_mssql }}
 
     - name: build and push custom-backends/dotnetIsolated-netherite
       uses: docker/build-push-action@v6
@@ -112,4 +202,4 @@ jobs:
         context: .
         file: ./custom-backends/dotnetIsolated-netherite/Dockerfile
         push: true
-        tags: ${{ steps.prefix.outputs.value }}/durablefunctionsmonitor.netherite:${{ github.event.inputs.imageTag }}
+        tags: ${{ steps.tags.outputs.durablefunctionsmonitor_netherite }}

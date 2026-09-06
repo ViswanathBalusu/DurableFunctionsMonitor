@@ -1,9 +1,23 @@
 name: push-to-vscode-marketplace
 
 # Publishes the VSIX produced by the shared build to the VsCode Marketplace.
+#
+# Runs on a release tag (v6.9.0), next to publish-nuget.yml and push-to-ghcr.yml, so that a release
+# ships the extension too. Prerelease tags (v6.9.0-rc.1, v6.9.0-develop.4) are skipped, not failed:
+# the Marketplace only accepts major.minor.patch, so an rc would burn the version number the
+# release itself needs. Those tags still get their NuGet packages and container images.
+#
+# A tag run never fails over the shape of the tag - publish-nuget.yml is what validates it, and one
+# red cross per bad tag is enough. This workflow skips instead, with a notice.
+#
+# Dispatching it by hand publishes <VersionPrefix> from Directory.Build.props, and is strict:
+# somebody asked for a publish, so a missing publisher is an error rather than a shrug.
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 permissions:
   contents: read
@@ -13,38 +27,75 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       version: ${{ steps.v.outputs.version }}
+      publish: ${{ steps.v.outputs.publish }}
     steps:
     - uses: actions/checkout@v4
-    - name: read version from Directory.Build.props
-      id: v
-      run: |
-        set -euo pipefail
-        PREFIX=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props)
-        if [ -z "$PREFIX" ]; then echo "::error::VersionPrefix not found in Directory.Build.props"; exit 1; fi
-        echo "version=$PREFIX" >> "$GITHUB_OUTPUT"
 
-    - name: publisher must be set
+    # One step answers both questions, because a job output can only come from one step: is this ref
+    # something to publish, and is there a publisher to publish it as.
+    - name: resolve the version to publish
+      id: v
       env:
         VSCE_PUBLISHER: ${{ vars.VSCE_PUBLISHER }}
       run: |
-        if [ -z "${VSCE_PUBLISHER}" ]; then
-          echo "::error::Repository variable VSCE_PUBLISHER is not set."
-          echo "::error::package.json still names the upstream publisher 'DurableFunctionsMonitor', which this"
-          echo "::error::fork cannot publish to. Create your own publisher at https://marketplace.visualstudio.com/manage"
-          echo "::error::and set VSCE_PUBLISHER to its id. Clear this check only if you are a member of the"
-          echo "::error::upstream publisher."
-          exit 1
+        set -euo pipefail
+
+        skip () {
+          echo "::$1::$2"
+          echo "publish=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        }
+
+        PREFIX=$(sed -n 's:.*<VersionPrefix>\(.*\)</VersionPrefix>.*:\1:p' Directory.Build.props)
+        if [ -z "$PREFIX" ]; then echo "::error::VersionPrefix not found in Directory.Build.props"; exit 1; fi
+
+        if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+          VERSION="$PREFIX"
+        else
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+
+          # Only a plain release tag, and only one that agrees with the props file
+          if [[ ! "$TAG_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            skip notice "$GITHUB_REF_NAME is not a release version - not publishing the extension for it."
+          fi
+          if [ "$TAG_VERSION" != "$PREFIX" ]; then
+            skip notice "$GITHUB_REF_NAME does not match VersionPrefix '$PREFIX' - not publishing the extension for it."
+          fi
+
+          VERSION="$TAG_VERSION"
         fi
-        echo "Publishing as publisher '${VSCE_PUBLISHER}'"
+
+        # package.json still names the upstream publisher 'DurableFunctionsMonitor', which this fork
+        # cannot publish to. Create your own at https://marketplace.visualstudio.com/manage and set
+        # the VSCE_PUBLISHER repository variable (Settings > Secrets and variables > Actions) to its
+        # id. Only remove this check once you are a member of the upstream publisher.
+        if [ -z "${VSCE_PUBLISHER}" ]; then
+          echo "::warning::Create a publisher at https://marketplace.visualstudio.com/manage and set VSCE_PUBLISHER to its id."
+
+          # A hand-dispatched run exists only to publish, so it has failed. A tag is a release of the
+          # packages and the images too, and those are fine - do not fail it over an extension this
+          # repository was never configured to publish.
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "::error::Repository variable VSCE_PUBLISHER is not set, so there is nowhere to publish this extension."
+            exit 1
+          fi
+          skip warning "VSCE_PUBLISHER is not set - skipping the VsCode Marketplace for $GITHUB_REF_NAME."
+        fi
+
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "publish=true" >> "$GITHUB_OUTPUT"
+        echo "Publishing $VERSION as publisher '$VSCE_PUBLISHER'"
 
   build:
     needs: version
+    if: needs.version.outputs.publish == 'true'
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ needs.version.outputs.version }}
 
   publish:
-    needs: build
+    needs: [ version, build ]
+    if: needs.version.outputs.publish == 'true'
     runs-on: ubuntu-22.04
     environment: release
     steps:
