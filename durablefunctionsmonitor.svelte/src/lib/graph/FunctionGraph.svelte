@@ -1,6 +1,6 @@
 <script lang="ts" module>
   import type { Edge, Node } from '@xyflow/svelte';
-  import { inkColor } from '$lib/charts/chart-tokens';
+  import { glyphColor } from '$lib/charts/chart-tokens';
   import type { FunctionGraph } from './function-graph-model';
   import type { PositionedNode } from './layout';
 
@@ -56,7 +56,7 @@
           markerEnd:
             edge.arrow === false
               ? undefined
-              : { type: 'arrowclosed' as never, color: inkColor(), width: 12, height: 12 },
+              : { type: 'arrowclosed' as never, color: glyphColor(), width: 12, height: 12 },
         }))
     );
   }

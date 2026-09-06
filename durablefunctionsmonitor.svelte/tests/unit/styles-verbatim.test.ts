@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 const ARTIFACT_PATH = '../docs/ui-plans-artifacts/dfm-ui.css';
 const COPY_PATH = 'src/styles/dfm-ui.css';
 const EXT_PATH = 'src/styles/dfm-ext.css';
+const BASE_PATH = 'src/styles/families/base.css';
 const APP_CSS_PATH = 'src/app.css';
 
 const read = (path: string) => readFileSync(path, 'utf8').split('\r\n').join('\n');
@@ -54,6 +55,23 @@ describe('src/app.css', () => {
 
     expect(flow).toBeGreaterThanOrEqual(0);
     expect(flow).toBeLessThan(appCss.indexOf('./styles/dfm-ui.css'));
+  });
+
+  it('imports families/base.css after dfm-ext.css, so a family sheet can follow it (E13)', () => {
+    const base = appCss.indexOf('./styles/families/base.css');
+
+    expect(base).toBeGreaterThanOrEqual(0);
+    expect(base).toBeGreaterThan(appCss.indexOf('./styles/dfm-ext.css'));
+  });
+});
+
+describe('src/styles/families/base.css', () => {
+  it('holds exactly one rule, the --glyph default', () => {
+    const css = read(BASE_PATH).replace(/\/\*[\s\S]*?\*\//g, '');
+
+    // Whatever every family shares goes here, and today that is one token: strip the comments and
+    // what is left has to be `:root { --glyph: var(--ink); }` and nothing else
+    expect(css.trim()).toMatch(/^:root\s*\{\s*--glyph:\s*var\(--ink\);?\s*\}$/);
   });
 });
 

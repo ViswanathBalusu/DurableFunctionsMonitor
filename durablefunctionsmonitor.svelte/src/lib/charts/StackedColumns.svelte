@@ -143,8 +143,9 @@
 <!--
   The histogram of ScreenOverview.dc.html L41-L60, drawn in SVG so that it can be brushed and
   exported. Columns touch and every segment carries the 2px ink stroke, which is what makes the
-  stack read as one block; the selection is an ink-outlined rect over a diagonal hatch, never a
-  translucent wash (design system §8).
+  stack read as one block; the selection is an outlined rect over a diagonal hatch, never a
+  translucent wash (design system §8). The hatch, the selection's edge and its handles are marks, so
+  they are drawn in `--glyph` (E13); the segment outlines stay `--ink`.
 -->
 <svelte:window onkeydown={onWindowKeydown} />
 
@@ -157,7 +158,7 @@
   >
     <defs>
       <pattern id="dfm-brush-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <line x1="0" y1="0" x2="0" y2="8" stroke="var(--ink)" stroke-width="2" />
+        <line x1="0" y1="0" x2="0" y2="8" stroke="var(--glyph)" stroke-width="2" />
       </pattern>
     </defs>
 
@@ -224,11 +225,11 @@
   :global(.dfm-brush .selection) {
     fill: url(#dfm-brush-hatch);
     fill-opacity: 1;
-    stroke: var(--ink);
+    stroke: var(--glyph);
     stroke-width: 2;
   }
 
   :global(.dfm-brush .handle) {
-    fill: var(--ink);
+    fill: var(--glyph);
   }
 </style>

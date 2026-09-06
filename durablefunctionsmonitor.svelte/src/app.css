@@ -14,3 +14,6 @@
 @import '@xyflow/svelte/dist/style.css';
 @import './styles/dfm-ui.css';
 @import './styles/dfm-ext.css';
+/* Theme families (E13): the shared `--glyph` token first, then one sheet per family, after
+   dfm-ext.css so that a family may override dfm-ui.css for its own theme (contracts §16). */
+@import './styles/families/base.css';

@@ -49,7 +49,7 @@
 </script>
 
 <script lang="ts">
-  import { inkColor, tokenColor } from './chart-tokens';
+  import { glyphColor, inkColor, tokenColor } from './chart-tokens';
 
   interface Props {
     model: SequenceModel;
@@ -80,6 +80,9 @@
     const top = 64;
     const height = top + model.messages.length * rowHeight + 16;
     const ink = inkColor();
+    // The lifelines and the arrows are marks, drawn in the glyph colour (E13); the participant
+    // frames stay ink
+    const glyph = glyphColor();
     const failedColor = tokenColor('status-failed');
 
     const svg = document.createElementNS(ns, 'svg');
@@ -135,7 +138,7 @@
         y1: '54',
         x2: String(x),
         y2: String(height - 8),
-        stroke: ink,
+        stroke: glyph,
         'stroke-width': '2',
         'stroke-dasharray': '6 4',
       });
@@ -144,7 +147,7 @@
     model.messages.forEach((message, index) => {
       const geometry = arrowOf(message, participants);
       const y = top + index * rowHeight + rowHeight / 2;
-      const color = geometry.failed ? failedColor : ink;
+      const color = geometry.failed ? failedColor : glyph;
 
       el(
         'text',

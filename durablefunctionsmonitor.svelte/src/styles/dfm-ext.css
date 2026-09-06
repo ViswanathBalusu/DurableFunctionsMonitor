@@ -7,7 +7,7 @@
    The node card itself is plain dfm-ui.css - only the frame Svelte Flow wraps it in is reset. */
 .svelte-flow {
   --xy-background-color: transparent;
-  --xy-edge-stroke: var(--ink);
+  --xy-edge-stroke: var(--glyph);
   --xy-edge-stroke-selected: var(--ring);
   --xy-edge-stroke-width: 2;
   --xy-node-border-radius: 0;
@@ -78,13 +78,14 @@
 /* The swatches of "Where the time went" (E8-S3-T1, ScreenInstance.dc.html L60-L63). dfm-ui.css
    fills `.wbar i.wait` and `.wbar i.orch` but leaves `.swq` with a border and nothing inside, and a
    legend whose squares do not look like the bar they explain explains nothing. The hatch is the
-   `.wbar` one at a tighter pitch, which is what fits in a 12 px square. */
+   `.wbar` one at a tighter pitch, which is what fits in a 12 px square. Both are marks, so they are
+   painted in `--glyph` (families/base.css), which is the ink in the papers. */
 .swq.wait {
-  background-image: repeating-linear-gradient(45deg, var(--ink) 0 1px, transparent 1px 4px);
+  background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 4px);
 }
 
 .swq.orch {
-  background: var(--ink);
+  background: var(--glyph);
 }
 
 /* A select whose list is longer than the screen has to scroll inside its popover: the Activity

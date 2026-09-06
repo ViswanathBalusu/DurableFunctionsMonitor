@@ -1,0 +1,24 @@
+/* Theme families (E13; README D12-D14; contracts §16).
+
+   The five papers are the neo-brutalist family and take their look from dfm-tokens.css and
+   dfm-ui.css, which are verbatim copies of the design system and never change. A theme of another
+   family - Glass, Neu - is one plain-CSS sheet next to this file, `<key>.css`, imported from app.css
+   after this one:
+   - every rule in it is scoped under `[data-theme="<key>"]`, `.dark[data-theme="<key>"]`,
+     `html[data-theme="<key>"]` or `html.dark[data-theme="<key>"]`, or sits inside
+     `@media (prefers-reduced-transparency: reduce)` / `@media (prefers-contrast: more)` with the
+     same scoping, so that nothing of it leaks into the papers;
+   - it declares every token `[data-theme="poster"]` declares, in a light block and again in a dark
+     block, because a token it leaves out would silently inherit Poster's value;
+   - it is plain CSS a browser can load on its own (the style preview harness does): no `@utility`,
+     `@theme`, `@custom-variant`, `@apply`, no Tailwind classes;
+   - it may override a dfm-ui.css rule for its own theme, and is the only place that may. This file
+     may not: it holds what every family shares, which is the one token below.
+
+   `--glyph` is the colour of a small solid mark: the checkbox tick, the switch knob, the select
+   caret, the sort triangle, an arrowhead, the "now" line, the orchestration bar, a hatch. In the
+   papers it is the ink. A soft family sets it to a strong colour while its `--ink` goes soft, so a
+   line can fade without the marks drawn in it disappearing. Outlines stay `--ink`. */
+:root {
+  --glyph: var(--ink);
+}

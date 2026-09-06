@@ -6,7 +6,7 @@
 // file someone opens next week. This draws the same cards, the same step edges and the same square
 // arrowheads, with real colours instead of the variables no viewer can resolve.
 
-import { inkColor, tokenColor } from '$lib/charts/chart-tokens';
+import { glyphColor, inkColor, tokenColor } from '$lib/charts/chart-tokens';
 import type { FunctionGraph, GraphEdge } from './function-graph-model';
 import type { PositionedNode } from './layout';
 
@@ -54,6 +54,8 @@ export function graphToSvg(
 ): SVGSVGElement {
   const doc = document;
   const ink = inkColor();
+  // An edge and its arrowhead are marks, drawn in the glyph colour (E13); the node frames stay ink
+  const glyph = glyphColor();
   const ring = tokenColor('ring');
 
   const byId = new Map(positions.map((node) => [node.id, node]));
@@ -81,7 +83,7 @@ export function graphToSvg(
     }
 
     const active = options.activePath?.has(edge.id) ?? false;
-    const color = active ? ring : ink;
+    const color = active ? ring : glyph;
 
     root.appendChild(
       el(doc, 'polyline', {

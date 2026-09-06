@@ -45,6 +45,7 @@ async function tokens(page: Page): Promise<Record<string, string>> {
     return {
       background: read('--background'),
       ink: read('--ink'),
+      glyph: read('--glyph'),
       primary: read('--primary'),
       radius: read('--radius'),
       borderWidth: read('--border-width'),
@@ -119,6 +120,12 @@ for (const entry of THEMES) {
 
       // Whichever way round they are, the line has to read on the paper (design system section 7)
       expect(contrast(read.ink, read.background), 'ink on paper').toBeGreaterThan(7);
+
+      // In the papers a mark is drawn in the ink: `--glyph` (families/base.css) computes to it, so
+      // nothing a brutalist theme paints has changed by the token existing (E13-S1-T2)
+      if (entry.family === 'brutal') {
+        expect(read.glyph, 'glyph is the ink').toBe(read.ink);
+      }
 
       // ...and the three metrics the Settings screen prints under the theme's name
       expect(metrics(read), 'radius · line · shadow').toBe(entry.metrics);

@@ -3,7 +3,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import type { BackendClient } from '$lib/api/client';
-import { chartSeriesColor, inkColor, mutedColor, statusColor, tokenColor } from './chart-tokens';
+import { chartSeriesColor, glyphColor, inkColor, mutedColor, statusColor, tokenColor } from './chart-tokens';
 import { saveSvg, serializeSvg } from './svg-export';
 
 function svgWith(inner: string): SVGSVGElement {
@@ -66,14 +66,17 @@ describe('chart tokens', () => {
     document.documentElement.style.removeProperty('--status-failed');
   });
 
-  it('has an ink and a muted colour', () => {
+  it('has an ink, a glyph and a muted colour', () => {
     document.documentElement.style.setProperty('--ink', '#111');
+    document.documentElement.style.setProperty('--glyph', '#222');
     document.documentElement.style.setProperty('--muted-foreground', '#777');
 
     expect(inkColor()).toBe('#111');
+    expect(glyphColor()).toBe('#222');
     expect(mutedColor()).toBe('#777');
 
     document.documentElement.style.removeProperty('--ink');
+    document.documentElement.style.removeProperty('--glyph');
     document.documentElement.style.removeProperty('--muted-foreground');
   });
 });

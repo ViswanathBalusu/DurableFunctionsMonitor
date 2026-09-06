@@ -31,6 +31,11 @@ export function inkColor(): string {
   return tokenColor('ink');
 }
 
+/** The colour of a small solid mark - an arrowhead, a lifeline, a hatch. The ink in the papers (E13). */
+export function glyphColor(): string {
+  return tokenColor('glyph');
+}
+
 export function mutedColor(): string {
   return tokenColor('muted-foreground');
 }
