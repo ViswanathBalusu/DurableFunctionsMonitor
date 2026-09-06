@@ -40,8 +40,8 @@ Do:
 2. Contrast: compute, for both modes, the pairs foreground/background, muted-foreground/card-over-paper (composite the alpha over `--background` by hand or in a 10-line node script), every status foreground on its fill, primary-foreground on primary, destructive-foreground on destructive, ring on background. Every text pair 4.5:1 or better, ring 3:1 or better. Put the numbers in the notes file.
 3. Fix the sheet accordingly; re-shoot.
 Accept:
-- [ ] The notes file lists every pair with its ratio and none is under the threshold.
-- [ ] Both modes of the preview page have no section the review still marks wrong.
+- [x] The notes file lists every pair with its ratio and none is under the threshold.
+- [x] Both modes of the preview page have no section the review still marks wrong.
 Test: manual review, recorded; `themes.spec.ts` still green.
 
 ### E14-S2 In the app

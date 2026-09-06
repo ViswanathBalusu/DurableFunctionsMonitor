@@ -252,6 +252,33 @@ html.dark[data-theme="glass"] body::before {
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
 }
 
+/* A surface inside a frosted surface is not frosted again: the pane it sits in has already blurred
+   the backdrop, and a second filter shows nothing and costs a compositing layer. The floating
+   surfaces - popover, dialog, peek, palette, bulk bar, sheet, bottom nav - are never nested inside
+   another and keep their own. */
+[data-theme="glass"]
+  :is(
+    .snav,
+    .topbar,
+    .panel,
+    .card,
+    .tbl-wrap,
+    .dialog,
+    .peek,
+    .palette,
+    .sheet,
+    .empty,
+    .group,
+    .hero,
+    .swim,
+    .seq,
+    .graph
+  )
+  :is(.panel, .card, .tbl-wrap, .empty, .group, .hero, .banner, .note, .swim, .seq, .graph, .ed) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* (5) The table is frosted once, by its frame; the modal veil is a tinted blur. */
 [data-theme="glass"] .tbl,
 [data-theme="glass"] .tfoot {
@@ -279,12 +306,21 @@ html.dark[data-theme="glass"] body::before {
 /* (7) The marks dfm-ui.css paints with the line colour keep a strong colour here: the tick, the
    knob, the carets, the sort triangle, the editor bar, the orchestration bar, the "now" line, the
    lifelines, the arrows, the graph edges and the hatches. */
-[data-theme="glass"] .box.on::after,
 [data-theme="glass"] .switch::after,
 [data-theme="glass"] .wbar i.orch,
 [data-theme="glass"] .bar.orch,
 [data-theme="glass"] .arrow::after {
   background: var(--glyph);
+}
+
+/* A mark on a coloured fill takes that fill's own text colour rather than the glyph: the tick on
+   the primary checkbox and the knob on the accent switch, which the glyph would sink into. */
+[data-theme="glass"] .box.on::after {
+  background: var(--primary-foreground);
+}
+
+[data-theme="glass"] .switch.on::after {
+  background: var(--accent-foreground);
 }
 
 [data-theme="glass"] .tri {
@@ -348,8 +384,13 @@ html.dark[data-theme="glass"] body::before {
 [data-theme="glass"] .meter i,
 [data-theme="glass"] .ttile .sw i,
 [data-theme="glass"] .avatar,
-[data-theme="glass"] .bottom-nav .bcnt {
+[data-theme="glass"] .bottom-nav .bcnt,
+[data-theme="glass"] .bar {
   border-width: 1px;
+}
+
+[data-theme="glass"] .wbar i {
+  border-right-width: 1px;
 }
 
 [data-theme="glass"] .seg-b {
