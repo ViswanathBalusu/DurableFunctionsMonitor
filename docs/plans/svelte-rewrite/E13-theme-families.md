@@ -79,6 +79,6 @@ Do:
 4. `CLAUDE.md` frozen-paths line: after "additions go to `dfm-ext.css`" add "; theme families go to `src/styles/families/` (contracts §16)".
 5. `docs/ui.md` "Themes, and the small screen": say themes come in families and that a family's paper, line and shadow differ while status colours keep their meaning; the count is written as "the themes in the menu" so E14/E15 only add their screenshot rows and the value list of `dfmTheme`.
 Accept:
-- [ ] `grep -n "five" docs/ui.md docs/plans/svelte-rewrite/00-shared-contracts.md .claude/skills/dfm-design-review/SKILL.md` shows no sentence that counts the themes as five.
-- [ ] A design review of E13 itself (the reviewer agent on the Settings screen in Poster) reports no deviation: nothing visible changed.
+- [x] `grep -n "five" docs/ui.md docs/plans/svelte-rewrite/00-shared-contracts.md .claude/skills/dfm-design-review/SKILL.md` shows no sentence that counts the themes as five.
+- [x] A design review of E13 itself (the reviewer agent on the Settings screen in Poster) reports no deviation: nothing visible changed.
 Test: docs; the reviewer run above, recorded in the commit message.
