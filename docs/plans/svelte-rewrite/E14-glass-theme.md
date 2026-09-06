@@ -54,8 +54,8 @@ Do:
 2. For each defect decide: a token, a rule in `glass.css`, or a component whose inline style names a brutalist value. The nine inline candidates are listed in the investigation note (`HistogramView.svelte` L74 `background:var(--card)`, `InstancesTable.svelte` L254, `TimelineView.svelte` L103, `AppearancePanel.svelte` L95 `border-color:var(--ink)`, `HubAdminPanel.svelte` L97, `Login.svelte` L27, L54, L72, `EntityChips.svelte` L86). A component change must not alter the five papers: where it does, the value moves to a token (`--glyph` or a new family-neutral one declared in `base.css` with the brutalist default).
 3. Record the pass in the notes file the way `notes/E12-theme-qa.md` does: what was looked at, what was wrong, what changed.
 Accept:
-- [ ] No screen of the matrix and no overlay in the list above breaks the look (a hard offset shadow, an ink outline, a doubled blur, a mark that vanished).
-- [ ] `themes.spec.ts` for the five papers is unchanged and green; the brutalist computed-style test (E13-S1-T3) is green.
+- [x] No screen of the matrix and no overlay in the list above breaks the look (a hard offset shadow, an ink outline, a doubled blur, a mark that vanished).
+- [x] `themes.spec.ts` for the five papers is unchanged and green; the brutalist computed-style test (E13-S1-T3) is green.
 Test: e2e (the matrix); the notes file.
 
 #### E14-S2-T2 Accessibility in Glass

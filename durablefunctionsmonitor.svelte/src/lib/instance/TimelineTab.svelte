@@ -6,7 +6,8 @@
     { label: 'running', cls: 'st-running' },
     { label: 'timer', cls: 'st-suspended' },
     { label: 'waiting for event', style: 'border-style:dotted' },
-    { label: 'orchestrator replay', style: 'background:var(--ink)' },
+    // A mark, so the glyph: the ink in the papers, a strong colour where the line is a rim (E14)
+    { label: 'orchestrator replay', style: 'background:var(--glyph)' },
   ];
 
   /** What the meta beside the legend says the picture is for (L99). */

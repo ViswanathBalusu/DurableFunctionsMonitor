@@ -223,7 +223,9 @@ html.dark[data-theme="glass"] body::before {
     radial-gradient(46% 56% at 62% 92%, rgba(20, 184, 166, 0.35), transparent 62%);
 }
 
-/* (4) The frosted surfaces: one blur per surface, never on a row, a chip, a button or an input. */
+/* (4) The frosted surfaces: one blur per surface, never on a row, a chip, a button or an input.
+   Unprefixed only: with `-webkit-backdrop-filter` beside it the bundler keeps the prefixed
+   declaration alone, which Chromium ignores, and every pane goes flat. */
 [data-theme="glass"]
   :is(
     .snav,
@@ -249,7 +251,6 @@ html.dark[data-theme="glass"] body::before {
     .ed
   ) {
   backdrop-filter: blur(var(--glass-blur)) saturate(160%);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
 }
 
 /* A surface inside a frosted surface is not frosted again: the pane it sits in has already blurred
@@ -276,19 +277,35 @@ html.dark[data-theme="glass"] body::before {
   )
   :is(.panel, .card, .tbl-wrap, .empty, .group, .hero, .banner, .note, .swim, .seq, .graph, .ed) {
   backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
-/* (5) The table is frosted once, by its frame; the modal veil is a tinted blur. */
+/* (5) The table is frosted once, by its frame; the function graph is a pane like the others (dfm-ui.css
+   gives it the paper, which is opaque here); the modal veil is a tinted blur, and the clear overlay
+   under the peek panel stays clear. A dialog or the palette sits inside the veil, whose filter makes it
+   the backdrop root: the pane's own blur cannot reach the page, so the two take the popover's denser
+   fill to be read on. The peek panel is not inside the veil and keeps the card; its shadow is cast
+   to the left, where the page is. */
 [data-theme="glass"] .tbl,
 [data-theme="glass"] .tfoot {
   background: transparent;
 }
 
-[data-theme="glass"] .overlay {
+[data-theme="glass"] .graph {
+  background: var(--card);
+}
+
+[data-theme="glass"] .overlay:not(.clear) {
   background: var(--glass-overlay);
   backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+}
+
+[data-theme="glass"] .dialog,
+[data-theme="glass"] .palette {
+  background: var(--popover);
+}
+
+[data-theme="glass"] .peek {
+  box-shadow: -8px 0 32px var(--shadow-ink);
 }
 
 /* (6) Motion: a lift, not a slide. Hover rises by a pixel and the shadow token deepens; a press
@@ -346,6 +363,13 @@ html.dark[data-theme="glass"] body::before {
 
 [data-theme="glass"] .jse-bar span.on {
   color: var(--glyph);
+}
+
+/* The JSON viewer and editor take their menu bar from the bridge in dfm-tokens.css, which draws it
+   in the ink: a rim here, with paper-coloured buttons on it that vanish. The bar is the glyph, as
+   the mockup's .jse-bar above is. */
+[data-theme="glass"] .jse-theme-dfm {
+  --jse-theme-color: var(--glyph);
 }
 
 [data-theme="glass"] .now,
@@ -450,6 +474,5 @@ html.dark[data-theme="glass"] body::before {
       .overlay
     ) {
     backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 }
