@@ -27,9 +27,9 @@ Do:
 3. `themes.ts`: append `{ key: 'neu', family: 'neu', label: 'Neu', idea: 'one soft material', metrics: '16 px · 1 px · 14 px', paper: '#E3E8F0', ink: '#1F2937', primary: '#5B5BD6', dark: '#2A2E37' }` - `ink` is the glyph colour. `host.svelte.ts`: `'neu'` joins the union.
 4. Run `npm run preview:styles`; adjust until the description holds. The table header rule and the row separators are the first things to check: with a 6 % line they can vanish in dark mode, and the answer is `border-bottom-color: var(--muted)` on `.tbl th` inside the family sheet, not a stronger `--ink`.
 Accept:
-- [ ] `family-sheets.test.ts` checks Neu and passes.
-- [ ] `npm run build && npm run verify` pass; `build-css.test.ts` counts `THEMES.length * 2`.
-- [ ] `themes.spec.ts` for `Neu light` and `Neu dark` passes the family assertions and shoots the seven screens.
+- [x] `family-sheets.test.ts` checks Neu and passes.
+- [x] `npm run build && npm run verify` pass; `build-css.test.ts` counts `THEMES.length * 2`.
+- [x] `themes.spec.ts` for `Neu light` and `Neu dark` passes the family assertions and shoots the seven screens.
 Test: as named.
 
 #### E15-S1-T2 Preview review

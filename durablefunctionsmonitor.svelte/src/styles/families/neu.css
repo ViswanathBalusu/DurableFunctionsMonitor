@@ -1,0 +1,385 @@
+/* Neu (E15; README D12-D14; contracts §16): one soft material for the page and every surface,
+   elevation from a pair of shadows - light from the top left, shade to the bottom right - inputs and
+   pressed states sunk into the surface, no visible line, strong marks. A theme like the five papers,
+   so every rule here is scoped to `data-theme="neu"`, and every token Poster declares is declared
+   again, in both modes, so that nothing inherits Poster's value by accident
+   (tests/unit/family-sheets.test.ts).
+
+   The line and the mark come apart in this family: `--ink` is the shade colour at a low alpha, there
+   so that rules and separators still exist without ever reading as an outline, and `--glyph` is the
+   text colour, so a tick, a caret, a sort triangle or an arrowhead stays strong. Outlines stay
+   `--ink`. */
+
+/* (1) The light tokens: one grey-blue material, pastel statuses with dark text, indigo primary.
+   Every fill that carries text keeps dark text (README D14), so the poster fills and the entity kind
+   are pastels rather than the chart hues; the destructive fill is the one coral deep enough for
+   white; the JSON number is a teal deep enough for the material. */
+[data-theme="neu"] {
+  --radius: 16px;
+  --border-width: 1px;
+  --shadow-offset: 0px;
+  --shadow-offset-lg: 0px;
+  --pattern: none;
+  --background: #e3e8f0;
+  --foreground: #1f2937;
+  --card: #e3e8f0;
+  --card-foreground: #1f2937;
+  --popover: #e9edf4;
+  --popover-foreground: #1f2937;
+  --primary: #5b5bd6;
+  --primary-foreground: #ffffff;
+  --secondary: #e3e8f0;
+  --secondary-foreground: #1f2937;
+  --accent: #c7d2fe;
+  --accent-foreground: #1e1b4b;
+  --muted: #d6dce7;
+  --muted-foreground: #4b5563;
+  --destructive: #d0343a;
+  --destructive-foreground: #ffffff;
+  --border: rgba(163, 177, 198, 0.35);
+  --input: #e3e8f0;
+  --ring: #7c3aed;
+  --ink: rgba(163, 177, 198, 0.35);
+  --paper: #e3e8f0;
+  --shadow-ink: #a3b1c6;
+  --on-poster: #1f2937;
+  --sidebar: #e3e8f0;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #5b5bd6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #c7d2fe;
+  --sidebar-accent-foreground: #1e1b4b;
+  --sidebar-border: rgba(163, 177, 198, 0.35);
+  --sidebar-ring: #7c3aed;
+  --poster-1: #a5b4fc;
+  --poster-2: #f9a8d4;
+  --poster-3: #67e8f9;
+  --poster-4: #86efac;
+  --poster-5: #fcd34d;
+  --poster-6: #c4b5fd;
+  --chart-1: #5b5bd6;
+  --chart-2: #db2777;
+  --chart-3: #0891b2;
+  --chart-4: #16a34a;
+  --chart-5: #d97706;
+  --status-completed: #86efac;
+  --status-completed-foreground: #052e16;
+  --status-running: #fde68a;
+  --status-running-foreground: #1f1300;
+  --status-failed: #fca5a5;
+  --status-failed-foreground: #450a0a;
+  --status-pending: #a5f3fc;
+  --status-pending-foreground: #083344;
+  --status-terminated: #cbd5e1;
+  --status-terminated-foreground: #0f172a;
+  --status-canceled: #d9dfe8;
+  --status-canceled-foreground: #0f172a;
+  --status-continued: #ddd6fe;
+  --status-continued-foreground: #2e1065;
+  --status-suspended: #fed7aa;
+  --status-suspended-foreground: #431407;
+  --kind-orchestration: #e3e8f0;
+  --kind-orchestration-foreground: #1f2937;
+  --kind-entity: #f9a8d4;
+  --kind-entity-foreground: #500724;
+  --node-orchestrator: #c7d2fe;
+  --node-activity: #a5f3fc;
+  --node-entity: #f9a8d4;
+  --node-suborchestrator: #ddd6fe;
+  --node-http: #bbf7d0;
+  --node-timer: #fed7aa;
+  --node-queue: #cbd5e1;
+  --node-other: #e3e8f0;
+  --node-foreground: #1f2937;
+  --json-key: #1f2937;
+  --json-string: #be185d;
+  --json-number: #0b6479;
+  --json-boolean: #6d28d9;
+  --json-null: #4b5563;
+  --json-punctuation: #4b5563;
+
+  /* The family's own: the mark, the two shadow colours, the raised pair at three sizes and on
+     hover, the sunk pair, and the stripe */
+  --glyph: #1f2937;
+  --neu-light: rgba(255, 255, 255, 0.85);
+  --neu-dark: rgba(163, 177, 198, 0.55);
+  --shadow-brutal: 6px 6px 14px var(--neu-dark), -6px -6px 14px var(--neu-light);
+  --shadow-brutal-sm: 3px 3px 8px var(--neu-dark), -3px -3px 8px var(--neu-light);
+  --shadow-brutal-lg: 12px 12px 28px var(--neu-dark), -12px -12px 28px var(--neu-light);
+  --shadow-brutal-hover: 9px 9px 20px var(--neu-dark), -9px -9px 20px var(--neu-light);
+  --shadow-inset: inset 4px 4px 10px var(--neu-dark), inset -4px -4px 10px var(--neu-light);
+  --stripe: repeating-linear-gradient(45deg, var(--primary) 0 12px, var(--glyph) 12px 24px);
+}
+
+/* (2) The dark tokens: the same material at night, the jewel statuses. The primary stays the light
+   mode's indigo, as every theme's accent does across modes; its lighter tint is kept for the first
+   chart series, which sits on the night material. */
+.dark[data-theme="neu"] {
+  --background: #2a2e37;
+  --foreground: #e5e7eb;
+  --card: #2a2e37;
+  --card-foreground: #e5e7eb;
+  --popover: #30353f;
+  --popover-foreground: #e5e7eb;
+  --primary: #5b5bd6;
+  --primary-foreground: #ffffff;
+  --secondary: #2a2e37;
+  --secondary-foreground: #e5e7eb;
+  --accent: #4338ca;
+  --accent-foreground: #eef2ff;
+  --muted: #363b46;
+  --muted-foreground: #a3a9b5;
+  --destructive: #f87171;
+  --destructive-foreground: #2a0505;
+  --border: rgba(255, 255, 255, 0.06);
+  --input: #2a2e37;
+  --ring: #a78bfa;
+  --ink: rgba(255, 255, 255, 0.06);
+  --paper: #2a2e37;
+  --shadow-ink: #14171d;
+  --on-poster: #0b1020;
+  --sidebar: #2a2e37;
+  --sidebar-foreground: #e5e7eb;
+  --sidebar-primary: #5b5bd6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #4338ca;
+  --sidebar-accent-foreground: #eef2ff;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #a78bfa;
+  --poster-1: #818cf8;
+  --poster-2: #f472b6;
+  --poster-3: #22d3ee;
+  --poster-4: #4ade80;
+  --poster-5: #fbbf24;
+  --poster-6: #a78bfa;
+  --chart-1: #818cf8;
+  --chart-2: #f472b6;
+  --chart-3: #22d3ee;
+  --chart-4: #4ade80;
+  --chart-5: #fbbf24;
+  --status-completed: #34d399;
+  --status-completed-foreground: #052e16;
+  --status-running: #fbbf24;
+  --status-running-foreground: #1f1300;
+  --status-failed: #f87171;
+  --status-failed-foreground: #2a0505;
+  --status-pending: #67e8f9;
+  --status-pending-foreground: #083344;
+  --status-terminated: #64748b;
+  --status-terminated-foreground: #f8fafc;
+  --status-canceled: #475569;
+  --status-canceled-foreground: #f8fafc;
+  --status-continued: #c4b5fd;
+  --status-continued-foreground: #2e1065;
+  --status-suspended: #fdba74;
+  --status-suspended-foreground: #431407;
+  --kind-orchestration: #2a2e37;
+  --kind-orchestration-foreground: #e5e7eb;
+  --kind-entity: #f472b6;
+  --kind-entity-foreground: #0b1020;
+  --node-orchestrator: #818cf8;
+  --node-activity: #22d3ee;
+  --node-entity: #f472b6;
+  --node-suborchestrator: #a78bfa;
+  --node-http: #4ade80;
+  --node-timer: #fbbf24;
+  --node-queue: #64748b;
+  --node-other: #30353f;
+  --node-foreground: #0b1020;
+  --json-key: #e5e7eb;
+  --json-string: #f9a8d4;
+  --json-number: #67e8f9;
+  --json-boolean: #c4b5fd;
+  --json-null: #a3a9b5;
+  --json-punctuation: #a3a9b5;
+
+  --glyph: #e5e7eb;
+  --neu-light: rgba(62, 68, 80, 0.7);
+  --neu-dark: rgba(15, 17, 22, 0.75);
+  --shadow-brutal: 6px 6px 14px var(--neu-dark), -6px -6px 14px var(--neu-light);
+  --shadow-brutal-sm: 3px 3px 8px var(--neu-dark), -3px -3px 8px var(--neu-light);
+  --shadow-brutal-lg: 12px 12px 28px var(--neu-dark), -12px -12px 28px var(--neu-light);
+  --shadow-brutal-hover: 9px 9px 20px var(--neu-dark), -9px -9px 20px var(--neu-light);
+  --shadow-inset: inset 4px 4px 10px var(--neu-dark), inset -4px -4px 10px var(--neu-light);
+}
+
+/* (3) The page is the material and nothing else: no pattern, no backdrop. */
+html[data-theme="neu"] body {
+  background: var(--background);
+  background-image: none;
+}
+
+/* (4) The raised surfaces. dfm-ui.css gives a shadow to what floats and leaves the panel, the
+   swimlane, the sequence diagram, the graph frame, notes and banners flat on purpose; here every
+   surface is extruded from the one material, or it is not there. The side nav casts to the right,
+   the top bar downward, the peek panel to the left, where the page is. */
+[data-theme="neu"] :is(.panel, .swim, .seq, .graph, .note, .banner) {
+  box-shadow: var(--shadow-brutal);
+}
+
+[data-theme="neu"] .snav {
+  box-shadow: 8px 0 20px var(--neu-dark);
+}
+
+[data-theme="neu"] .topbar {
+  box-shadow: 0 6px 16px var(--neu-dark);
+}
+
+[data-theme="neu"] .peek {
+  box-shadow: -8px 0 20px var(--neu-dark);
+}
+
+/* (5) The sunk surfaces: an input, an editor, the palette's search field. The table's header row is
+   the material too - its rule is the muted step, since a 6 % line vanishes at night - and the modal
+   veil is a plain tint; the clear overlay under the peek panel stays clear. */
+[data-theme="neu"] :is(.input, .ed, .palette > input) {
+  box-shadow: var(--shadow-inset);
+}
+
+[data-theme="neu"] .tbl th {
+  background: transparent;
+  border-bottom-color: var(--muted);
+}
+
+[data-theme="neu"] .overlay:not(.clear) {
+  background: rgba(20, 24, 32, 0.3);
+}
+
+/* (6) Motion: hover deepens the shadow token, a press sinks into the surface, nothing slides. A
+   pressed segment and the selected tab are sunk too. Ghost, flat and disabled buttons stay still,
+   as they do in the papers. */
+[data-theme="neu"] :is(.btn:not(.ghost, .flat, :disabled, [aria-disabled="true"]), .stat-tile, .brutal-press):hover {
+  transform: none;
+}
+
+[data-theme="neu"] :is(.btn:not(.ghost, .flat, :disabled, [aria-disabled="true"]), .stat-tile, .brutal-press):active {
+  transform: none;
+  box-shadow: var(--shadow-inset);
+}
+
+[data-theme="neu"] .seg button[aria-pressed="true"],
+[data-theme="neu"] .tab[aria-selected="true"] {
+  box-shadow: var(--shadow-inset);
+}
+
+/* (7) The marks dfm-ui.css paints with the line colour keep a strong colour here: the tick, the
+   knob, the carets, the sort triangle, the editor bar, the orchestration bar, the "now" line, the
+   lifelines, the arrows, the graph edges and the hatches. */
+[data-theme="neu"] .switch::after,
+[data-theme="neu"] .wbar i.orch,
+[data-theme="neu"] .bar.orch,
+[data-theme="neu"] .arrow::after {
+  background: var(--glyph);
+}
+
+/* A mark on a coloured fill takes that fill's own text colour rather than the glyph: the tick on
+   the primary checkbox and the knob on the accent switch, which the glyph would sink into. */
+[data-theme="neu"] .box.on::after {
+  background: var(--primary-foreground);
+}
+
+[data-theme="neu"] .switch.on::after {
+  background: var(--accent-foreground);
+}
+
+[data-theme="neu"] .tri {
+  border-left-color: var(--glyph);
+}
+
+[data-theme="neu"] .sel::after {
+  border-top-color: var(--glyph);
+}
+
+[data-theme="neu"] .tbl th.sort::after {
+  border-bottom-color: var(--glyph);
+}
+
+[data-theme="neu"] .tbl th.sort.desc::after {
+  border-top-color: var(--glyph);
+}
+
+[data-theme="neu"] .jse-bar {
+  background: var(--glyph);
+  color: var(--paper);
+}
+
+[data-theme="neu"] .jse-bar span.on {
+  color: var(--glyph);
+}
+
+/* The JSON viewer and editor take their menu bar from the bridge in dfm-tokens.css, which draws it
+   in the ink: a 35 % shade here, with paper-coloured buttons on it that vanish. The bar is the
+   glyph, as the mockup's .jse-bar above is. */
+[data-theme="neu"] .jse-theme-dfm {
+  --jse-theme-color: var(--glyph);
+}
+
+[data-theme="neu"] .now,
+[data-theme="neu"] .life {
+  border-left-color: var(--glyph);
+}
+
+[data-theme="neu"] .arrow:not(.failed) {
+  border-top-color: var(--glyph);
+}
+
+[data-theme="neu"] .gcanvas polyline:not(.active) {
+  stroke: var(--glyph);
+}
+
+[data-theme="neu"] .gcanvas rect:not(.active) {
+  fill: var(--glyph);
+}
+
+[data-theme="neu"] .wbar i.wait {
+  background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 7px);
+}
+
+[data-theme="neu"] .brush {
+  background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 8px);
+}
+
+/* (8) The lines dfm-ui.css draws at a hard-coded 2 px follow the family's 1 px. */
+[data-theme="neu"] .seg-b,
+[data-theme="neu"] .legend i,
+[data-theme="neu"] .swq,
+[data-theme="neu"] .mini,
+[data-theme="neu"] .tag,
+[data-theme="neu"] .prow .kbd,
+[data-theme="neu"] .fchip .x,
+[data-theme="neu"] .meter i,
+[data-theme="neu"] .ttile .sw i,
+[data-theme="neu"] .avatar,
+[data-theme="neu"] .bottom-nav .bcnt,
+[data-theme="neu"] .bar {
+  border-width: 1px;
+}
+
+[data-theme="neu"] .wbar i {
+  border-right-width: 1px;
+}
+
+[data-theme="neu"] .seg-b {
+  margin-top: -1px;
+}
+
+[data-theme="neu"] .ttile .sw i {
+  margin-right: -1px;
+}
+
+/* (9) A reader who asked for more contrast gets a discernible edge on every surface: the line
+   becomes the muted text colour at 40 %; the shadows stay. Written as rgba rather than color-mix,
+   which the theme matrix reserves for the modal veil. */
+@media (prefers-contrast: more) {
+  [data-theme="neu"] {
+    --ink: rgba(75, 85, 99, 0.4);
+    --border: rgba(75, 85, 99, 0.4);
+    --sidebar-border: rgba(75, 85, 99, 0.4);
+  }
+
+  .dark[data-theme="neu"] {
+    --ink: rgba(163, 169, 181, 0.4);
+    --border: rgba(163, 169, 181, 0.4);
+    --sidebar-border: rgba(163, 169, 181, 0.4);
+  }
+}

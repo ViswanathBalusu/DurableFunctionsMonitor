@@ -102,6 +102,17 @@ export const THEMES: readonly ThemeDescriptor[] = [
     primary: '#4F46E5',
     dark: '#0B1020',
   },
+  {
+    key: 'neu',
+    family: 'neu',
+    label: 'Neu',
+    idea: 'one soft material',
+    metrics: '16 px · 1 px · 14 px',
+    paper: '#E3E8F0',
+    ink: '#1F2937',
+    primary: '#5B5BD6',
+    dark: '#2A2E37',
+  },
 ];
 
 export function theme(key: ThemeName): ThemeDescriptor {
