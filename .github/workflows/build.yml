@@ -170,11 +170,18 @@ jobs:
 
     # Building nuget packages
 
-    - name: copy LICENSE.txt into each publish output
+    - name: copy LICENSE.txt and README.md into each publish output
       run: |
+        set -euo pipefail
         for d in durablefunctionsmonitor.dotnetisolated dotnetIsolated-mssql dotnetIsolated-netherite; do
           cp durablefunctionsmonitor.dotnetisolated/LICENSE.txt drop/$d/output/
         done
+        # nuget pack sweeps everything in each publish output into the package root (the nuspec's
+        # '<file src="..\output\*" target="/" />' entry), which is how each package's own README.md,
+        # named by <readme> in its nuspec, ends up where NuGet requires it.
+        cp durablefunctionsmonitor.dotnetisolated.core/README.md      drop/durablefunctionsmonitor.dotnetisolated/output/
+        cp durablefunctionsmonitor.dotnetisolated.mssql/README.md     drop/dotnetIsolated-mssql/output/
+        cp durablefunctionsmonitor.dotnetisolated.netherite/README.md drop/dotnetIsolated-netherite/output/
 
     - name: Install latest nuget.exe
       uses: nuget/setup-nuget@v4
