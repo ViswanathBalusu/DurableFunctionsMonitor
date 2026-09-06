@@ -3,7 +3,6 @@
 
 using System.Text;
 using System.Collections.Concurrent;
-using System.Reflection;
 using Newtonsoft.Json.Linq;
 
 namespace DurableFunctionsMonitor.DotNetIsolated
@@ -85,6 +84,35 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             };
         }
 
+        // Turns DfmSettings.CustomTemplatesFolderName into an absolute folder path.
+        //
+        // An absolute path is used as is. A relative one is resolved against the folder the app actually
+        // runs from (AppContext.BaseDirectory) - for an isolated Functions app that is the app root, the
+        // folder holding host.json - and, only if nothing is there, against its parent folder, which is
+        // where the in-process host kept the app root (the assembly then sat in '<app root>/bin').
+        // That legacy fallback is why callers must never have to spell the bin folder out themselves.
+        //
+        // Returns the base-directory candidate when neither exists; every caller checks for existence anyway.
+        internal static string ResolveCustomTemplatesFolder(string folderName)
+        {
+            if (Path.IsPathRooted(folderName))
+            {
+                return folderName;
+            }
+
+            string baseFolder = AppContext.BaseDirectory;
+
+            string folder = Path.GetFullPath(Path.Combine(baseFolder, folderName));
+            if (Directory.Exists(folder))
+            {
+                return folder;
+            }
+
+            string legacyFolder = Path.GetFullPath(Path.Combine(baseFolder, "..", folderName));
+
+            return Directory.Exists(legacyFolder) ? legacyFolder : folder;
+        }
+
         // Yes, it is OK to use Task in this way.
         // The Task code will only be executed once. All subsequent/parallel awaits will get the same returned value.
         // Tasks do have the same behavior as Lazy<T>.
@@ -144,8 +172,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             try 
             {
-                string binFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                string templatesFolder = Path.Combine(binFolder, "..", folderName, Globals.TabTemplateFolderName);
+                string templatesFolder = Path.Combine(ResolveCustomTemplatesFolder(folderName), Globals.TabTemplateFolderName);
 
                 if (!Directory.Exists(templatesFolder))
                 {
@@ -207,8 +234,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             try
             {
-                string binFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                string filePath = Path.Combine(binFolder, "..", folderName, Globals.CustomMetaTagBlobName);
+                string filePath = Path.Combine(ResolveCustomTemplatesFolder(folderName), Globals.CustomMetaTagBlobName);
 
                 if (!File.Exists(filePath))
                 {
@@ -272,8 +298,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var result = new FunctionMapsMap();
             try
             {
-                string binFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-                string functionMapsFolder = Path.Combine(binFolder, "..", folderName, Globals.FunctionMapFolderName);
+                string functionMapsFolder = Path.Combine(ResolveCustomTemplatesFolder(folderName), Globals.FunctionMapFolderName);
 
                 if (!Directory.Exists(functionMapsFolder))
                 {

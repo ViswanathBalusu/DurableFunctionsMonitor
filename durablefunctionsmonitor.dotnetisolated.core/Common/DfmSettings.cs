@@ -60,8 +60,11 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public IEnumerable<string> AllowedUserNames { get; set; }
 
         /// <summary>
-        /// Folder where to search for custom tab/html templates.
-        /// Must be a part of your Functions project and be adjacent to your host.json file.
+        /// Folder to load custom tab/html templates and Function Maps from, instead of Azure Storage.
+        /// Either an absolute path, or a path relative to the folder your app runs from - typically a
+        /// folder of your Functions project, adjacent to host.json, copied to the output directory.
+        /// Just the folder name ("dfm-templates") is enough; do not prepend the bin folder to it.
+        /// Can also be set by setting DFM_CUSTOM_TEMPLATES_FOLDER.
         /// </summary>
         public string CustomTemplatesFolderName { get; set; }
 
@@ -139,6 +142,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string dfmAuditEnabled = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_AUDIT_ENABLED);
             string dfmAggregationCacheSeconds = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_AGGREGATION_CACHE_SECONDS);
             string dfmStatsCap = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_STATS_CAP);
+            string dfmCustomTemplatesFolder = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_CUSTOM_TEMPLATES_FOLDER);
 
             // NOTE: an unset setting and a setting explicitly set to an empty string both mean
             // "no restriction" and must map to null. Up to .NET 9 an empty value could only ever
@@ -175,6 +179,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // range all mean "use the documented default" rather than failing startup.
             this.AggregationCacheSeconds = ParseIntOrDefault(dfmAggregationCacheSeconds, DefaultAggregationCacheSeconds, 0, MaxAggregationCacheSeconds);
             this.StatsScanCap = ParseIntOrDefault(dfmStatsCap, DefaultStatsScanCap, 1, int.MaxValue);
+
+            // Unset, empty or whitespace all mean "no local folder configured", which is how the rest of
+            // DfMon spells "load custom templates from Storage instead".
+            this.CustomTemplatesFolderName = string.IsNullOrWhiteSpace(dfmCustomTemplatesFolder) ? null : dfmCustomTemplatesFolder.Trim();
         }
 
         /// <summary>

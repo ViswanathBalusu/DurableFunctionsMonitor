@@ -48,6 +48,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string DFM_AUDIT_ENABLED = "DFM_AUDIT_ENABLED";
         public const string DFM_AGGREGATION_CACHE_SECONDS = "DFM_AGGREGATION_CACHE_SECONDS";
         public const string DFM_STATS_CAP = "DFM_STATS_CAP";
+        public const string DFM_CUSTOM_TEMPLATES_FOLDER = "DFM_CUSTOM_TEMPLATES_FOLDER";
     }
 
     static class Globals

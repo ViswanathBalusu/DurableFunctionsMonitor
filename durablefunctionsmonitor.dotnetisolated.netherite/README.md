@@ -94,6 +94,7 @@ The UI asks `/about` once and turns each screen and button on or off from what t
 | `DFM_MODE` | `ReadOnly` hides every write action; anything else (or unset) is normal read/write mode |
 | `DFM_DANGEROUS_OPERATIONS_ENABLED` | `true` allows Restart in place, which rewrites Task Hub storage and re-executes work that already ran (Replay stays unsupported on this provider regardless) |
 | `DFM_AUDIT_ENABLED` | `true` records every write and dangerous call into the `{hub}DfmAudit` table, which the Activity screen and the `/audit` endpoint read |
+| `DFM_CUSTOM_TEMPLATES_FOLDER` | load custom tab templates, Function Maps and the custom meta tag from this folder instead of Azure Storage. A folder name (`dfm-templates`) is resolved next to your app; an absolute path is used as is. Same as `settings.CustomTemplatesFolderName` |
 
 `DFM_STATS_CAP` and `DFM_AGGREGATION_CACHE_SECONDS` have no effect on this package: `/stats`, `/failures` and `/storage` are unsupported here, so there is nothing to cap or cache.
 

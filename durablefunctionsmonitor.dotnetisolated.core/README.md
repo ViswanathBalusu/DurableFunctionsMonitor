@@ -95,8 +95,9 @@ This package is the reference implementation, backing a plain Azure Storage Task
 | `DFM_AUDIT_ENABLED` | `true` records every write and dangerous call into the `{hub}DfmAudit` table, which the Activity screen and the `/audit` endpoint read |
 | `DFM_STATS_CAP` | how many instance rows `/stats` and `/failures` scan before answering `partial: true` instead of scanning further (default 50000) |
 | `DFM_AGGREGATION_CACHE_SECONDS` | how long `/stats`, `/failures` and `/storage` may serve a previously computed answer for the same query instead of scanning storage again (default 30; 0 disables caching) |
+| `DFM_CUSTOM_TEMPLATES_FOLDER` | load custom tab templates, Function Maps and the custom meta tag from this folder instead of Azure Storage. A folder name (`dfm-templates`) is resolved next to your app; an absolute path is used as is. Same as `settings.CustomTemplatesFolderName` |
 
-This package implements every capability, so all six apply.
+This package implements every capability, so all seven apply.
 
 ## Editing an instance's inputs
 
