@@ -78,5 +78,5 @@ Do:
 2. Core README: the `DFM_CLIENT_CONFIG` example mentions the value.
 3. Extension CHANGELOG: "Neu theme" in the same "Unreleased" entry as Glass, or its own line if E14 has not landed.
 Accept:
-- [ ] `grep -n neu docs/ui.md` shows the value list and the screenshot row.
+- [x] `grep -n neu docs/ui.md` shows the value list and the screenshot row.
 Test: docs.

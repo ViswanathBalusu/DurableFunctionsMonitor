@@ -222,7 +222,7 @@ status colours keep their meaning in every one of them. The top bar's swatch swi
 | ![Poster, dark](../readme/screenshots/dfm-instances-dark.png) | ![Theme menu](../readme/screenshots/dfm-theme-menu.png) |
 | ![Riso](../readme/screenshots/dfm-theme-riso.png) | ![Memphis](../readme/screenshots/dfm-theme-memphis.png) |
 | ![Blueprint, dark](../readme/screenshots/dfm-theme-blueprint.png) | ![Hazard, dark](../readme/screenshots/dfm-theme-hazard.png) |
-| ![Glass, dark](../readme/screenshots/dfm-theme-glass.png) | |
+| ![Glass, dark](../readme/screenshots/dfm-theme-glass.png) | ![Neu](../readme/screenshots/dfm-theme-neu.png) |
 
 Light, dark and "system" are three separate choices: system follows the browser, or the editor in the
 VS Code webview.
@@ -326,7 +326,7 @@ A boolean setting is `true` (any casing, trimmed) and nothing else: `1` and `yes
 | Key | Values |
 |---|---|
 | `theme` | `light`, `dark` |
-| `dfmTheme` | `poster`, `riso`, `memphis`, `blueprint`, `hazard`, `glass` |
+| `dfmTheme` | `poster`, `riso`, `memphis`, `blueprint`, `hazard`, `glass`, `neu` |
 | `showTimeAs` | `UTC`, `Local` |
 
 A user's own choices override them, and are kept per user: in the browser as `dfm.<name>` local

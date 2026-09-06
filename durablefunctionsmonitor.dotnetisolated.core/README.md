@@ -13,7 +13,7 @@ The same Svelte UI ships in every DurableFunctionsMonitor package. Once wired in
 * **Entities** — the durable entities of the hub, filterable by name and key prefix.
 * **Storage** — the tables, queues and control-queue partitions behind the task hub.
 * **Activity** — an audit trail of every write and dangerous operation made through the UI.
-* **Settings** — six visual themes, light/dark/system mode, density, whether times are shown as UTC or local, and the "needs attention" thresholds.
+* **Settings** — seven visual themes, light/dark/system mode, density, whether times are shown as UTC or local, and the "needs attention" thresholds.
 
 The UI asks `/about` once and turns each screen and button on or off from what the backend reports it can do — see Capabilities below. Every JSON payload it shows is pretty-printed and fully expanded, never a truncated preview.
 
@@ -93,7 +93,7 @@ This package is the reference implementation, backing a plain Azure Storage Task
 | `DFM_MODE` | `ReadOnly` hides every write action; anything else (or unset) is normal read/write mode |
 | `DFM_DANGEROUS_OPERATIONS_ENABLED` | `true` allows Replay and Restart in place, which rewrite Task Hub storage and re-execute work that already ran |
 | `DFM_AUDIT_ENABLED` | `true` records every write and dangerous call into the `{hub}DfmAudit` table, which the Activity screen and the `/audit` endpoint read |
-| `DFM_CLIENT_CONFIG` | a JSON object with the UI's defaults, injected into `index.html` - for example `{"dfmTheme":"glass","theme":"dark","showTimeAs":"Local"}`. `dfmTheme` is one of `poster`, `riso`, `memphis`, `blueprint`, `hazard`, `glass`; the other keys are listed in [docs/ui.md](../docs/ui.md) |
+| `DFM_CLIENT_CONFIG` | a JSON object with the UI's defaults, injected into `index.html` - for example `{"dfmTheme":"glass","theme":"dark","showTimeAs":"Local"}`. `dfmTheme` is one of `poster`, `riso`, `memphis`, `blueprint`, `hazard`, `glass`, `neu`; the other keys are listed in [docs/ui.md](../docs/ui.md) |
 | `DFM_STATS_CAP` | how many instance rows `/stats` and `/failures` scan before answering `partial: true` instead of scanning further (default 50000) |
 | `DFM_AGGREGATION_CACHE_SECONDS` | how long `/stats`, `/failures` and `/storage` may serve a previously computed answer for the same query instead of scanning storage again (default 30; 0 disables caching) |
 | `DFM_CUSTOM_TEMPLATES_FOLDER` | load custom tab templates, Function Maps and the custom meta tag from this folder instead of Azure Storage. A folder name (`dfm-templates`) is resolved next to your app; an absolute path is used as is. Same as `settings.CustomTemplatesFolderName` |
