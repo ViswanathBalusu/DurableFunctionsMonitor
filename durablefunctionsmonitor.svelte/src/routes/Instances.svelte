@@ -167,13 +167,16 @@
     <div>
       <ViewStrip {instances} />
 
-      {#if instances.view === 'table'}
-        <InstancesTable {instances} />
-      {:else if instances.view === 'timeline'}
-        <TimelineView {instances} />
-      {:else}
-        <HistogramView {instances} />
-      {/if}
+      <!-- The panel each tab of the strip above controls, named so `aria-controls` lands on it -->
+      <div role="tabpanel" id={`panel-${instances.view}`} aria-labelledby={`tab-${instances.view}`}>
+        {#if instances.view === 'table'}
+          <InstancesTable {instances} />
+        {:else if instances.view === 'timeline'}
+          <TimelineView {instances} />
+        {:else}
+          <HistogramView {instances} />
+        {/if}
+      </div>
     </div>
   {/if}
 

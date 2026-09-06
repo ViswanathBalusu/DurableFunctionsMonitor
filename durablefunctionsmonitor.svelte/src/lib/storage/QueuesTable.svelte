@@ -54,7 +54,11 @@
 </script>
 
 <!-- ScreenStorage.dc.html L44-L57: what is in each queue, and what that means for the hub. -->
-<div class="tbl-wrap keep">
+<!-- `tabindex="0"` because the frame scrolls sideways and holds nothing focusable: without it a
+     keyboard alone cannot reach the columns past the edge (axe `scrollable-region-focusable`). The
+     compiler's rule is about widgets, and a scroll container is the documented exception to it. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<div class="tbl-wrap keep" role="region" aria-label="Queues, scrollable" tabindex="0">
   <table class="tbl" aria-label="Queues">
     <thead>
       <tr>

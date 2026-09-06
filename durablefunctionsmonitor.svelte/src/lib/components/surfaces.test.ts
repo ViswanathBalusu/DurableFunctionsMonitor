@@ -126,8 +126,12 @@ describe('Tabs', () => {
   it('is a tablist of .tab buttons with the selected one marked', () => {
     render(Tabs, { props: { tabs, value: 'history', ariaLabel: 'Instance views' } });
 
+    // The tablist owns the tabs and nothing else, inside the `.tabs` strip that also holds the
+    // screen's own controls (E12-S3-T2); `display: contents` keeps the row looking like one strip
     const list = screen.getByRole('tablist', { name: 'Instance views' });
-    expect(list).toHaveClass('tabs');
+
+    expect(list).toHaveClass('tablist');
+    expect(list.parentElement).toHaveClass('tabs');
 
     expect(screen.getByRole('tab', { name: 'History' }).getAttribute('aria-selected')).toBe('true');
     expect(screen.getByRole('tab', { name: 'Timeline' }).getAttribute('aria-selected')).toBe('false');

@@ -126,7 +126,10 @@
   HTML lanes rather than SVG, exactly as ScreenInstance.dc.html L89-L98 draws them: `.swim > .swim-in
   > .axis + .lane*`, each lane a label and a `.track` of absolutely positioned `.bar`s.
 -->
-<div bind:this={root} class={cn('swim', className)} {style} role="group" aria-label={ariaLabel}>
+<!-- `tabindex="0"` on the frame: it scrolls sideways, and a keyboard has to be able to scroll it
+     even when the lane it wants is off the right edge (axe `scrollable-region-focusable`). -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<div bind:this={root} class={cn('swim', className)} {style} role="group" aria-label={ariaLabel} tabindex="0">
   <div class="swim-in" style={`min-width:${minWidth}px;${innerStyle ?? ''}`}>
     <div class="axis">
       <span class="meta">{axisLabel}</span>
@@ -158,13 +161,23 @@
         </span>
         <div class="track">
           {#each lane.bars as bar (bar.key)}
-            <!-- svelte-ignore a11y_no_static_element_interactions, a11y_click_events_have_key_events -->
+            <!-- A bar that does something is a button: focusable, named by what its tooltip says, and
+                 pressed with Enter or Space. A bar that does nothing stays a shape. -->
             <div
               class={cn('bar', bar.cls ?? '', highlightKey === bar.key ? 'hl' : '')}
               data-bar={bar.key}
               style={`left:${bar.left}%;width:${bar.width}%`}
               title={bar.title}
+              role={onBarClick ? 'button' : undefined}
+              tabindex={onBarClick ? 0 : undefined}
+              aria-label={onBarClick ? (bar.title ?? bar.text ?? bar.key) : undefined}
               onclick={() => onBarClick?.(lane.key, bar)}
+              onkeydown={(event) => {
+                if (onBarClick && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault();
+                  onBarClick(lane.key, bar);
+                }
+              }}
             >
               {bar.text ?? ''}
             </div>

@@ -96,3 +96,32 @@
   max-height: var(--bits-select-content-available-height, 60vh);
   overflow-y: auto;
 }
+
+/* The expanded failure group (E12-S3-T2). dfm-ui.css L380-L381 keys these two on
+   `.group[aria-expanded="true"]`, which no div may carry; the component says `data-expanded` and
+   these repeat the same two declarations for it. Nothing here overrides a dfm-ui.css rule - the
+   selector it uses simply never matches any more. */
+.group[data-expanded='true'] .ghead {
+  border-bottom: var(--border-width) solid var(--ink);
+}
+
+.group[data-expanded='true'] .tri {
+  transform: rotate(90deg);
+}
+
+/* The tablist inside a tab strip (E12-S3-T2). It exists so that `role="tablist"` owns tabs and
+   nothing else; `display: contents` leaves the tabs themselves as flex items of `.tabs`
+   (dfm-ui.css L144), which is what the mockup's layout is built on. */
+.tabs > .tablist {
+  display: contents;
+}
+
+/* The text on a swimlane bar (E12-S3-T2). A bar carries a status class, and `.st-*` (dfm-ui.css L60)
+   sets a background and the foreground that goes with it - but `.bar` (L299) comes later in the same
+   file and wins for `background`, so what is left is the status foreground on the card. In light mode
+   that foreground is black and reads fine; in dark mode it is still black, on a near-black card, at
+   about 1.2:1 (axe `color-contrast`, serious). The bar takes the card's own foreground instead, which
+   is the one colour guaranteed to be readable on it, in every theme and both modes. */
+.swim .bar {
+  color: var(--card-foreground);
+}

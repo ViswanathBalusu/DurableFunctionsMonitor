@@ -117,6 +117,36 @@ Accept:
 - [ ] `a11y.spec.ts` reports zero serious/critical violations across screens.
 Test: itself.
 
+**Done, E12-S3-T2 (2026-09-05).** axe (wcag2a/2aa/21a/21aa) over eight screens plus the workspace, in
+both modes of the Poster theme, and over the three overlays - peek, confirm dialog, palette. Six real
+violations, all fixed:
+
+1. **`aria-valid-attr-value`** (critical): the Instances view strip's tabs pointed
+   `aria-controls` at `panel-table`, which nothing rendered. The three views now sit in a
+   `role="tabpanel"` named after the tab that controls it, the way the workspace's tabs already did.
+2. **`aria-required-children`** (critical): `.tabs` was the `role="tablist"` *and* the row that holds
+   the screen's own controls, and a tablist may own nothing but tabs. The tabs moved into an inner
+   `role="tablist"` with `display: contents` (dfm-ext.css), so the strip looks exactly as it did.
+3. **`aria-required-attr`** (critical): the palette's input is a `combobox` and bits-ui does not give
+   it `aria-controls`; the list carries an id of ours now and the input names it.
+4. **`scrollable-region-focusable`** (serious): the two Storage tables and the swimlane scroll
+   sideways and held nothing focusable, so a keyboard could not reach what was past the edge. All
+   three are `tabindex="0"` regions now - and, as the task asks, a swimlane bar that does something is
+   a `role="button"` with an `aria-label` and Enter/Space.
+5. **`color-contrast`** (serious, dark mode): the picked theme tile paints its own foreground, but the
+   metrics inside it kept `.meta`'s muted grey. That span inherits the tile's colour when it is the
+   picked one.
+6. **`color-contrast`** (serious, dark mode): a swimlane bar carries a status class, whose foreground
+   is black in most themes - but `.bar` (dfm-ui.css L299) comes later in the file than `.st-*` (L60)
+   and wins for `background`, leaving black text on a near-black card at about 1.2:1. `.swim .bar`
+   takes `--card-foreground` in dfm-ext.css, the one colour that is readable on the card it really
+   has. The mockup composes the same two classes, so it has the same defect in dark mode.
+
+Reduced motion needed no change: the stylesheet's global rule zeroes every transition and animation,
+and the spec asserts it for the bulk bar, the running stripe and an ordinary button. The `serious` and
+`critical` levels are what fails the run; `moderate` and `minor` are advisory and full of choices the
+design system makes on purpose.
+
 #### E12-S3-T3 Theme QA matrix
 Files: `tests/e2e/themes.spec.ts`, `docs/plans/svelte-rewrite/notes/E12-theme-qa.md`
 Depends: E11

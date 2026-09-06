@@ -104,7 +104,10 @@
           <i style={`background:${entry.dark}`}></i>
         </span>
         <span>{entry.label}</span>
-        <span class="meta" style="margin-left:auto;font-weight:400">{entry.metrics}</span>
+        <!-- The picked tile paints its own foreground; `.meta`'s muted grey on it is unreadable -->
+        <span class="meta" style="margin-left:auto;font-weight:400{entry.key === prefs.theme ? ';color:inherit' : ''}">
+          {entry.metrics}
+        </span>
       </button>
     {/each}
   </div>

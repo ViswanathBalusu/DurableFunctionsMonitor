@@ -48,7 +48,8 @@
         </span>
         {entry.label}
         <span class="grow"></span>
-        <span class="meta">{entry.idea}</span>
+        <!-- ...and on the picked one it inherits that tile's foreground instead (E12-S3-T2) -->
+        <span class="meta" style={entry.key === app.prefs.theme ? 'color:inherit' : undefined}>{entry.idea}</span>
       </button>
     {/each}
 

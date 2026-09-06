@@ -42,7 +42,10 @@
 </script>
 
 <!-- ScreenFailures.dc.html L28-L58: one orchestrator and one error signature, expanded in place. -->
-<div class="group" aria-expanded={open}>
+<!-- `data-expanded`, not `aria-expanded`: a div has no role that may carry it (axe flags it as a
+     critical `aria-allowed-attr`), and the state is already on the button below, where a screen
+     reader looks for it. dfm-ext.css mirrors the two frozen rules that key on the attribute. -->
+<div class="group" data-expanded={open}>
   <button class="ghead" type="button" aria-expanded={open} onclick={onToggle}>
     <span class="tri" aria-hidden="true"></span>
     <span>{group.name}</span>

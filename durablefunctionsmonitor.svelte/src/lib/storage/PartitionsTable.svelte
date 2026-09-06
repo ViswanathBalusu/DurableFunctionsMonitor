@@ -45,7 +45,11 @@
 </script>
 
 <!-- ScreenStorage.dc.html L58-L68: which worker holds which control queue, and since when. -->
-<div class="tbl-wrap keep">
+<!-- `tabindex="0"` because the frame scrolls sideways and holds nothing focusable: without it a
+     keyboard alone cannot reach the columns past the edge (axe `scrollable-region-focusable`). The
+     compiler's rule is about widgets, and a scroll container is the documented exception to it. -->
+<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+<div class="tbl-wrap keep" role="region" aria-label="Partitions, scrollable" tabindex="0">
   <table class="tbl" aria-label="Partitions">
     <thead>
       <tr>

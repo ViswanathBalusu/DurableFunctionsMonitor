@@ -1,3 +1,8 @@
+<script lang="ts" module>
+  /** What the input's `aria-controls` names; only one palette is ever on screen. */
+  const LIST_ID = 'dfm-palette-list';
+</script>
+
 <script lang="ts">
   import * as Command from '$lib/components/ui/command/index.js';
   import type { Palette } from '$lib/state/palette.svelte';
@@ -53,15 +58,18 @@
       aria-modal="true"
       aria-label="Command palette"
     >
+      <!-- `aria-controls` is required of a combobox and bits-ui does not set it, so the list below
+           carries an id of ours for the input to name (axe `aria-required-attr`). -->
       <Command.Input
         bind:ref={input}
         value={palette.query}
         placeholder="Type a command, a screen or an instance id"
         aria-label="Command"
+        aria-controls={LIST_ID}
         oninput={(event) => palette.setQuery(event.currentTarget.value)}
       />
 
-      <Command.List>
+      <Command.List id={LIST_ID}>
         {#each groups as group (group.name)}
           <Command.Group heading={group.name}>
             {#each group.items as item (item.id)}

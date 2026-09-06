@@ -57,24 +57,33 @@
   }
 </script>
 
-<!-- The tab strip of ScreenInstance.dc.html L44-L53: `.tabs` of `.tab` buttons, state on aria-selected. -->
-<div class={cn('tabs', className)} role="tablist" aria-label={ariaLabel}>
-  {#each tabs as tab, index (tab.id)}
-    <button
-      bind:this={buttons[index]}
-      type="button"
-      class={cn('tab', tab.summaryTab ? 'summary-tab' : '')}
-      role="tab"
-      id={`tab-${tab.id}`}
-      aria-selected={tab.id === value}
-      aria-controls={`panel-${tab.id}`}
-      tabindex={tab.id === value ? 0 : -1}
-      onclick={() => choose(tab.id)}
-      onkeydown={(event) => onkeydown(event, index)}
-    >
-      {tab.label}
-    </button>
-  {/each}
+<!--
+  The tab strip of ScreenInstance.dc.html L44-L53: `.tabs` of `.tab` buttons, state on aria-selected.
+
+  The tablist is an inner element rather than `.tabs` itself, because the strip also carries a spacer
+  and the screen's own controls (a select, a Refresh button) and a `role="tablist"` may own nothing
+  but tabs (axe `aria-required-children`). `display: contents` on it - dfm-ext.css - keeps every tab a
+  direct flex item of `.tabs`, so the row looks exactly as it did.
+-->
+<div class={cn('tabs', className)}>
+  <div class="tablist" role="tablist" aria-label={ariaLabel}>
+    {#each tabs as tab, index (tab.id)}
+      <button
+        bind:this={buttons[index]}
+        type="button"
+        class={cn('tab', tab.summaryTab ? 'summary-tab' : '')}
+        role="tab"
+        id={`tab-${tab.id}`}
+        aria-selected={tab.id === value}
+        aria-controls={`panel-${tab.id}`}
+        tabindex={tab.id === value ? 0 : -1}
+        onclick={() => choose(tab.id)}
+        onkeydown={(event) => onkeydown(event, index)}
+      >
+        {tab.label}
+      </button>
+    {/each}
+  </div>
 
   {#if controls}
     <span class="grow"></span>

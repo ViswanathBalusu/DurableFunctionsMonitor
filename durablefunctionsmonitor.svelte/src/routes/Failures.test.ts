@@ -110,7 +110,7 @@ describe('Failures: the groups', () => {
       'ReconcileLedgerOrchestrator LedgerOutOfBalance: * entries could not be matched 1 last 02:42:13',
     ]);
 
-    expect(groups().map((group) => group.getAttribute('aria-expanded'))).toEqual(['true', 'false', 'false']);
+    expect(groups().map((group) => group.getAttribute('data-expanded'))).toEqual(['true', 'false', 'false']);
 
     // ...and only the open one has rows under it
     expect(rows()).toHaveLength(6);
@@ -123,7 +123,7 @@ describe('Failures: the groups', () => {
 
     await fireEvent.click(groups()[1].querySelector('.ghead') as HTMLElement);
 
-    expect(groups()[1].getAttribute('aria-expanded')).toBe('true');
+    expect(groups()[1].getAttribute('data-expanded')).toBe('true');
     expect(rows()).toHaveLength(8);
 
     await fireEvent.click(groups()[0].querySelector('.ghead') as HTMLElement);

@@ -42,6 +42,7 @@
     "tailwind-merge": "3.6.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@azure/data-tables": "13.3.2",
     "@azure/storage-blob": "12.33.0",
     "@azure/storage-queue": "12.31.0",

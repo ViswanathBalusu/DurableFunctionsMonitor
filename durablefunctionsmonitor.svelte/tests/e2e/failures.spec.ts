@@ -64,11 +64,11 @@ function rowsOf(group: Locator): Locator {
  * that clicked blindly would be closing one of them half the time.
  */
 async function open(group: Locator): Promise<void> {
-  if ((await group.getAttribute('aria-expanded')) !== 'true') {
+  if ((await group.getAttribute('data-expanded')) !== 'true') {
     await group.locator('.ghead').click();
   }
 
-  await expect(group).toHaveAttribute('aria-expanded', 'true');
+  await expect(group).toHaveAttribute('data-expanded', 'true');
 }
 
 test('groups the failures of the range by what went wrong', async ({ page }) => {
@@ -85,15 +85,15 @@ test('groups the failures of the range by what went wrong', async ({ page }) => 
   await expect(inventory.locator('.ghead')).toContainText('ProcessOrderOrchestrator');
 
   // The first group is open and the rest are not (ScreenFailures.dc.html L96)
-  await expect(groups(page).first()).toHaveAttribute('aria-expanded', 'true');
-  await expect(groups(page).nth(1)).toHaveAttribute('aria-expanded', 'false');
+  await expect(groups(page).first()).toHaveAttribute('data-expanded', 'true');
+  await expect(groups(page).nth(1)).toHaveAttribute('data-expanded', 'false');
 
   await open(inventory);
   await expect(rowsOf(inventory)).toHaveCount(6);
 
   const timeout = group(page, TIMEOUT);
 
-  await expect(timeout).toHaveAttribute('aria-expanded', 'false');
+  await expect(timeout).toHaveAttribute('data-expanded', 'false');
   await expect(timeout.locator('.ghead .chip')).toHaveText('2');
   await expect(rowsOf(timeout)).toHaveCount(0);
 
