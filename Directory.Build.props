@@ -10,7 +10,14 @@
          .github/workflows/publish-nuget.yml verifies the tag matches this value,
          then packs and pushes to nuget.org.
 
+    The same workflow also publishes prereleases of the version below, as
+    "v<VersionPrefix>-rc.<n>" or "v<VersionPrefix>-develop.<n>". Only the release part
+    of the tag is checked against this value, so a prerelease needs no bump here -
+    which is what keeps AssemblyVersion (VersionPrefix + ".0") numeric. nuget.org
+    keeps them off "latest stable", and SemVer orders develop.N < rc.N < the release.
+
     CI builds off main publish <VersionPrefix>-preview.<run number> to GitHub Packages.
+    That suffix is deliberately not one publish-nuget.yml accepts: previews live there.
   -->
   <PropertyGroup>
     <VersionPrefix>6.9.0</VersionPrefix>
