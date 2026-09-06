@@ -66,8 +66,8 @@ Do:
 2. axe marks text on a translucent background as "incomplete" rather than failing it. Add to `themes.spec.ts`, for non-brutal families, a computed check on the Instances screen: sample the table's first cell text colour and the composited background (`--card` over `--background`; ignore the blobs, they are lighter than the paper in light mode and darker in dark mode by construction) and assert 4.5:1; the same for `.meta` text (`--muted-foreground`) inside a `.panel` on the Overview.
 3. Keyboard: the focus ring (`--ring`) must be visible on a frosted button in both modes; if it is not, the family sets a `--ring` with more contrast, not a thicker outline.
 Accept:
-- [ ] `a11y.spec.ts` green for Poster and Glass, both modes.
-- [ ] The two computed-contrast checks pass in both modes of Glass.
+- [x] `a11y.spec.ts` green for Poster and Glass, both modes.
+- [x] The two computed-contrast checks pass in both modes of Glass.
 Test: itself.
 
 #### E14-S2-T3 Docs and release

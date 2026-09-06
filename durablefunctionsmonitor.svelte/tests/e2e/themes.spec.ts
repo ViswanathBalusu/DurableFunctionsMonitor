@@ -5,7 +5,8 @@
 // every theme and both modes, photographed for review - and, so that the review has something to
 // hold on to, the tokens each theme claims are asserted against what the stylesheet really computes.
 // What is asserted depends on the theme's family (themes.ts): the papers are held to the design
-// system's brutalist rules, a soft family to the universal ones and to its own metrics.
+// system's brutalist rules, a soft family to the universal ones, to its own metrics, and to the
+// contrast of its text over its translucent panes, which axe leaves "incomplete" (E14-S2-T2).
 //
 // The screenshots go to `test-results/themes/` and are not committed; CI keeps them as an artifact.
 // `notes/E12-theme-qa.md` is the checklist they were reviewed against.
@@ -59,6 +60,7 @@ async function tokens(page: Page): Promise<Record<string, string>> {
       shadow: read('--shadow-brutal'),
       pattern: read('--pattern'),
       glassBlur: read('--glass-blur'),
+      ring: read('--ring'),
     };
   });
 }
@@ -119,6 +121,62 @@ function metrics(family: ThemeFamily, read: Record<string, string>): string {
   }
 }
 
+interface Sampled {
+  /** The text colour, as painted, over what is behind it. */
+  color: string;
+  /** What is behind it: the surface's own paint composited over the page's paper. */
+  background: string;
+}
+
+/**
+ * The colour of the first element `text` finds and the colour behind it, as hex, with the surface's
+ * translucent fill composited over the page's paper by hand (E14-S2-T2). axe reports text on a
+ * translucent background as "incomplete" rather than failing it, so a soft family checks its own
+ * pairs here. The blobs behind the paper are ignored: they are lighter than the paper in light mode
+ * and darker in dark mode by construction, so the paper is the worse case.
+ */
+async function sampled(page: Page, text: string, surface: string): Promise<Sampled> {
+  return page.evaluate(
+    ([textSelector, surfaceSelector]) => {
+      type Rgba = [number, number, number, number];
+
+      const parse = (value: string): Rgba => {
+        const parts = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/.exec(value);
+
+        if (!parts) {
+          throw new Error(`not an rgb colour: ${value}`);
+        }
+
+        return [+parts[1], +parts[2], +parts[3], parts[4] === undefined ? 1 : +parts[4]];
+      };
+      const over = (top: Rgba, under: Rgba): Rgba => [
+        Math.round(top[0] * top[3] + under[0] * (1 - top[3])),
+        Math.round(top[1] * top[3] + under[1] * (1 - top[3])),
+        Math.round(top[2] * top[3] + under[2] * (1 - top[3])),
+        1,
+      ];
+      const hex = (rgba: Rgba) =>
+        `#${rgba
+          .slice(0, 3)
+          .map((channel) => channel.toString(16).padStart(2, '0'))
+          .join('')}`;
+
+      const element = document.querySelector(textSelector);
+      const surfaceElement = document.querySelector(surfaceSelector);
+
+      if (!element || !surfaceElement) {
+        throw new Error(`nothing matches ${element ? surfaceSelector : textSelector}`);
+      }
+
+      const paper = parse(getComputedStyle(document.body).backgroundColor);
+      const behind = over(parse(getComputedStyle(surfaceElement).backgroundColor), paper);
+
+      return { color: hex(over(parse(getComputedStyle(element).color), behind)), background: hex(behind) };
+    },
+    [text, surface],
+  );
+}
+
 async function shoot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: `${SHOTS}/${name}.png` });
 }
@@ -176,6 +234,16 @@ for (const entry of THEMES) {
 
         // A soft family's backdrop is its own and never a paper pattern
         expect(read.pattern, 'pattern').toBe('none');
+
+        // The pairs a reader meets first, composited by hand because the pane is translucent: a
+        // cell of the table on its frosted frame, and the focus ring on that frame and on the paper
+        await expect(page.locator('.tbl tbody tr').first()).toBeVisible();
+
+        const cell = await sampled(page, '.tbl tbody tr td:not(.spine):not(.sel-cell)', '.tbl-wrap');
+
+        expect(contrast(cell.color, cell.background), 'table text on the frame').toBeGreaterThan(4.5);
+        expect(contrast(read.ring, cell.background), 'focus ring on the frame').toBeGreaterThan(3);
+        expect(contrast(read.ring, read.background), 'focus ring on the paper').toBeGreaterThan(3);
       }
 
       // The matrix itself: seven screens, in this theme and this mode
@@ -183,6 +251,16 @@ for (const entry of THEMES) {
 
       await page.goto(hubPath());
       await expect(page.getByRole('heading', { name: 'Overview', level: 1 })).toBeVisible();
+
+      if (entry.family !== 'brutal') {
+        // ...and the muted text of a panel on its frosted pane, the other pair axe leaves open
+        await expect(page.locator('.panel .meta, .panel .muted').first()).toBeVisible();
+
+        const meta = await sampled(page, '.panel .meta, .panel .muted', '.panel');
+
+        expect(contrast(meta.color, meta.background), 'muted text on a panel').toBeGreaterThan(4.5);
+      }
+
       await shoot(page, `${name}-overview`);
 
       await page.goto(hubPath('instances'));

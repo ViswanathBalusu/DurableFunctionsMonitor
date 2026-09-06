@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-// The accessibility pass (E12-S3-T2): axe-core over every screen, in both modes of one theme per
-// family, and the keyboard paths a person who never touches a mouse has to be able to walk.
+// The accessibility pass (E12-S3-T2): axe-core over every screen and every overlay, in both modes
+// of one theme per family, and the keyboard paths a person who never touches a mouse has to be
+// able to walk.
 //
 // Only `serious` and `critical` violations fail the run. The two lighter levels are advisory and
 // full of things the design system decides on purpose (a chip that repeats a colour, a heading level
@@ -18,7 +19,7 @@ import { ENTITY_INSTANCE_ID, RUNNING_INSTANCE_ID } from './seed/fixtures.mjs';
  * One theme per family, in both modes (E13-S1-T3): the axe loop over every screen is the expensive
  * part of this file, and what it measures - contrast, names, roles - is decided by the family's
  * sheet, not by which paper is on. The first theme of each family stands for it: Poster for the
- * papers, and each soft family by its own key once it lands.
+ * papers, Glass for its own (E14-S2-T2), and each further family by its own key once it lands.
  */
 const FAMILY_SAMPLES = THEMES.filter(
   (entry, index) => THEMES.findIndex((other) => other.family === entry.family) === index,
@@ -66,34 +67,35 @@ for (const sample of FAMILY_SAMPLES) {
 
       expect(await serious(page), `Instance workspace (${sample.label} ${mode})`).toEqual([]);
     });
+
+    test(`the overlays are reachable and announced in ${sample.label} ${mode}`, async ({ page }) => {
+      await gotoHub(page, 'instances');
+      await theme(page, sample.label, mode === 'dark');
+
+      // A dialog: the peek panel, opened from a row
+      await page.locator('.tbl tbody tr').first().click();
+      await expect(page.getByRole('dialog', { name: 'Instance peek' })).toBeVisible();
+
+      expect(await serious(page), 'peek panel').toEqual([]);
+
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('dialog', { name: 'Instance peek' })).toBeHidden();
+
+      // ...a confirm, which is where the destructive operations live
+      await gotoInstance(page, ENTITY_INSTANCE_ID);
+      await page.locator('.hero .actions').getByRole('button', { name: 'Purge' }).click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+
+      expect(await serious(page), 'purge dialog').toEqual([]);
+
+      await page.keyboard.press('Escape');
+
+      // ...and the palette, which is the keyboard's own way around the app
+      await palette(page, 'over');
+      expect(await serious(page), 'command palette').toEqual([]);
+    });
   }
 }
-
-test('the overlays are reachable and announced', async ({ page }) => {
-  await gotoHub(page, 'instances');
-
-  // A dialog: the peek panel, opened from a row
-  await page.locator('.tbl tbody tr').first().click();
-  await expect(page.getByRole('dialog', { name: 'Instance peek' })).toBeVisible();
-
-  expect(await serious(page), 'peek panel').toEqual([]);
-
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog', { name: 'Instance peek' })).toBeHidden();
-
-  // ...a confirm, which is where the destructive operations live
-  await gotoInstance(page, ENTITY_INSTANCE_ID);
-  await page.locator('.hero .actions').getByRole('button', { name: 'Purge' }).click();
-  await expect(page.getByRole('dialog')).toBeVisible();
-
-  expect(await serious(page), 'purge dialog').toEqual([]);
-
-  await page.keyboard.press('Escape');
-
-  // ...and the palette, which is the keyboard's own way around the app
-  await palette(page, 'over');
-  expect(await serious(page), 'command palette').toEqual([]);
-});
 
 test('the app is operable without a mouse', async ({ page }) => {
   await gotoHub(page, 'instances');
