@@ -249,6 +249,12 @@ jobs:
         npm version "$VSIX_VERSION" --no-git-tag-version --allow-same-version
         # The upstream publisher id cannot be published to from this fork. Override it when
         # the VSCE_PUBLISHER repository variable is set.
+        #
+        # package.json "name" is deliberately NOT the upstream durablefunctionsmonitor. The VsCode
+        # Marketplace requires an extension name to be unique across ALL publishers, not just within
+        # one, so publishing the upstream name from a fork is rejected with "The extension
+        # durablefunctionsmonitor already exists in the Marketplace" - which is how v6.10.0 failed.
+        # Do not restore it. The .vsix is named after it, so the globs below stay extension-agnostic.
         if [ -n "${VSCE_PUBLISHER}" ]; then
           node -e "const f='package.json',j=require('./'+f);j.publisher=process.env.VSCE_PUBLISHER;require('fs').writeFileSync(f,JSON.stringify(j,null,4)+'\n')"
         fi
@@ -258,7 +264,7 @@ jobs:
       run: npm run package
       working-directory: durablefunctionsmonitor-vscodeext
     - name: copy VSIX-file to ArtifactStagingDirectory
-      run: cp durablefunctionsmonitor-vscodeext/durablefunctionsmonitor*.vsix drop
+      run: cp durablefunctionsmonitor-vscodeext/*.vsix drop
 
     # Publish artifacts
 

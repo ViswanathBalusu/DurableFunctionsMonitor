@@ -1,5 +1,9 @@
 # Change Log
 
+# Version 6.10.1
+
+- The extension now publishes under the Marketplace id `durablefunctionsmonitor-reimagined`. The VsCode Marketplace requires an extension name to be unique across every publisher, not only within one, so this fork could not publish under the upstream `durablefunctionsmonitor` name - the 6.10.0 Marketplace publish was rejected with "The extension durablefunctionsmonitor already exists in the Marketplace". The displayed name, the commands and the settings are all unchanged; only the id you would use with `code --install-extension` differs.
+
 # Version 6.10.0
 
 - The time range control - the one on Overview, Instances, Failures, Functions and Activity - now offers **Custom range…**, which opens a picker for the exact window instead of leaving a custom range to a chart brush or a hand-edited URL. It opens on the window in force, shows times in whichever clock you picked (UTC or local), and what you apply goes into the URL, so it holds across every screen and survives a copied link.
