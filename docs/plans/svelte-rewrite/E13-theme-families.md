@@ -65,8 +65,8 @@ Do:
 2. `--shoot`: with Playwright from the Svelte project, open the page as `file://`, and for every theme × mode write three crops at 1440 px (0–1500, 1500–3000, 3000–end) to `durablefunctionsmonitor.svelte/test-results/style-preview/<key>-<mode>-<n>.png`, plus one line per combination printing the computed `--ink`, `--glyph`, `--shadow-brutal`, `--radius`, `--border-width`. This is the spike's procedure (`notes/theme-families-investigation.md`), made repeatable.
 3. `npm run preview:styles` runs it with `--shoot`. Document the two commands in the harness header comment and in the commands list of the repo-root `CLAUDE.md`.
 Accept:
-- [ ] With no family sheet the page builds, lists the five papers, and `--shoot` writes 10 combinations × 3 crops.
-- [ ] The built page loads the family sheets as plain CSS (open it in a browser: no console error, no Tailwind directive left unprocessed - assert by grepping the linked files for `@utility|@theme|@apply`).
+- [x] With no family sheet the page builds, lists the five papers, and `--shoot` writes 10 combinations × 3 crops.
+- [x] The built page loads the family sheets as plain CSS (open it in a browser: no console error, no Tailwind directive left unprocessed - assert by grepping the linked files for `@utility|@theme|@apply`).
 Test: run it; a unit test for the patch step (`tests/unit/style-preview.test.ts`) feeds a small stand-in page and asserts the link tags and the switcher entries.
 
 #### E13-S2-T2 Rules, contracts and the review checklist
