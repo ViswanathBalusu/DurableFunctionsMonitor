@@ -16,6 +16,7 @@
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import type { InstanceState } from '$lib/state/instance.svelte';
   import { activePath, activityOf, kindSuffix } from './graph-path';
+  import { DERIVED_FROM_HISTORY, buildHistoryGraph } from './history-graph';
 
   interface Props {
     instance: InstanceState;
@@ -31,13 +32,33 @@
   /** The counters on the orchestrator's card, when the backend can count them. */
   let metrics = $state<Record<string, NodeMetrics>>({});
 
-  const model = $derived(buildFunctionGraph(instance.functionMap));
-
   const orchestrator = $derived(instance.functionName);
+
+  /**
+   * The hub's map when the host publishes one and this function is on it; otherwise the graph this
+   * instance's own history describes. The second is a smaller claim than the first - what this
+   * execution did, not what the code can do - and the footer says which one is on screen.
+   */
+  const fromHistory = $derived(!instance.isOnFunctionMap);
+
+  const model = $derived(
+    fromHistory ? buildHistoryGraph(orchestrator, instance.history.rows) : buildFunctionGraph(instance.functionMap),
+  );
 
   const activity = $derived(activityOf(instance.history.rows));
 
-  const path = $derived(activePath(model, orchestrator, activity));
+  /**
+   * The edges this instance walked. Every edge of a history-derived graph is one of them - nothing
+   * is drawn there that did not happen - where the map's graph has the code's other edges too.
+   */
+  const path = $derived(
+    fromHistory ? new Set(model.edges.map((edge) => edge.id)) : activePath(model, orchestrator, activity),
+  );
+
+  /** `· 3 calls` and the like. The two bindings of a derived graph are not functions and count none. */
+  function suffix(name: string): string {
+    return model.nodes.find((node) => node.id === name)?.binding ? '' : kindSuffix(name, orchestrator, activity);
+  }
 
   /** Which card is picked out; the workspace opens on its own function, once the details name it. */
   let picked = false;
@@ -111,13 +132,13 @@
   bind:selected
   {metrics}
   activePath={path}
-  kindSuffix={(name) => kindSuffix(name, orchestrator, activity)}
+  kindSuffix={suffix}
   height={440}
   onOpenCode={openCode}
 />
 
 <div class="row" style="justify-content:space-between">
-  <span class="meta">{GRAPH_FOOTER}</span>
+  <span class="meta">{fromHistory ? DERIVED_FROM_HISTORY : GRAPH_FOOTER}</span>
 
   <div class="row">
     <Button variant="ghost" onclick={() => void save()}>Save as SVG</Button>

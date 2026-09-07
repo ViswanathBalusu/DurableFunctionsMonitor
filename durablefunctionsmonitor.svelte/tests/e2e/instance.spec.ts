@@ -140,7 +140,9 @@ test('draws the sequence diagram of what the instance called', async ({ page }) 
   await expect(page.getByRole('button', { name: 'Copy diagram code to clipboard' })).toBeVisible();
 });
 
-test('offers a Graph tab only when this instance is on a function map', async ({ page }) => {
+test('offers a Graph tab, of the hub map where there is one and of the history where there is not', async ({
+  page,
+}) => {
   await gotoInstance(page, RUNNING_INSTANCE_ID);
 
   // Summary is the first tab and hidden above 1100px, so the strip is waited for on a real one
@@ -148,16 +150,21 @@ test('offers a Graph tab only when this instance is on a function map', async ({
 
   const graph = page.getByRole('tab', { name: 'Graph' });
 
-  if ((await graph.count()) === 0) {
-    // The seed publishes a function map, so this normally has one; a host reading a storage account
-    // that has no map blob serves IsFunctionGraphAvailable=0, and then there is nothing to draw and
-    // nothing is offered (React rule)
-    await expect(page.getByRole('tab', { name: 'Raw' })).toBeVisible();
-    return;
-  }
+  // Every orchestration has one now: its own history is enough to draw a graph from
+  await expect(graph).toBeVisible();
 
   await graph.click();
   await expect(page.locator('.graph .node').first()).toBeVisible();
+
+  // The seed publishes a function map this orchestrator is on, so the graph is the hub's, and the
+  // footer is the one that says so. A host reading a storage account with no map blob serves
+  // IsFunctionGraphAvailable=0, and the footer then names the instance's history instead.
+  const footer = page
+    .locator('.graph')
+    .locator('..')
+    .getByText(/ring-colored path|Built from this instance history/);
+
+  await expect(footer).toBeVisible();
 });
 
 test('sets the customStatus and clears it again', async ({ page }) => {

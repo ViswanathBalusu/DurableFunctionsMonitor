@@ -197,7 +197,11 @@ describe('InstanceState: the details', () => {
 
     expect(calls.functionMaps).toBe(0);
     expect(instance.functionMap).toBeNull();
-    expect(instance.hasGraph).toBe(false);
+
+    // No map, so nothing to match against - but the Graph tab is still there, drawn from the
+    // instance's own history instead
+    expect(instance.isOnFunctionMap).toBe(false);
+    expect(instance.hasGraph).toBe(true);
   });
 
   it('asks for the function map once per hub, however many instances are opened', async () => {
@@ -236,7 +240,8 @@ describe('InstanceState: the tabs', () => {
 
     await instance.loadDetails();
 
-    expect(instance.tabs).toEqual(['history', 'inputs', 'sequence', 'raw', customTab('Order summary')]);
+    // Graph without a published map is the history-derived one (E5-S6 follow-up)
+    expect(instance.tabs).toEqual(['history', 'inputs', 'sequence', 'graph', 'raw', customTab('Order summary')]);
     expect(instance.tab).toBe('history');
   });
 
@@ -266,20 +271,35 @@ describe('InstanceState: the tabs', () => {
     await orchestration.instance.loadDetails();
 
     expect(orchestration.instance.tabs).toContain('graph');
+    expect(orchestration.instance.isOnFunctionMap).toBe(true);
 
     // The map lowers entity names, which is why React matched them case-insensitively
     const entity = makeInstance({ id: ENTITY_ID, details: entityDetails(), functionGraph: true });
 
     await entity.instance.loadDetails();
 
+    expect(entity.instance.isOnFunctionMap).toBe(true);
     expect(entity.instance.hasGraph).toBe(true);
 
-    // A function nobody published is not on the graph, so the tab is not offered
+    // A function nobody published is not on the map; the tab is still offered, and the tab draws
+    // the history-derived graph rather than the hub's
     const unknown = makeInstance({ functionGraph: true, details: detailsFixture({ name: 'SomethingElse' }) });
 
     await unknown.instance.loadDetails();
 
-    expect(unknown.instance.tabs).not.toContain('graph');
+    expect(unknown.instance.isOnFunctionMap).toBe(false);
+    expect(unknown.instance.tabs).toContain('graph');
+  });
+
+  it('gives an entity no Graph tab, with a map or without one', async () => {
+    // An entity is signalled, calls nothing and has no history of calls to derive a graph from
+    const { instance } = makeInstance({ id: ENTITY_ID, details: entityDetails() });
+
+    await instance.loadDetails();
+
+    expect(instance.isOnFunctionMap).toBe(false);
+    expect(instance.hasGraph).toBe(false);
+    expect(instance.tabs).not.toContain('graph');
   });
 
   it('takes the tab off the URL, and falls back when it is one this instance has not got', async () => {

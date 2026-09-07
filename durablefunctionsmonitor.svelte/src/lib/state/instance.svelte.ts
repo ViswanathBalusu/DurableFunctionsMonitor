@@ -137,11 +137,10 @@ export class InstanceState {
   }
 
   /**
-   * Whether the Graph tab is offered: the host has to publish a graph at all, and this instance's
-   * function has to be on it. Entities are lowered in the map, so the match is case-insensitive
-   * (React `shownFunctionNames`).
+   * Whether this instance's function is on the hub's published function map. Entities are lowered
+   * in the map, so the match is case-insensitive (React `shownFunctionNames`).
    */
-  get hasGraph(): boolean {
+  get isOnFunctionMap(): boolean {
     const name = this.functionName.toLowerCase();
 
     if (!this.#app.host.functionGraphAvailable || !name) {
@@ -149,6 +148,16 @@ export class InstanceState {
     }
 
     return Object.keys(this.functionMap?.functions ?? {}).some((key) => key.toLowerCase() === name);
+  }
+
+  /**
+   * Whether the Graph tab is offered. The map is the better graph and is used whenever there is
+   * one; without it the tab draws the graph this instance's own history describes, which is the
+   * same source the Sequence tab is built from - so the tab is offered on the same terms as that
+   * one. An entity calls nothing and has no graph either way.
+   */
+  get hasGraph(): boolean {
+    return this.isOnFunctionMap || (!!this.functionName && !this.isEntity);
   }
 
   /**

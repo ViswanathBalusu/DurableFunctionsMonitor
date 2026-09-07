@@ -13,6 +13,7 @@ import type { InstanceState } from '$lib/state/instance.svelte';
 import WorkspaceHarness from '../../../tests/unit/harnesses/WorkspaceHarness.svelte';
 import GraphTab, { AZ_FUNC_AS_A_GRAPH_URL, GRAPH_FOOTER } from './GraphTab.svelte';
 import { activePath, activityOf, kindSuffix } from './graph-path';
+import { DERIVED_FROM_HISTORY, DURABLE_TIMER, EXTERNAL_EVENTS } from './history-graph';
 import { details as detailsFixture } from '../../../tests/unit/fixtures/details';
 import { functionMap } from '../../../tests/unit/fixtures/function-map';
 import { history as historyFixture, historyEvent } from '../../../tests/unit/fixtures/history';
@@ -231,5 +232,85 @@ describe('GraphTab', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'az-func-as-a-graph' }));
 
     expect(open).toHaveBeenCalledWith(AZ_FUNC_AS_A_GRAPH_URL, '_blank');
+  });
+});
+
+describe('GraphTab: without a published function map', () => {
+  /** The same workspace, on a host that publishes no graph at all. */
+  function mountBare() {
+    const rendered = render(WorkspaceHarness, {
+      props: {
+        component: GraphTab,
+        instanceId: INSTANCE_ID,
+        functionGraph: false,
+        capabilities: {},
+        endpoints: {
+          getOrchestration: async () => detailsFixture(),
+          getHistory: async () => ({ history: historyFixture }),
+        } as unknown as Endpoints,
+      },
+    });
+
+    const harness = rendered.component as unknown as { instanceState: () => InstanceState };
+    const instance = harness.instanceState();
+
+    void instance.history.load();
+
+    return { ...rendered, instance };
+  }
+
+  it('draws the graph this instance history describes, and says that is what it is', async () => {
+    const { instance } = mountBare();
+
+    await waitFor(() => expect(instance.functionName).toBe(ORCHESTRATOR));
+
+    // The orchestrator, the three functions it called, and the two things that are not functions
+    await waitFor(() =>
+      expect(cards().map((card) => card.querySelector('.name')?.textContent)).toEqual([
+        ORCHESTRATOR,
+        'ReserveInventory',
+        'ChargePayment',
+        'NotifyCustomer',
+        EXTERNAL_EVENTS,
+        DURABLE_TIMER,
+      ]),
+    );
+
+    expect(kindOf(ORCHESTRATOR)).toBe('Orchestrator · this instance');
+    expect(kindOf('ChargePayment')).toBe('Activity · 3 calls, 1 failed');
+
+    // Neither of the two bindings is a function, so neither of them carries a count
+    expect(kindOf(EXTERNAL_EVENTS)).toBe('External');
+    expect(kindOf(DURABLE_TIMER)).toBe('Timer');
+
+    // The tab is not claiming to be the hub's graph
+    expect(screen.getByText(DERIVED_FROM_HISTORY)).toBeInTheDocument();
+    expect(screen.queryByText(GRAPH_FOOTER)).toBeNull();
+    expect(instance.isOnFunctionMap).toBe(false);
+  });
+
+  it('draws nothing that did not happen', async () => {
+    const rendered = render(WorkspaceHarness, {
+      props: {
+        component: GraphTab,
+        instanceId: INSTANCE_ID,
+        functionGraph: false,
+        capabilities: {},
+        endpoints: {
+          getOrchestration: async () => detailsFixture(),
+          getHistory: async () => ({
+            history: [historyEvent({ EventType: 'ExecutionStarted', Name: ORCHESTRATOR })],
+          }),
+        } as unknown as Endpoints,
+      },
+    });
+
+    const instance = (rendered.component as unknown as { instanceState: () => InstanceState }).instanceState();
+
+    void instance.history.load();
+
+    // SendConfirmation is on the hub's map and is not on this one: it was never called
+    await waitFor(() => expect(cards()).toHaveLength(1));
+    expect(kindOf(ORCHESTRATOR)).toBe('Orchestrator · this instance');
   });
 });

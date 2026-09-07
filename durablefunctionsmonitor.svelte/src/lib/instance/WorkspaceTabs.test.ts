@@ -74,7 +74,7 @@ describe('WorkspaceTabs', () => {
 
     // Summary is always in the strip and hidden above 1100px by CSS (`.tab.summary-tab`)
     await waitFor(() =>
-      expect(tabLabels()).toEqual(['Summary', 'History', 'Inputs', 'Sequence', 'Raw', 'Order summary']),
+      expect(tabLabels()).toEqual(['Summary', 'History', 'Inputs', 'Sequence', 'Graph', 'Raw', 'Order summary']),
     );
 
     expect(document.querySelector('.tabs .tab')).toHaveClass('summary-tab');
