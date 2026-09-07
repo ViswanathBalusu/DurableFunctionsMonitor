@@ -13,7 +13,7 @@ The same Svelte UI ships in every DurableFunctionsMonitor package. Once wired in
 * **Entities** — the durable entities of the hub, filterable by name and key prefix.
 * **Storage** — the tables, queues and control-queue partitions behind the task hub.
 * **Activity** — an audit trail of every write and dangerous operation made through the UI.
-* **Settings** — five visual themes, light/dark/system mode, density, whether times are shown as UTC or local, and the "needs attention" thresholds.
+* **Settings** — seven visual themes, light/dark/system mode, density, whether times are shown as UTC or local, and the "needs attention" thresholds.
 
 The UI asks `/about` once and turns each screen and button on or off from what the backend reports it can do — see Capabilities below. Every JSON payload it shows is pretty-printed and fully expanded, never a truncated preview.
 

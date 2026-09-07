@@ -25,7 +25,7 @@ See the [complete list of features in our wiki](https://github.com/microsoft/Dur
 The webview hosts the same UI the standalone and "injected" backends serve: an Overview of the hub,
 Instances as a table, a timeline or a histogram with bulk actions over the selection, a per-instance
 workspace (timeline, history, inputs, sequence, function graph, raw), Failures grouped by error
-signature, Entities, Storage, the audit trail, five themes in light and dark, and a `Ctrl`/`Cmd` `K`
+signature, Entities, Storage, the audit trail, seven themes in light and dark, and a `Ctrl`/`Cmd` `K`
 command palette. Screens and buttons follow the capabilities the connected backend reports, so a
 Task Hub on MSSQL or Netherite shows what that provider can actually do.
 
