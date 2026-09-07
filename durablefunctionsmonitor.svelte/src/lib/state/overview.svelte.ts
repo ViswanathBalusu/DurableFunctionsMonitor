@@ -23,6 +23,9 @@ export const NO_STATS_TITLE = 'Overview needs the stats endpoint';
 export const NO_STATS_TEXT =
   'This backend does not report hub statistics. Instances, Entities and Settings work without it.';
 
+/** What the screen says when /stats answered with an error, in place of the numbers it has not got. */
+export const STATS_FAILED_TITLE = 'Statistics could not be loaded';
+
 export interface OverviewOptions {
   app: AppState;
   /** The clock the range is resolved against, so a test can pin its window. */
@@ -209,6 +212,9 @@ export class Overview {
     } catch (error) {
       if (requestId === this.#requestId) {
         this.error = error instanceof Error ? error.message : String(error);
+        // The numbers on screen were counted over a range that is no longer the one in the title;
+        // keeping them would put the last range's totals under this range's label
+        this.stats = null;
       }
 
       this.#fail(requestId, 'stats', error, () => void this.load());

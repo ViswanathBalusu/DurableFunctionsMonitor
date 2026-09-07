@@ -1,10 +1,13 @@
 <script lang="ts">
   import { getContext } from 'svelte';
   import ConfirmDialog from './ConfirmDialog.svelte';
+  import DateRangeCalendar, { PICK_END } from './DateRangeCalendar.svelte';
   import DateTimeField from './DateTimeField.svelte';
   import Field from './Field.svelte';
   import Select, { type SelectOption } from './Select.svelte';
   import {
+    MAX_RANGE_DAYS,
+    MAX_RANGE_MS,
     TIME_RANGE_LABELS,
     TIME_RANGE_PRESETS,
     isPreset,
@@ -56,17 +59,34 @@
   let from = $state<string | null>(null);
   let to = $state<string | null>(null);
 
+  /** One end clicked on the calendar and the other not yet: the window is still the old one. */
+  let picking = $state(false);
+
   const fromMs = $derived(from ? new Date(from).getTime() : Number.NaN);
   const toMs = $derived(to ? new Date(to).getTime() : Number.NaN);
-  const valid = $derived(Number.isFinite(fromMs) && Number.isFinite(toMs) && fromMs < toMs);
+  const ordered = $derived(Number.isFinite(fromMs) && Number.isFinite(toMs) && fromMs < toMs);
+
+  /** The window the backend refuses to aggregate, caught here rather than as a 400 on every screen. */
+  const tooLong = $derived(ordered && toMs - fromMs > MAX_RANGE_MS);
+
+  /** Mid-gesture the window is still the old one; Apply would not apply what is on the calendar. */
+  const valid = $derived(ordered && !tooLong && !picking);
 
   const hint = $derived.by(() => {
+    if (picking) {
+      return PICK_END;
+    }
+
     if (!from || !to) {
       return 'Set both ends of the window.';
     }
 
-    if (!valid) {
+    if (!ordered) {
       return 'The start has to be earlier than the end.';
+    }
+
+    if (tooLong) {
+      return `The window is ${Math.ceil((toMs - fromMs) / 86_400_000)} days. The backend aggregates at most ${MAX_RANGE_DAYS} days at a time.`;
     }
 
     return app.prefs.showTimeAs === 'UTC' ? 'Times are UTC.' : 'Times are your local time.';
@@ -125,10 +145,13 @@
   confirmLabel="Apply"
   confirmDisabled={!valid}
   {hint}
-  width={480}
+  width={560}
   onConfirm={apply}
 >
-  <div class="row">
+  <!-- The calendar picks the two days; the fields below it pick the time of day on each of them. -->
+  <DateRangeCalendar bind:from bind:to bind:picking showTimeAs={app.prefs.showTimeAs} calendarLabel="Time range days" />
+
+  <div class="row" style="margin-top:12px">
     <Field label="From">
       <DateTimeField bind:value={from} showTimeAs={app.prefs.showTimeAs} ariaLabel="From" />
     </Field>

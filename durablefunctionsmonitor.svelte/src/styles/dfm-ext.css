@@ -178,3 +178,119 @@
   white-space: nowrap;
   display: inline-block;
 }
+
+/* The range calendar of the custom time range. The mockups have no calendar, so this is drawn from
+   the same parts everything else is: 2px ink borders, square corners, the primary fill for what is
+   chosen and the muted fill for what lies between the two ends. */
+.cal {
+  display: block;
+  border: var(--border-width) solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 10px;
+}
+
+.cal-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cal-nav {
+  width: 30px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  flex: none;
+}
+
+.cal-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.cal-months {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.cal-grid {
+  border-collapse: collapse;
+}
+
+/* A range that covers both months would otherwise run across the gap as one unbroken block */
+.cal-months .cal-grid + .cal-grid {
+  border-left: var(--border-width) solid var(--muted);
+  padding-left: 22px;
+}
+
+.cal-wd {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted-foreground);
+  padding-bottom: 4px;
+  text-align: center;
+}
+
+.cal-cell {
+  padding: 0;
+}
+
+.cal-day {
+  width: 30px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: transparent;
+  color: var(--foreground);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  padding: 0;
+}
+
+.cal-day:hover:not([data-disabled]) {
+  background: var(--muted);
+}
+
+.cal-day[data-today] {
+  border-color: var(--ink);
+}
+
+/* Between the two ends: the window itself, so it reads as one block rather than as separate days */
+.cal-day[data-selected] {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.cal-day[data-selection-start],
+.cal-day[data-selection-end] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--ink);
+  box-shadow: var(--shadow-brutal-sm);
+  font-weight: 700;
+}
+
+.cal-day[data-outside-month] {
+  color: var(--muted-foreground);
+  opacity: 0.5;
+}
+
+/* Beyond today, or beyond the backend's maximum range from the end already picked */
+.cal-day[data-disabled] {
+  color: var(--muted-foreground);
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cal-day:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}

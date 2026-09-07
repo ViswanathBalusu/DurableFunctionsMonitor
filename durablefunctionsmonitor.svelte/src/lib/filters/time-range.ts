@@ -32,6 +32,32 @@ const PRESET_MS: Readonly<Record<TimeRangePreset, number>> = {
 /** Contracts §4: "Default `24h`." */
 export const DEFAULT_TIME_RANGE: TimeRange = { preset: '24h' };
 
+/**
+ * The longest window the aggregation endpoints will answer for, and therefore the longest one this
+ * app may ask for. It is the backend's own `RangeQuery.MaxRangeDays`: /stats, /failures and /audit
+ * all reject a longer range with a 400, so a picker that let one be set turned every screen that
+ * shares the range into an error - which is what it used to do.
+ */
+export const MAX_RANGE_DAYS = 92;
+
+export const MAX_RANGE_MS = MAX_RANGE_DAYS * 24 * 60 * 60_000;
+
+/** How long the window is, in ms; `NaN` for a custom range whose ends do not parse. */
+export function spanMs(range: TimeRange, now: Date = new Date()): number {
+  if (isPreset(range)) {
+    return PRESET_MS[range.preset];
+  }
+
+  const { from, to } = resolve(range, now);
+
+  return to.getTime() - from.getTime();
+}
+
+/** True for a window the backend would refuse. No preset can be one; only a custom range can. */
+export function isTooLong(range: TimeRange, now: Date = new Date()): boolean {
+  return spanMs(range, now) > MAX_RANGE_MS;
+}
+
 export function isPreset(range: TimeRange): range is { preset: TimeRangePreset } {
   return 'preset' in range;
 }

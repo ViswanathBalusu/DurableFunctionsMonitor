@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { render, screen, waitFor } from '@testing-library/svelte';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import { normalizeAbout } from '$lib/api/endpoints';
 import type { Capabilities, StatsResponse } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
-import { NO_STATS_TEXT, NO_STATS_TITLE } from '$lib/state/overview.svelte';
+import { NO_STATS_TEXT, NO_STATS_TITLE, STATS_FAILED_TITLE } from '$lib/state/overview.svelte';
 import ScreenHarness from '../../tests/unit/harnesses/ScreenHarness.svelte';
 import Overview from './Overview.svelte';
 import { audit as auditFixture } from '../../tests/unit/fixtures/audit';
@@ -238,5 +238,62 @@ describe('Overview: without the stats capability', () => {
     await screen.getByRole('button', { name: 'Instances' }).click();
 
     expect(onStats).not.toHaveBeenCalled();
+  });
+});
+
+describe('Overview: when /stats answers with an error', () => {
+  /** A window longer than the backend's RangeQuery.MaxRangeDays, as a shared link can carry one. */
+  const TOO_LONG = '/DurableFunctionsHub?from=2025-01-01T00:00:00.000Z&to=2026-09-04T00:00:00.000Z';
+
+  const REJECTED = 'The requested range is longer than the maximum of 92 days';
+
+  function mountFailing(path?: string) {
+    return render(ScreenHarness, {
+      props: {
+        screen: Overview,
+        path: path ?? '/DurableFunctionsHub',
+        capabilities: { stats: true, storageHealth: true, audit: true },
+        endpoints: {
+          stats: async () => {
+            throw new Error(REJECTED);
+          },
+          storage: async () => storageFixture(),
+          audit: async () => {
+            throw new Error(REJECTED);
+          },
+        },
+      },
+    });
+  }
+
+  it('says so on the screen rather than leaving it blank behind a toast', async () => {
+    mountFailing(TOO_LONG);
+
+    // The toast can be dismissed; the screen has to explain itself without it
+    await waitFor(() => expect(screen.getByRole('heading', { name: STATS_FAILED_TITLE })).toBeInTheDocument());
+    expect(screen.getByText(REJECTED)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument();
+
+    // Nothing is drawn from numbers that were never counted
+    expect(document.querySelector('.tiles')).toBeNull();
+  });
+
+  it('offers the way out of a range the backend will not aggregate', async () => {
+    const rendered = mountFailing(TOO_LONG);
+
+    const button = await screen.findByRole('button', { name: 'Use last 24 hours' });
+
+    await fireEvent.click(button);
+
+    expect(appOf(rendered).timeRange).toEqual({ preset: '24h' });
+  });
+
+  it('does not offer it for a range that is already short enough', async () => {
+    mountFailing();
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: STATS_FAILED_TITLE })).toBeInTheDocument());
+
+    // 24 hours failed for some other reason; changing the range would not be the fix
+    expect(screen.queryByRole('button', { name: 'Use last 24 hours' })).toBeNull();
   });
 });

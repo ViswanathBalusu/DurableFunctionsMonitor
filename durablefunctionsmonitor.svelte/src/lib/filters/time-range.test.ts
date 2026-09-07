@@ -5,12 +5,16 @@ import { describe, expect, it } from 'vitest';
 
 import {
   DEFAULT_TIME_RANGE,
+  MAX_RANGE_DAYS,
+  MAX_RANGE_MS,
   TIME_RANGE_LABELS,
   TIME_RANGE_PRESETS,
   isPreset,
+  isTooLong,
   label,
   parseTimeRange,
   resolve,
+  spanMs,
   toQuery,
   type TimeRange,
   type TimeRangePreset,
@@ -141,5 +145,32 @@ describe('parseTimeRange fallbacks', () => {
     expect(parseTimeRange(new URLSearchParams('from=2026-09-04T08:30:00Z'))).toEqual({ preset: '24h' });
     expect(parseTimeRange(new URLSearchParams('range=7d&from=2026-09-04T08:30:00Z'))).toEqual({ preset: '7d' });
     expect(parseTimeRange(new URLSearchParams('from=nonsense&to=alsononsense'))).toEqual({ preset: '24h' });
+  });
+});
+
+describe('the maximum range', () => {
+  it('is the backend own cap, and no preset comes near it', () => {
+    // RangeQuery.MaxRangeDays in durablefunctionsmonitor.dotnetisolated.core/Common/RangeQuery.cs
+    expect(MAX_RANGE_DAYS).toBe(92);
+
+    for (const preset of TIME_RANGE_PRESETS) {
+      expect(isTooLong({ preset }, NOW)).toBe(false);
+    }
+  });
+
+  it('measures a custom window, and says which side of the cap it falls', () => {
+    const to = '2026-09-04T00:00:00.000Z';
+
+    // 92 days exactly is the longest the backend answers for
+    expect(spanMs({ from: '2026-06-04T00:00:00.000Z', to }, NOW)).toBe(MAX_RANGE_MS);
+    expect(isTooLong({ from: '2026-06-04T00:00:00.000Z', to }, NOW)).toBe(false);
+
+    // One minute more is the 400 the Overview used to go blank on
+    expect(isTooLong({ from: '2026-06-03T23:59:00.000Z', to }, NOW)).toBe(true);
+    expect(isTooLong({ from: '2025-01-01T00:00:00.000Z', to }, NOW)).toBe(true);
+  });
+
+  it('calls an unparsable window neither too long nor short', () => {
+    expect(isTooLong({ from: 'nonsense', to: 'alsononsense' }, NOW)).toBe(false);
   });
 });

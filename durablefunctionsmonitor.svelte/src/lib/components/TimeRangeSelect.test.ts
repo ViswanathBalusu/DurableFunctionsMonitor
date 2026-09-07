@@ -5,6 +5,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
 import { describe, expect, it } from 'vitest';
 import type { AppState } from '$lib/state/app.svelte';
 import ScreenHarness from '../../../tests/unit/harnesses/ScreenHarness.svelte';
+import { PICK_END } from './DateRangeCalendar.svelte';
 import TimeRangeSelect from './TimeRangeSelect.svelte';
 
 const DAY_MS = 24 * 60 * 60_000;
@@ -104,5 +105,99 @@ describe('TimeRangeSelect', () => {
 
     // The picker entry is an action, not a range: the trigger still names the window in force
     expect(trigger().textContent?.trim()).toBe('Last 24 hours');
+  });
+});
+
+describe('TimeRangeSelect: the backend maximum', () => {
+  /** A window longer than RangeQuery.MaxRangeDays, as a shared link could carry one. */
+  const TOO_LONG = '/DurableFunctionsHub?from=2025-01-01T00:00:00.000Z&to=2026-09-04T00:00:00.000Z';
+
+  it('refuses to apply a window the backend would reject, and says how long it is', async () => {
+    const { app } = mount(TOO_LONG);
+
+    await choose('Custom range…');
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+    // /stats, /failures and /audit all answer 400 for this one, so Apply is not offered
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled();
+    expect(screen.getByText(/611 days.*at most 92 days/)).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Cancelled, so the link's own window is still what every screen is loading
+    expect(app.timeRange).toEqual({ from: '2025-01-01T00:00:00.000Z', to: '2026-09-04T00:00:00.000Z' });
+  });
+
+  it('applies a window exactly as long as the maximum', async () => {
+    const { app } = mount('/DurableFunctionsHub?from=2026-06-04T00:00:00.000Z&to=2026-09-04T00:00:00.000Z');
+
+    await choose('Custom range…');
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+    expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled();
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+
+    await waitFor(() =>
+      expect(app.timeRange).toEqual({ from: '2026-06-04T00:00:00.000Z', to: '2026-09-04T00:00:00.000Z' }),
+    );
+  });
+
+  it('shows the calendar of the window beside the two time fields', async () => {
+    mount();
+
+    await choose('Custom range…');
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+    // Two months, so a window that crosses a month boundary is one gesture
+    expect(document.querySelector('.cal')?.getAttribute('aria-label')).toContain('Time range days');
+    expect(document.querySelectorAll('.cal-grid')).toHaveLength(2);
+
+    // The 24 hours in force are already drawn on it: two ends, one of them today
+    expect(document.querySelectorAll('.cal-day[data-selection-start]')).toHaveLength(1);
+    expect(document.querySelectorAll('.cal-day[data-selection-end]')).toHaveLength(1);
+    expect(screen.getByLabelText('From')).toBeInTheDocument();
+    expect(screen.getByLabelText('To')).toBeInTheDocument();
+  });
+});
+
+describe('TimeRangeSelect: picking days on the calendar', () => {
+  function day(value: string): HTMLElement {
+    const found = document.querySelector<HTMLElement>(`.cal-day[data-value="${value}"]`);
+
+    if (!found) {
+      throw new Error(`no ${value} on the calendar`);
+    }
+
+    return found;
+  }
+
+  it('takes two clicks, and only then is the window the one on the calendar', async () => {
+    // A window safely in the past: nothing after today can be picked, and there is no data there
+    const { app } = mount('/DurableFunctionsHub?from=2026-06-01T08:30:00.000Z&to=2026-06-04T14:02:00.000Z');
+
+    await choose('Custom range…');
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument());
+
+    await fireEvent.click(day('2026-06-08'));
+
+    // Half a gesture is not a window: Apply stays off until the other end is picked
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Apply' })).toBeDisabled());
+    expect(screen.getByText(PICK_END)).toBeInTheDocument();
+    expect(day('2026-06-08')).toHaveAttribute('data-selection-start');
+
+    await fireEvent.click(day('2026-06-15'));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Apply' })).toBeEnabled());
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
+
+    // The days are the ones clicked; the times are the ones the window already had
+    await waitFor(() =>
+      expect(app.timeRange).toEqual({ from: '2026-06-08T08:30:00.000Z', to: '2026-06-15T14:02:00.000Z' }),
+    );
   });
 });

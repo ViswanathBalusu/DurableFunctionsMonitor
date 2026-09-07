@@ -7,7 +7,7 @@
   import Page from '$lib/components/Page.svelte';
   import PageTitle from '$lib/components/PageTitle.svelte';
   import TimeRangeSelect from '$lib/components/TimeRangeSelect.svelte';
-  import { isPreset, label as rangeLabel } from '$lib/filters/time-range';
+  import { isPreset, isTooLong, label as rangeLabel } from '$lib/filters/time-range';
   import { fmtInt } from '$lib/format/number';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import BacklogPanel from '$lib/overview/BacklogPanel.svelte';
@@ -16,7 +16,7 @@
   import StatTiles from '$lib/overview/StatTiles.svelte';
   import ThroughputPanel from '$lib/overview/ThroughputPanel.svelte';
   import TopOrchestrators from '$lib/overview/TopOrchestrators.svelte';
-  import { NO_STATS_TEXT, NO_STATS_TITLE, Overview } from '$lib/state/overview.svelte';
+  import { NO_STATS_TEXT, NO_STATS_TITLE, Overview, STATS_FAILED_TITLE } from '$lib/state/overview.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -26,6 +26,9 @@
   const rangeLower = $derived(rangeLabel(app.timeRange).toLowerCase());
 
   const isDay = $derived(isPreset(app.timeRange) && app.timeRange.preset === '24h');
+
+  /** A window the backend will not aggregate; the error state then offers the way out of it. */
+  const rangeTooLong = $derived(isTooLong(app.timeRange, new Date(app.now)));
 
   /** The bottom pair. Each panel needs its capability; Backlog needs the answer to have arrived too. */
   const hasBacklog = $derived(app.capabilities.storageHealth && !!overview.storage);
@@ -133,7 +136,21 @@
       </Banner>
     {/if}
 
-    {#if overview.isEmpty}
+    {#if overview.error && !overview.stats}
+      <!--
+        /stats answered with an error and there are no numbers to draw. Without this the screen was
+        blank but for a toast - and a toast that has been dismissed leaves nothing at all, which is
+        how a range longer than the backend's 92-day maximum looked.
+      -->
+      <EmptyState title={STATS_FAILED_TITLE} text={overview.error}>
+        {#snippet actions()}
+          {#if rangeTooLong}
+            <Button variant="primary" onclick={() => app.setTimeRange({ preset: '24h' })}>Use last 24 hours</Button>
+          {/if}
+          <Button onclick={() => app.refresh()}>Retry</Button>
+        {/snippet}
+      </EmptyState>
+    {:else if overview.isEmpty}
       <EmptyState
         title="No orchestrations"
         text={`Nothing was created in the ${rangeLower}. Widen the time range or start a new instance.`}
