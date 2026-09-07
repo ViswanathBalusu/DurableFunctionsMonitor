@@ -1,5 +1,15 @@
 # Change Log
 
+# Version 6.12.0
+
+- **Custom time ranges are picked on a calendar**, two months side by side with the window drawn across them, and the two time fields below it still set the time of day on each end.
+
+- **The shared time range is held to the 92 days the backend aggregates.** `/stats`, `/failures` and `/audit` refuse a longer window with a 400, which used to turn the Overview into an empty screen behind a toast. The picker will not set one now, and the Overview says on the screen why the numbers are missing, with "Use last 24 hours" beside it.
+
+- **The instance Graph tab no longer needs a published function map.** Without one it draws the graph the instance's own history describes - what this execution actually called, rather than what the code can call - and says which of the two is on screen.
+
+- Long labels no longer spill out of the boxes that draw them: the time range and auto-refresh selects, the theme tiles on the Settings screen, and a child orchestration's name in the instance workspace.
+
 # Version 6.11.0
 
 - **Glass and Neu themes**: two more themes in the theme menu, on the Settings screen and in the command palette, each in light and dark, selectable like the five papers and accepted by `DFM_CLIENT_CONFIG` as `"dfmTheme": "glass"` or `"neu"`. Glass is frosted, translucent panes over a soft colour backdrop; Neu is one soft material with every surface raised from it by a pair of shadows and inputs sunk into it.
