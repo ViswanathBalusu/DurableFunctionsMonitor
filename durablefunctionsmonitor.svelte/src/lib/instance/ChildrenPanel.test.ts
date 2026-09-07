@@ -70,10 +70,11 @@ describe('ChildrenPanel', () => {
 
     const link = screen.getByRole('link', { name: 'NotifyCustomer' });
 
-    // The name is what is read; the id is where it goes
+    // The name is what is read; the id is where it goes. The name truncates when the panel is
+    // narrower than it, so the tooltip carries both.
     expect(link).toHaveAttribute('href', '/DurableFunctionsHub/instances/order-2026-09-04-000913%3A0');
-    expect(link).toHaveAttribute('title', 'order-2026-09-04-000913:0');
-    expect(link).toHaveClass('link', 'mono');
+    expect(link).toHaveAttribute('title', 'NotifyCustomer · order-2026-09-04-000913:0');
+    expect(link).toHaveClass('link', 'mono', 'trunc-name');
 
     await fireEvent.click(link);
 

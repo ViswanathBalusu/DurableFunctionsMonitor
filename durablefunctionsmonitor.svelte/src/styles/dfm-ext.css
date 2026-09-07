@@ -126,3 +126,55 @@
 .swim .bar {
   color: var(--card-foreground);
 }
+
+/* The `.sel` listbox trigger. dfm-ui.css leaves room for the `.sel::after` arrow with `select.input`
+   and `select.fchip`, and the bits-ui trigger is a `button`, so neither rule reached it: a label as
+   wide as its box ran underneath the arrow ("Last 24 hours", a custom range's own dates). Same room
+   here, and `.seltext` ends a label too long for the box in an ellipsis instead of outside it. */
+.seltrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-right: 30px;
+}
+
+.fchip.seltrigger {
+  padding-right: 28px;
+}
+
+.seltrigger .seltext {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A theme tile is `white-space:nowrap` and has no room to give, so a name and a metrics string wider
+   than the grid column used to be drawn outside the tile's own border - which is what the Glass and
+   Neu families did to the Appearance panel once they made the strings longer than the five the
+   mockup was drawn with. The swatch and the metrics keep their size; the name is what gives way. */
+.ttile {
+  overflow: hidden;
+}
+
+.ttile > .sw,
+.ttile > .meta {
+  flex: none;
+}
+
+.ttile > span:not(.sw):not(.meta) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A name beside something else on a `.row` - a child orchestration's function name next to its
+   status chip, and the like. dfm-ui.css truncates a `.link` only inside a `td.trunc`, so anywhere
+   else a long function name pushed its row's right-hand element out of the panel. */
+.row > .trunc-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}

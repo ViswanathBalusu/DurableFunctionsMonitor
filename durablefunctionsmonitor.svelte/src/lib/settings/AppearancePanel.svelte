@@ -83,8 +83,13 @@
 
   <div class="meta" style="margin-bottom:6px">Theme</div>
 
+  <!--
+    The mockup's 180px was drawn for five themes whose metrics read `0 px · 2 px · 4 px`; Glass and
+    Neu (E13-E15) say `14 px · 1 px · blur 16`, and the widest tile now needs 220px. Narrower than
+    its content, a `white-space:nowrap` tile draws over its own border.
+  -->
   <div
-    style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px"
+    style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px"
     role="radiogroup"
     aria-label="Theme"
   >

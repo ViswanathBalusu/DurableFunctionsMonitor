@@ -54,12 +54,17 @@
 </div>
 
 {#each response.children as child (child.instanceId)}
-  <div class="row" style="justify-content:space-between">
-    <!-- The name is what is read; the id is where the link goes, and what its tooltip says -->
+  <div class="row" style="justify-content:space-between;flex-wrap:nowrap">
+    <!--
+      The name is what is read; the id is where the link goes, and what its tooltip says. It
+      truncates: a long orchestrator name used to run past the panel and push the status chip out
+      with it, and the tooltip already carries the whole of the id it links to.
+    -->
     <LinkButton
       mono
+      class="trunc-name"
       href={href(child.instanceId)}
-      title={child.instanceId}
+      title={`${child.name} · ${child.instanceId}`}
       onclick={(event) => go(child.instanceId, event)}
     >
       {child.name}

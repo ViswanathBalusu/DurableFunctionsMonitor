@@ -56,10 +56,15 @@
   <SelectPrimitive.Root type="single" bind:value {onValueChange} {disabled}>
     <SelectPrimitive.Trigger
       aria-label={ariaLabel}
-      class={cn(chip ? 'fchip' : 'input', mono ? 'mono' : '')}
+      class={cn('seltrigger', chip ? 'fchip' : 'input', mono ? 'mono' : '')}
       style={size === 'sm' ? 'height:30px' : undefined}
     >
-      {selected?.label ?? ''}
+      <!--
+        The label is its own element so it can end in an ellipsis: the trigger is a button, so
+        dfm-ui.css's `select.input` rule - the one that leaves room for the `.sel::after` arrow -
+        does not reach it, and a label as wide as the box used to run underneath the arrow.
+      -->
+      <span class="seltext">{selected?.label ?? ''}</span>
     </SelectPrimitive.Trigger>
     <SelectPrimitive.Content>
       {#each options as option (option.value)}
