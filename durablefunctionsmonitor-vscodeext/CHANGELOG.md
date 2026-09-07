@@ -1,6 +1,6 @@
 # Change Log
 
-# Unreleased
+# Version 6.11.0
 
 - **Glass and Neu themes**: two more themes in the theme menu, on the Settings screen and in the command palette, each in light and dark, selectable like the five papers and accepted by `DFM_CLIENT_CONFIG` as `"dfmTheme": "glass"` or `"neu"`. Glass is frosted, translucent panes over a soft colour backdrop; Neu is one soft material with every surface raised from it by a pair of shadows and inputs sunk into it.
 
