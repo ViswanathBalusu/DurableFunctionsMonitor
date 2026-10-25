@@ -1,6 +1,6 @@
 # Change Log
 
-# Unreleased
+# Version 6.13.0
 
 - **The extension starts again.** Every route of the backend lives under `/durable-functions-monitor/` since the backend was made hostable at any path, but the extension kept waiting for it on `/a/p/i/...`. The backend came up, the extension never saw it, and gave up after 60 seconds with "No response". The extension now asks where the backend serves, and a test reads the backend's source to keep it that way.
 
@@ -19,6 +19,8 @@
 - **Smaller fixes.** A message sent to a view that was not ready yet (a command from the tree, for a hidden view) is queued until the UI says it is, instead of being lost. `Save as JSON` of the function graph works in the monitor as well. The UI gets an answer to every request it makes of the extension. Event Hub and Service Bus navigation sends the access token, not the object that holds it, and picks the topic when the queue is not the one. A hub name that host.json takes from an app setting (`"%TaskHubName%"`) is read from local.settings.json. A `local.settings.json` with a byte order mark is read. What is typed into **Go to instanceId...**, which goes into the route of the request for suggestions, is encoded.
 
 - **Packaged the way extensions are packaged today.** One bundled file instead of 32 MB of `node_modules` (the VSIX is 48 MB, nearly all of it the backends), no activation events that VsCode makes up from the contributions, commands that only make sense in the context menu are out of the Command Palette, and the dependencies that carried 22 known vulnerabilities (the deprecated `@azure/ms-rest-*`, `adal-node`, `axios`, `crypto-js`, `portscanner`, `rimraf`, `open`) are gone. Requires VsCode 1.100 or newer.
+
+- **Updated dependencies, with no known vulnerabilities left.** The UI the extension shows is built with current versions of its libraries (the Vite dev-server advisories and four transitive ones are gone), and the backends carry current Azure SDK packages. The MSSQL backend no longer ships a `System.Security.Cryptography.Pkcs` with two known denial-of-service advisories.
 
 # Version 6.12.0
 
