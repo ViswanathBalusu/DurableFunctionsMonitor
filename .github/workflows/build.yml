@@ -251,9 +251,19 @@ jobs:
       working-directory: durablefunctionsmonitor-vscodeext
     - name: npm run test:integration durablefunctionsmonitor-vscodeext
       # A real VsCode, which needs a display. It is downloaded by the test runner.
+      # When it fails, the end of what it wrote becomes an annotation of the run: the log of a step can be read by whoever is
+      # signed in, the annotations by anyone, and VsCode writes hundreds of lines of its own around the few that matter.
       run: |
         npm run build
-        xvfb-run -a npm run test:integration
+        set +e
+        xvfb-run -a npm run test:integration 2>&1 | tee "$RUNNER_TEMP/integration.log"
+        code=${PIPESTATUS[0]}
+        set -e
+        if [ "$code" -ne 0 ]; then
+          detail=$(grep -v -F -e '[AgentHost]' -e '[ChatModelSelection]' "$RUNNER_TEMP/integration.log" | tail -n 70 | cut -c1-400 | sed -e 's/%/%25/g' | awk '{printf "%s%%0A", $0}')
+          echo "::error title=integration tests failed (exit code $code)::$detail"
+        fi
+        exit $code
       working-directory: durablefunctionsmonitor-vscodeext
 
     - name: stamp VSIX version and publisher
