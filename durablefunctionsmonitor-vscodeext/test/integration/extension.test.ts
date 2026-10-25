@@ -3,6 +3,7 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs';
+import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -76,6 +77,21 @@ async function waitFor(condition: () => boolean, what: string, timeoutInMs = 200
         }
         await new Promise(resolve => setTimeout(resolve, 100));
     }
+}
+
+// A port that nothing listens on: asked from the system, and given back
+function getClosedPort(): Promise<number> {
+
+    return new Promise((resolve, reject) => {
+
+        const server = net.createServer();
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', () => {
+
+            const port = (server.address() as net.AddressInfo).port;
+            server.close(() => resolve(port));
+        });
+    });
 }
 
 const isAlive = (pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } };
@@ -159,12 +175,28 @@ suite('Durable Functions Monitor', () => {
 
     test('tells that there is no emulator, instead of failing, when nothing listens where the emulator should', async () => {
 
-        // Nothing listens on the default ports of a machine that runs the tests
-        const root = await api.treeDataProvider.getChildren();
-        const emulator = await api.treeDataProvider.getChildren(root.find(n => n.contextValue === 'storageEmulator'));
+        // The default ports are not free of an emulator: CI starts one there, with a Task Hub in it, and so might a developer's machine.
+        // So the emulator is looked for where nothing is.
+        const closed = await getClosedPort();
+        // (The tests are transpiled one by one, not bundled, so they read the manifest and do not import the source)
+        let connString: string = manifest.contributes.configuration.properties[`${Section}.storageEmulatorConnectionString`].default;
+        for (const port of [10000, 10001, 10002]) {
+            connString = connString.split(`127.0.0.1:${port}/`).join(`127.0.0.1:${closed}/`);
+        }
+        await setUserSetting('storageEmulatorConnectionString', connString);
 
-        assert.strictEqual(emulator.length, 1);
-        assert.match(String(emulator[0].label), /No Task Hubs found|Failed to load Task Hubs/);
+        try {
+
+            const root = await api.treeDataProvider.getChildren();
+            const emulator = await api.treeDataProvider.getChildren(root.find(n => n.contextValue === 'storageEmulator'));
+
+            assert.strictEqual(emulator.length, 1);
+            assert.match(String(emulator[0].label), /No Task Hubs found|Failed to load Task Hubs/);
+
+        } finally {
+
+            await setUserSetting('storageEmulatorConnectionString', undefined);
+        }
     });
 
     test('has nothing stored to begin with, and offers to attach', async () => {
