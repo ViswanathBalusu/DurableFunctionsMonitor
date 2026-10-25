@@ -1,0 +1,42 @@
+{
+    "version": "4.16.0",
+    "minimumVersion": "4.1.2",
+    "releaseUrl": "https://github.com/Azure/azure-functions-core-tools/releases/download/4.16.0",
+    "assets": {
+        "win-x64": {
+            "file": "Azure.Functions.Cli.min.win-x64.4.16.0.zip",
+            "size": 74778835,
+            "sha256": "483ff0dfcf0c0c92c4ae1f0ee619ee11673f15c2f7a2c38d65deb3ddda4725e1"
+        },
+        "win-arm64": {
+            "file": "Azure.Functions.Cli.min.win-arm64.4.16.0.zip",
+            "size": 72097879,
+            "sha256": "783cfb4e259c44ea436d928b2ff59b34a9023f245ab241ae8d594e9b6d61f0b2"
+        },
+        "win-x86": {
+            "file": "Azure.Functions.Cli.min.win-x86.4.16.0.zip",
+            "size": 71253706,
+            "sha256": "6da2be2cccfd8bc428d84d7fcd87b669a5631252db33c5031b0cbb365a0fc3c9"
+        },
+        "linux-x64": {
+            "file": "Azure.Functions.Cli.linux-x64.4.16.0.zip",
+            "size": 596110652,
+            "sha256": "c68c7780d94c7583157f7a7d1a05e0ec3e34057c3d55e4c7be71fc4aa0c23667"
+        },
+        "linux-arm64": {
+            "file": "Azure.Functions.Cli.linux-arm64.4.16.0.zip",
+            "size": 254545250,
+            "sha256": "1c0ee40f6808a25556aa98bf4f1d65e8df1989d4bc8ab47a63d6e440bdabfb4e"
+        },
+        "osx-x64": {
+            "file": "Azure.Functions.Cli.osx-x64.4.16.0.zip",
+            "size": 648084887,
+            "sha256": "b56cb2321b95c52999bb4f84004c0f796c3dd666e32fa38b37d78fa190fba692"
+        },
+        "osx-arm64": {
+            "file": "Azure.Functions.Cli.osx-arm64.4.16.0.zip",
+            "size": 620065733,
+            "sha256": "5698d54038fd0507a614af53e8bd3f91c89f96e60ae081c113373b3d2af375f3"
+        }
+    }
+}

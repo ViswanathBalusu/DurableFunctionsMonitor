@@ -1,0 +1,102 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+import type { StorageAccount } from '@azure/arm-storage';
+
+// Helpers for Storage and MSSQL connection strings. Has no dependency on VsCode.
+export class ConnStringUtils {
+
+    // Extracts AccountName from Storage Connection String
+    static GetAccountName(connString: string): string {
+        const match = /AccountName=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : '';
+    }
+
+    // Extracts AccountKey from Storage Connection String
+    static GetAccountKey(connString: string): string {
+        const match = /AccountKey=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : '';
+    }
+
+    // Extracts DefaultEndpointsProtocol from Storage Connection String
+    static GetDefaultEndpointsProtocol(connString: string): string {
+        const match = /DefaultEndpointsProtocol=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : 'https';
+    }
+
+    // Extracts TableEndpoint from Storage Connection String
+    static GetTableEndpoint(connString: string): string {
+
+        const accountName = ConnStringUtils.GetAccountName(connString);
+        if (!accountName) {
+            return '';
+        }
+
+        const endpointsProtocol = ConnStringUtils.GetDefaultEndpointsProtocol(connString);
+
+        const suffixMatch = /EndpointSuffix=([^;]+)/i.exec(connString);
+        if (!!suffixMatch && suffixMatch.length > 0) {
+
+            return `${endpointsProtocol}://${accountName}.table.${suffixMatch[1]}/`;
+        }
+
+        const endpointMatch = /TableEndpoint=([^;]+)/i.exec(connString);
+        return (!!endpointMatch && endpointMatch.length > 0) ? endpointMatch[1] : `${endpointsProtocol}://${accountName}.table.core.windows.net/`;
+    }
+
+    // Replaces 'UseDevelopmentStorage=true' with the full Storage Emulator connection string
+    static ExpandEmulatorShortcutIfNeeded(connString: string, emulatorConnString: string): string {
+
+        if (connString.includes('UseDevelopmentStorage=true')) {
+            return emulatorConnString;
+        }
+
+        return connString;
+    }
+
+    // Extracts server name from MSSQL Connection String
+    static GetSqlServerName(connString: string): string {
+        const match = /(Data Source|Server)=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 1) ? match[2] : '';
+    }
+
+    // Extracts database name from MSSQL Connection String
+    static GetSqlDatabaseName(connString: string): string {
+        const match = /Initial Catalog=([^;]+)/i.exec(connString);
+        return (!!match && match.length > 0) ? match[1] : '';
+    }
+
+    // Extracts human-readable storage name from a bunch of connection strings
+    static GetStorageName(connString: string): string {
+
+        const serverName = this.GetSqlServerName(connString);
+
+        if (!serverName) {
+            return this.GetAccountName(connString);
+        }
+
+        const dbName = this.GetSqlDatabaseName(connString);
+
+        return serverName + (!dbName ? '' : '/' + dbName);
+    }
+
+    // Replaces AccountKey with stars
+    static MaskStorageConnString(connString: string): string {
+        return connString.replace(/AccountKey=[^;]+/gi, 'AccountKey=*****');
+    }
+
+    // Formats Storage Connection String for a given StorageAccount
+    static getConnectionStringForStorageAccount(account: StorageAccount, storageKey?: string): string {
+
+        const endpoints = account.primaryEndpoints ?
+            `BlobEndpoint=${account.primaryEndpoints.blob};QueueEndpoint=${account.primaryEndpoints.queue};TableEndpoint=${account.primaryEndpoints.table};FileEndpoint=${account.primaryEndpoints.file};`
+            :
+            `BlobEndpoint=https://${account.name}.blob.core.windows.net/;QueueEndpoint=https://${account.name}.queue.core.windows.net/;TableEndpoint=https://${account.name}.table.core.windows.net/;FileEndpoint=https://${account.name}.file.core.windows.net/;`;
+
+        if (!storageKey) {
+            return `DefaultEndpointsProtocol=https;AccountName=${account.name};${endpoints}`;
+        }
+
+        return `DefaultEndpointsProtocol=https;AccountName=${account.name};AccountKey=${storageKey};${endpoints}`;
+    }
+}

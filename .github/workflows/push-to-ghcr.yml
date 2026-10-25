@@ -110,17 +110,17 @@ jobs:
       # storage layer, so here an unreachable emulator has to be a failure instead.
       DFM_TEST_REQUIRE_STORAGE: "true"
 
-    services:
-      # Storage emulator for tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests
-      azurite:
-        image: mcr.microsoft.com/azure-storage/azurite
-        ports:
-          - 10000:10000
-          - 10001:10001
-          - 10002:10002
-
     steps:
     - uses: actions/checkout@v4
+
+    # Storage emulator for tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests.
+    # Started from npm and not as a service container, for the reason build.yml gives at its 'start Azurite' step:
+    # the Azure Storage SDKs ask for a service API version that is newer than the newest Azurite knows.
+    # (Node is on the runner already.)
+    - name: start Azurite
+      run: |
+        mkdir -p "$RUNNER_TEMP/azurite"
+        nohup npx --yes azurite@3.37.0 --silent --skipApiVersionCheck --location "$RUNNER_TEMP/azurite" > "$RUNNER_TEMP/azurite.log" 2>&1 &
 
     # Testing .NET
 

@@ -1,5 +1,25 @@
 # Change Log
 
+# Unreleased
+
+- **The extension starts again.** Every route of the backend lives under `/durable-functions-monitor/` since the backend was made hostable at any path, but the extension kept waiting for it on `/a/p/i/...`. The backend came up, the extension never saw it, and gave up after 60 seconds with "No response". The extension now asks where the backend serves, and a test reads the backend's source to keep it that way.
+
+- **Azure Functions Core Tools are downloaded when there are none.** The first time a Task Hub is opened on a machine that has no Core Tools (or only one older than 4.1.2), the extension downloads the release it was tested with - about 70 MB on Windows, 240 to 620 MB elsewhere - checks it against a SHA-256 that ships with the extension, and keeps it in its global storage. The new setting `durableFunctionsMonitor.coreTools.download` (`always`, `prompt`, `never`) controls it, and the new command **Durable Functions Monitor: Download Azure Functions Core Tools** does it on demand.
+
+- **A missing .NET runtime is said so.** The backends are built for .NET 10, and without the runtime func starts and its worker never does, with nothing to point to why. The extension checks first, and offers to install the runtime with the .NET Install Tool.
+
+- **The Durable Functions view has an Activity Bar icon of its own.** It was contributed to the Azure view container, which does not exist without another extension, so VsCode put the view into the Explorer, collapsed, at the bottom.
+
+- **A backend that cannot be started says why.** Anything func writes to stderr used to fail the start, and a process that could not be spawned, or that died, was noticed by nobody. Now the start fails when the process dies, or when it says that it cannot work (a bad connection string, a missing runtime, a port it cannot listen on), with the last lines it wrote, and `Durable Functions Monitor: Show Log` shows all of them.
+
+- **Ports are picked by listening on them.** Windows reserves ranges of ports (Hyper-V, WSL), and nothing answers on those, so a probe that only asks whether something answers on a port picked them, and the backend then failed with `EACCES`. A port that turns out to be unavailable is retried on another one. Stopping the backend now stops what it started as well, so a closed VsCode no longer leaves a worker holding a port.
+
+- **The webview is hardened.** It has a Content Security Policy with a nonce per view, the instance id and the Task Hub name are written into the page as JSON that cannot close the script (`</script>`, line separators), and the UI can only ask the backend for what is below its own Task Hub. The settings that decide what is executed (`customPathToAzureFunctionsHost`, `customPathToBackendBinaries`, `backendBaseUrl`) are machine settings: a workspace cannot set them. A workspace that is not trusted is not read for connection strings.
+
+- **Smaller fixes.** A message sent to a view that was not ready yet (a command from the tree, for a hidden view) is queued until the UI says it is, instead of being lost. `Save as JSON` of the function graph works in the monitor as well. The UI gets an answer to every request it makes of the extension. Event Hub and Service Bus navigation sends the access token, not the object that holds it, and picks the topic when the queue is not the one. A hub name that host.json takes from an app setting (`"%TaskHubName%"`) is read from local.settings.json. A `local.settings.json` with a byte order mark is read. What is typed into **Go to instanceId...**, which goes into the route of the request for suggestions, is encoded.
+
+- **Packaged the way extensions are packaged today.** One bundled file instead of 32 MB of `node_modules` (the VSIX is 48 MB, nearly all of it the backends), no activation events that VsCode makes up from the contributions, commands that only make sense in the context menu are out of the Command Palette, and the dependencies that carried 22 known vulnerabilities (the deprecated `@azure/ms-rest-*`, `adal-node`, `axios`, `crypto-js`, `portscanner`, `rimraf`, `open`) are gone. Requires VsCode 1.100 or newer.
+
 # Version 6.12.0
 
 - **Custom time ranges are picked on a calendar**, two months side by side with the window drawn across them, and the two time fields below it still set the time of day on each end.

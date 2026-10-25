@@ -40,15 +40,6 @@ jobs:
       # storage layer, so here an unreachable emulator has to be a failure instead.
       DFM_TEST_REQUIRE_STORAGE: "true"
 
-    services:
-      # Storage emulator for tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests
-      azurite:
-        image: mcr.microsoft.com/azure-storage/azurite
-        ports:
-          - 10000:10000
-          - 10001:10001
-          - 10002:10002
-
     steps:
     - uses: actions/checkout@v4
 
@@ -63,6 +54,18 @@ jobs:
         node-version: 22
         cache: npm
         cache-dependency-path: durablefunctionsmonitor.svelte/package-lock.json
+
+    # Storage emulator for tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests, for the end-to-end
+    # specs, and for the Table discovery tests of the extension.
+    #
+    # Not the docker image as a service container: the Azure Storage SDKs ask for a service API version that is newer
+    # than the newest Azurite knows ("The API version ... is not supported by Azurite"), and Azurite refuses the request,
+    # unless it is started with --skipApiVersionCheck, which a service container cannot be given. Production is not
+    # affected: the Azure Storage service supports every version its SDKs ask for.
+    - name: start Azurite
+      run: |
+        mkdir -p "$RUNNER_TEMP/azurite"
+        nohup npx --yes azurite@3.37.0 --silent --skipApiVersionCheck --location "$RUNNER_TEMP/azurite" > "$RUNNER_TEMP/azurite.log" 2>&1 &
 
     # nuget pack infers no dependencies from a hand-written .nuspec, so a PackageReference added to a
     # library and not mirrored into its .nuspec ships a package that restores and builds fine and then
@@ -225,17 +228,34 @@ jobs:
         cp -r drop/dotnetIsolated-mssql/output     durablefunctionsmonitor-vscodeext/custom-backends/dotnetIsolated-mssql
         cp -r drop/dotnetIsolated-netherite/output durablefunctionsmonitor-vscodeext/custom-backends/dotnetIsolated-netherite
 
-    - name: npm install durablefunctionsmonitor-vscodeext
-      run: npm install
+    - name: npm ci durablefunctionsmonitor-vscodeext
+      run: npm ci
       working-directory: durablefunctionsmonitor-vscodeext
-    - name: npm install -g azure-functions-core-tools@4
-      run: npm install -g azure-functions-core-tools@4
+
+    # The extension is checked before it is packaged: types, lint, the unit tests, and the tests inside of a real VsCode.
+    # No Azure Functions Core Tools are installed for them. The extension downloads its own when it needs them,
+    # and the integration tests start a stand-in for func.
+    - name: npm run typecheck durablefunctionsmonitor-vscodeext
+      run: npm run typecheck
       working-directory: durablefunctionsmonitor-vscodeext
-    - name: run tests on durablefunctionsmonitor-vscodeext
-      # TODO: vscode test pipeline was broken, need to investigate and fix
-      if: 'false'
-      run: npm run test
+    - name: npm run lint durablefunctionsmonitor-vscodeext
+      run: npm run lint
       working-directory: durablefunctionsmonitor-vscodeext
+    - name: npm run test:unit durablefunctionsmonitor-vscodeext
+      # These read the C# source of the backend (routes, header, environment variables), so that the extension cannot
+      # fall behind it again, and run the Table discovery against the Azurite of this job, with the task hub that was seeded above.
+      # The account key is the one every Storage emulator has.
+      env:
+        DFM_TEST_STORAGE_CONNECTION_STRING: AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;DefaultEndpointsProtocol=http;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;
+      run: npm run test:unit
+      working-directory: durablefunctionsmonitor-vscodeext
+    - name: npm run test:integration durablefunctionsmonitor-vscodeext
+      # A real VsCode, which needs a display. It is downloaded by the test runner.
+      run: |
+        npm run build
+        xvfb-run -a npm run test:integration
+      working-directory: durablefunctionsmonitor-vscodeext
+
     - name: stamp VSIX version and publisher
       env:
         VERSION: ${{ inputs.version }}

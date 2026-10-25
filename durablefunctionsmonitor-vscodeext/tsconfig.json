@@ -1,26 +1,22 @@
 {
-	"compilerOptions": {
-		"module": "node16",
-		"moduleResolution": "node16",
-		"target": "es2019",
-		"outDir": "out",
-		"lib": [
-            "dom",
-			"es2019"
-		],
-		"sourceMap": true,
-        "rootDir": "src",
-		"strict": true,   /* enable all strict type-checking options */
-		/* Additional Checks */
-		// "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-		// "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-        // "noUnusedParameters": true,  /* Report errors on unused parameters. */
-        
+    "compilerOptions": {
+        // esbuild bundles and transpiles; tsc is only the type checker (see "typecheck" in package.json)
+        "noEmit": true,
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "target": "ES2022",
+        // No "dom": this runs in the extension host (Node), where fetch and AbortSignal come from @types/node
+        "lib": ["ES2022"],
+        "types": ["node", "mocha"],
+        "strict": true,
+        "noImplicitOverride": true,
+        "noFallthroughCasesInSwitch": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
         "resolveJsonModule": true
-	},
-	"exclude": [
-		"node_modules",
-        ".vscode-test",
-        "backend"
-	]
+    },
+    "include": ["src", "test", "scripts"],
+    "exclude": ["node_modules", "dist", "out", "backend", "custom-backends", ".vscode-test"]
 }

@@ -9,11 +9,11 @@ List/monitor/debug your Azure Durable Functions inside VsCode.
 * Get a bird's eye view of any Azure Functions project in form of a graph - **Command Palette -> Visualize Functions as a Graph...**. 
 * List your Orchestrations and/or Durable Entities, with sorting, infinite scrolling and auto-refresh.
 * Monitor the status of a certain Orchestration/Durable Entity. Restart, Purge, Rewind, Terminate, Raise Events.
-* Start new orchestration instances - **AZURE view container -> DURABLE FUNCTIONS -> [right-click on your TaskHub] -> Start New Orchestration Instance...**
-* Quickly navigate to an Orchestration/Entity instance by its ID - **Command Palette -> Durable Functions Monitor: Go to instanceId...** or **Azure Functions View Container -> DURABLE FUNCTIONS -> [right-click on your TaskHub] -> Go to instanceId...**
+* Start new orchestration instances - **Durable Functions Monitor activity bar icon -> DURABLE FUNCTIONS -> [right-click on your TaskHub] -> Start New Orchestration Instance...**
+* Quickly navigate to an Orchestration/Entity instance by its ID - **Command Palette -> Durable Functions Monitor: Go to instanceId...** or **Durable Functions Monitor activity bar icon -> DURABLE FUNCTIONS -> [right-click on your TaskHub] -> Go to instanceId...**
 * Purge Orchestrations/Durable Entities history - **Command Palette -> Durable Functions Monitor: Purge History...**
 * Cleanup deleted Durable Entities - **Command Palette -> Durable Functions Monitor: Clean Entity Storage...**
-* Observe all Task Hubs in your Azure Subscription and connect to them - **AZURE view container -> DURABLE FUNCTIONS**
+* Observe all Task Hubs in your Azure Subscription and connect to them - **Durable Functions Monitor activity bar icon -> DURABLE FUNCTIONS**
 * Delete Task Hubs - **Command Palette -> Delete Task Hub...**
 
 See the [complete list of features in our wiki](https://github.com/microsoft/DurableFunctionsMonitor/wiki#features).
@@ -34,16 +34,14 @@ The full tour, the keyboard map, the capability matrix and every setting are in
 
 ## How to run
 
-After installing this extension from the Marketplace or from a VSIX-file the **DURABLE FUNCTIONS** tab should appear on **AZURE** view container:
+After installing this extension from the Marketplace or from a VSIX-file, a **Durable Functions Monitor** icon appears in the Activity Bar, with the **DURABLE FUNCTIONS** view behind it. It is there on its own: no other extension is needed for it to show up.
 
-<img src="https://user-images.githubusercontent.com/5447190/216991871-b3f221e0-0bdc-4c4e-8c5a-a1e84b4b48a7.png" width="300px" style="display:block; margin:auto"/>
-
-NOTE: if you don't have [Azure Account](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account) extension installed, the tab will appear on the default **EXPLORER** view container.
+The first time you open a Task Hub, the monitor starts its backend, and for that it needs [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local) and the .NET runtime. If they are not on your machine, the extension gets them: see [Prerequisites](#prerequisites). Nothing has to be installed by hand before you start.
 
 **DURABLE FUNCTIONS** tab shows Task Hubs automatically discovered from:
-* Your Azure Subscription(s), if you're signed in into Azure. To sign in into Azure use `Azure: Sign In` command. To (un)filter the list of shown Azure Subscriptions, use `Azure: Select Subscriptions` command.
-* Your currently opened project, if it is an Azure Functions project.
-* Local Storage Emulator, if it is running.
+* Your Azure Subscription(s), if you're signed in into Azure. To sign in into Azure click **Sign in to Azure...** in the view. If you have the [Azure Resources](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azureresourcegroups) extension, its `Azure: Select Subscriptions` filter is respected.
+* Your currently opened project, if it is an Azure Functions project (and the workspace is [trusted](https://code.visualstudio.com/docs/editor/workspace-trust): the connection strings of `local.settings.json` are not read from a workspace that is not).
+* Local Storage Emulator, if it is running. On Windows, Hyper-V and WSL may reserve the default Azurite ports (10000-10002) for themselves, and then Azurite fails with `EACCES`. Start it on other ports and put them into the `durableFunctionsMonitor.storageEmulatorConnectionString` setting.
 
 In addition to that you can also connect to arbitrary Storage accounts or Microsoft SQL Server/Azure SQL databases. Either click on ![image](https://user-images.githubusercontent.com/5447190/216996327-8a31e4cf-9446-4302-b147-f85fb0a85b9c.png)
  button or use `Attach to Task Hub...` command. You will be asked for a Connection String (it can be either Azure Storage or Microsoft SQL Server connection string) and a Task Hub name to connect to. The entered Connection Strings are persisted with [VsCode SecretStorage API](https://code.visualstudio.com/api/references/vscode-api#SecretStorage) (On Windows you should be able to see them in Windows Credential Manager). 
@@ -108,22 +106,52 @@ and follow the flow.
 
 ## Prerequisites
 
-* Make sure you have the latest [Azure Functions Core Tools](https://www.npmjs.com/package/azure-functions-core-tools) globally installed on your devbox.
+The backend the monitor starts for you is an Azure Functions app, built for .NET 10. It needs two things, and the extension takes care of both:
 
-* [Azure Account](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account) VsCode extension is not required, but highly recommended. To login into Azure execute the **Azure: Sign In** command in Command Palette. To filter the list of Azure subscriptions shown execute the **Azure: Select Subscriptions** command.
+* **Azure Functions Core Tools** (`func`), version 4.1.2 or newer. The extension looks, in this order, at:
+  1. the executable the `durableFunctionsMonitor.customPathToAzureFunctionsHost` setting points to;
+  2. the copy it downloaded earlier;
+  3. an Azure Functions Core Tools that is installed on your machine (`PATH`, the Windows installer, Homebrew, npm);
+  4. and if there is none, it **downloads** the release it was tested with from [github.com/Azure/azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools/releases), the first time you open a Task Hub. A progress notification shows it. The download is checked against a SHA-256 checksum that is part of the extension, so a file that is not the one that was tested is not run. It is about 70 MB on Windows, and 240 to 620 MB on Linux and macOS, where there is no smaller package. It is kept in the extension's global storage, so it is downloaded once. The command **Durable Functions Monitor: Download Azure Functions Core Tools** does it on demand.
+
+  The `durableFunctionsMonitor.coreTools.download` setting says what happens when there is none: `always` (the default), `prompt` (ask first) or `never`.
+
+* The **.NET 10 runtime**. If it is missing, the monitor says so, and offers to install it with the [.NET Install Tool](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.vscode-dotnet-runtime) extension, which keeps it apart from the .NET of your machine.
+
+Signing in to Azure, to list the Task Hubs of your subscriptions, uses the Microsoft sign-in that is built into VsCode. No other extension is needed.
+
+## Troubleshooting
+
+Run **Durable Functions Monitor: Show Log**: everything the extension does, and every line its backend writes, is there.
+
+* *"The backend could not listen on its port"*: something uses the port, or Windows has reserved it. The monitor picks a free port from `durableFunctionsMonitor.backendBaseUrl` (by default 37072 to 38000, `http://localhost:{portNr}`) by trying to listen on it, and tries another one if that fails. If all of them are taken, give it another range: `http://localhost:[8080-9080]`.
+* *"No response within 60 seconds"*: the backend did not come up. The last lines it wrote are in the message. A firewall that blocks `localhost`, or a slow disk, can be the reason: `durableFunctionsMonitor.backendTimeoutInSeconds` gives it more time.
+* *"Windows cannot start a program from a path of ... characters"*: the path to `func.exe` is longer than the 259 characters Windows allows for starting a program. Put Azure Functions Core Tools in a shorter folder, and set `durableFunctionsMonitor.customPathToAzureFunctionsHost` to it.
+* *The Task Hub of the local Storage Emulator is not listed*: see the note about Azurite ports above.
+
+The settings that decide what is executed (`customPathToAzureFunctionsHost`, `customPathToBackendBinaries`, `backendBaseUrl`, `coreTools.download`) can only be set in your user settings, not in a workspace, so that a project you open cannot make the extension run a program of its own.
 
 ## How to compile and run this project locally
 
-This project is a typical [VsCode extension](https://code.visualstudio.com/api/get-started/your-first-extension), so to run/debug it locally you just open these sources in your VsCode and press F5. 
-But before that you'll need to get the [backend](https://github.com/microsoft/DurableFunctionsMonitor/tree/main/durablefunctionsmonitor.dotnetisolated) binaries compiled and copied:
-* Go to [durablefunctionsmonitor.dotnetisolated](https://github.com/microsoft/DurableFunctionsMonitor/tree/main/durablefunctionsmonitor.dotnetisolated) folder.
-* Execute `dotnet publish -o ../durablefunctionsmonitor-vscodeext/backend` there with your command line. This will compile the backend and place its binaries into the newly created **durablefunctionsmonitor-vscodeext/backend** subfolder.
+This project is a typical [VsCode extension](https://code.visualstudio.com/api/get-started/your-first-extension): TypeScript, bundled into a single file by [esbuild](https://esbuild.github.io/), tested with [Vitest](https://vitest.dev/) and with a real VsCode. Everything below is run in the **durablefunctionsmonitor-vscodeext** folder.
 
-The custom backends (used for MSSQL and Netherite storage providers) are shipped as *published binaries* too, because they reference **durablefunctionsmonitor.dotnetisolated.\*** by project reference. From the repo root:
-* `dotnet publish custom-backends/dotnetIsolated-mssql -o durablefunctionsmonitor-vscodeext/custom-backends/dotnetIsolated-mssql`
-* `dotnet publish custom-backends/dotnetIsolated-netherite -o durablefunctionsmonitor-vscodeext/custom-backends/dotnetIsolated-netherite`
+1. `npm install`
+2. The backends the extension starts are shipped as *published binaries*, so they have to be published once, and again whenever the backend changes. **F5 runs what is in these folders, so a stale copy is what you will be debugging.** From the repo root:
+   * `dotnet publish durablefunctionsmonitor.dotnetisolated -c Release --output durablefunctionsmonitor-vscodeext/backend`
+   * `dotnet publish custom-backends/dotnetIsolated-mssql -c Release --output durablefunctionsmonitor-vscodeext/custom-backends/dotnetIsolated-mssql`
+   * `dotnet publish custom-backends/dotnetIsolated-netherite -c Release --output durablefunctionsmonitor-vscodeext/custom-backends/dotnetIsolated-netherite`
 
-Now you'll also need to do `npm install` in **durablefunctionsmonitor-vscodeext** folder. 
+   The UI the backends serve is in their **DfmStatics** folder, which `npm run build-and-copy` in **durablefunctionsmonitor.svelte** refreshes.
+3. Press F5. This starts a sandbox VsCode instance with the extension running in it from sources, and rebuilds it whenever you save.
 
-Then finally you can press F5. This will start a sandbox VsCode instance, with **DfMon** extension running in it from sources. 
+| | |
+|---|---|
+| `npm run compile` | type check, then bundle |
+| `npm run lint` | ESLint |
+| `npm test` | the unit tests, which need no VsCode |
+| `npm run test:integration` | tests inside a real VsCode (`npm run build` first; set `DFM_VSCODE_PATH` to the `Code` executable to use the one you have instead of downloading one) |
+| `npm run package` | the VSIX |
+| `npm run update-core-tools [version]` | pins another release of Azure Functions Core Tools: the file names, sizes and checksums go to `src/coreTools/manifest.json` |
+
+The unit tests include a *contract test*, which reads the C# source of the backend and fails when the routes, the header or the environment variables it uses are not those the extension uses. When the backend changes its routes, that is the test that says so, and the constants to change are in `src/constants.ts`.
 

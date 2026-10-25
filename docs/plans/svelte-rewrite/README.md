@@ -42,35 +42,35 @@ When a mockup and a design document disagree, the mockup wins for visuals and co
 | D13 | A family is one plain-CSS sheet, `src/styles/families/<key>.css`, every rule scoped under its own `[data-theme]`, declaring every token Poster declares in both modes. It may override `dfm-ui.css` rules for its theme; nothing else may, and the two frozen stylesheets stay verbatim. Shared plumbing (the `--glyph` token) lives in `families/base.css`. | The frozen stylesheets are the contract with the mockups; a soft look needs a few overrides (hover motion, table backgrounds, the overlay) that `dfm-ext.css` is forbidden to make. |
 | D14 | The design system's §3 rules split in two. Universal, every family: status is a solid fill with dark text and keeps its hue; colour is a vocabulary; one loud element per screen; sentence case; verb + object on destructive buttons; icons never alone; the focus ring is a colour, never the line; motion only in answer to an action. Brutalist only: ink outline, hard offset shadow, no alpha, no gradients, no blur, paper patterns. `--glyph` is the colour of a small solid mark; it is `--ink` in the papers and a strong colour in the soft families. | Glass needs translucency and blur, Neu needs soft dual shadows and no line; the rules that carry meaning survive, the ones that describe the brutalist look do not. |
 
-## Package versions (resolved 2026-09-04, pin these)
+## Package versions (resolved 2026-09-04, bumped to the latest stable on 2026-10-24, pin these)
 
 | Package | Version | Notes |
 |---|---|---|
-| svelte | 5.57.0 | runes only |
-| vite | 8.2.2 | |
-| @sveltejs/vite-plugin-svelte | 7.3.0 | |
+| svelte | 5.57.2 | runes only |
+| vite | 8.3.5 | |
+| @sveltejs/vite-plugin-svelte | 7.3.1 | |
 | tailwindcss, @tailwindcss/vite | 4.3.3 | |
-| bits-ui | 2.19.0 | peer `@internationalized/date ^3.8.1` |
-| shadcn-svelte (CLI, dev) | 1.6.1 | Tailwind v4 mode |
+| bits-ui | 2.19.5 | peer `@internationalized/date ^3.8.1`. **Held below 2.20.0 on purpose:** 2.20.0 gives `Select.Trigger` the `combobox` role (bits-ui#2216), where every release before it renders a `button`, and the unit tests and e2e specs look the Select trigger up as a button. Adopting 2.20+ means changing those queries to `combobox`, in `src/**/*.test.ts` and `tests/e2e`. |
+| shadcn-svelte (CLI, dev) | 1.7.1 | Tailwind v4 mode |
 | mode-watcher | 1.1.0 | |
-| @lucide/svelte | 1.41.0 | not `lucide-svelte` (that package is stale) |
+| @lucide/svelte | 1.61.0 | not `lucide-svelte` (that package is stale) |
 | svelte-sonner | 1.2.1 | |
-| @tanstack/table-core | 9.2.4 | via shadcn data-table |
-| @tanstack/svelte-virtual | 3.13.36 | |
+| @tanstack/table-core | 9.3.1 | via shadcn data-table |
+| @tanstack/svelte-virtual | 3.13.48 | |
 | svelte-jsoneditor | 3.13.0 | |
 | d3 | 7.9.0 | + `@types/d3` 7.4.3 |
-| @xyflow/svelte | 1.6.6 | |
-| @dagrejs/dagre | 3.1.1 | |
+| @xyflow/svelte | 1.7.0 | |
+| @dagrejs/dagre | 3.1.3 | |
 | @internationalized/date | 3.12.4 | |
-| @azure/msal-browser | 5.21.0 | |
+| @azure/msal-browser | 5.26.0 | |
 | @fontsource-variable/archivo, @fontsource-variable/jetbrains-mono | 5.3.0 | used in E12 only |
 | typescript | 5.9.3 | do not use TypeScript 7 yet; `svelte-check` 4.x targets 5.x |
-| svelte-check | 4.7.6 | |
-| vitest | 5.0.0 | with `jsdom` 30.0.1 |
+| svelte-check | 4.7.7 | |
+| vitest | 5.0.5 | with `jsdom` 30.1.3 |
 | @testing-library/svelte | 5.4.2 | |
-| @playwright/test | 1.63.0 | |
-| @azure/data-tables, @azure/storage-blob, @azure/storage-queue (dev, e2e seed) | 13.3.2, 12.33.0, 12.31.0 | |
-| Azure.Storage.Queues (NuGet) | 12.27.1 | backend B4 |
+| @playwright/test | 1.64.1 | |
+| @azure/data-tables, @azure/storage-blob, @azure/storage-queue (dev, e2e seed) | 13.3.2, 12.34.0, 12.32.0 | |
+| Azure.Storage.Queues (NuGet) | 12.28.1 | backend B4 |
 
 Toolchain on the reference machine: Node 22.23.2 (pinned in the repo-root `.node-version`; install with `fnm install` and let `fnm env --use-on-cd` select it), npm 11.6, .NET SDK 10.0.400, Azure Functions Core Tools 4 (`func` 4.126.0 from `%LOCALAPPDATA%/AzureFunctionsTools/Releases/4.126.0/cli_x64`).
 

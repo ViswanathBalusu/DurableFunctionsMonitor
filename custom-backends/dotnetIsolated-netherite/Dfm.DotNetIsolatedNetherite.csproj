@@ -9,11 +9,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Netherite" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Netherite" Version="3.1.2" />
   </ItemGroup>
 
   <!-- Copying statics -->
-  <ItemGroup >
+  <ItemGroup>
       <Content Include="$(MSBuildThisFileDirectory)\..\..\durablefunctionsmonitor.dotnetisolated\DfmStatics\**" LinkBase="DfmStatics\">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </Content>

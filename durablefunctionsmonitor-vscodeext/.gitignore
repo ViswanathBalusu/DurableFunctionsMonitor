@@ -104,3 +104,5 @@ bin
 obj
 appsettings.json
 local.settings.json
+# Test fixtures are meant to be checked in, whatever they are called
+!test/fixtures/**/local.settings.json

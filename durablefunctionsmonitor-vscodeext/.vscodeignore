@@ -1,10 +1,13 @@
-.vscode/**
-.vscode-test/**
-out/test/**
-src/**
-.gitignore
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/tslint.json
-**/*.map
-**/*.ts
+# Allow-list: the extension is one bundled file plus the backends it starts and its resources.
+# Everything else (sources, tests, tooling, node_modules, source maps) stays out of the VSIX.
+**
+
+!package.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!logo.png
+!dist/extension.js
+!resources/**
+!backend/**
+!custom-backends/**
