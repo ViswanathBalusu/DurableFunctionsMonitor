@@ -40,6 +40,14 @@
 
   const selected = $derived(options.find((option) => option.value === value));
 
+  /**
+   * What the trigger is called. An `aria-label` of its own replaces the button's content as its name,
+   * so a screen reader would never say which option is chosen, and a person who drives the page by
+   * speaking what it shows ("click Last 24 hours") would have no name to say. WCAG 2.5.3 (Label in
+   * Name) wants the visible text inside the name; axe checks it since 4.14 (label-content-name-mismatch).
+   */
+  const name = $derived(selected?.label ? `${ariaLabel}: ${selected.label}` : ariaLabel);
+
   function onValueChange(next: string): void {
     value = next as T;
     onchange?.(next as T);
@@ -55,7 +63,7 @@
 <div class={cn('sel', className)} style={width ? `width:${width}` : undefined}>
   <SelectPrimitive.Root type="single" bind:value {onValueChange} {disabled}>
     <SelectPrimitive.Trigger
-      aria-label={ariaLabel}
+      aria-label={name}
       class={cn('seltrigger', chip ? 'fchip' : 'input', mono ? 'mono' : '')}
       style={size === 'sm' ? 'height:30px' : undefined}
     >

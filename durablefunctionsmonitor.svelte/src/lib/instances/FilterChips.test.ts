@@ -41,7 +41,7 @@ describe('FilterChips', () => {
 
     expect(screen.getByRole('button', { name: '+ status' })).toHaveClass('fchip', 'add');
     expect(screen.getByRole('button', { name: '+ orchestrator' })).toHaveClass('add');
-    expect(screen.getByRole('button', { name: 'Time range' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Time range/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '+ include entities' })).toHaveClass('add');
 
     // Nothing is filtered yet, so there is nothing to clear
@@ -151,7 +151,7 @@ describe('FilterChips', () => {
     const onQuery = vi.fn();
     const { component } = mount({ onQuery });
 
-    const trigger = screen.getByRole('button', { name: 'Time range' });
+    const trigger = screen.getByRole('button', { name: /^Time range/ });
     await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
 
     // bits-ui selects on pointerup, which is what a click in jsdom is not

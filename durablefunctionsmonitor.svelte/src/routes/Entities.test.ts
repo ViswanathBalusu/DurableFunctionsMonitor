@@ -186,7 +186,7 @@ describe('Entities: the filter chips', () => {
   it('opens on the last seven days, and narrows to what the user picks', async () => {
     const { app, queries } = await mounted();
 
-    const select = screen.getByRole('button', { name: 'Updated in' });
+    const select = screen.getByRole('button', { name: /^Updated in/ });
 
     expect(select).toHaveTextContent('Updated in the last 7 days');
     expect(select).toHaveClass('fchip');

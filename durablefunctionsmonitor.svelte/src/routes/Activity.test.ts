@@ -59,9 +59,12 @@ async function mounted(options: Parameters<typeof mount>[0] = {}) {
   return rendered;
 }
 
-/** Picks an option out of a bits-ui select, which does not answer to a plain click in jsdom. */
+/**
+ * Picks an option out of a bits-ui select, which does not answer to a plain click in jsdom. The select is
+ * found by its label, which its accessible name starts with ("Time range: Last 24 hours").
+ */
 async function pick(select: string, option: string): Promise<void> {
-  await fireEvent.keyDown(screen.getByRole('button', { name: select }), { key: 'ArrowDown' });
+  await fireEvent.keyDown(screen.getByRole('button', { name: new RegExp(`^${select}`) }), { key: 'ArrowDown' });
 
   const item = await screen.findByRole('option', { name: option });
 
@@ -78,8 +81,8 @@ describe('Activity: the title row', () => {
     expect(screen.getByRole('heading', { name: 'Activity', level: 1 })).toHaveClass('display');
 
     // ScreenActivity.dc.html L18-L21
-    expect(screen.getByRole('button', { name: 'Time range' })).toHaveTextContent('Last 24 hours');
-    expect(screen.getByRole('button', { name: 'Operation' })).toHaveTextContent('All operations');
+    expect(screen.getByRole('button', { name: /^Time range/ })).toHaveTextContent('Last 24 hours');
+    expect(screen.getByRole('button', { name: /^Operation/ })).toHaveTextContent('All operations');
     expect(document.querySelector('.ptitle .meta')?.textContent).toBe('6 entries');
   });
 
@@ -113,7 +116,7 @@ describe('Activity: the title row', () => {
   it('offers the batch operations under the names the backend records them by', async () => {
     await mounted();
 
-    await fireEvent.keyDown(screen.getByRole('button', { name: 'Operation' }), { key: 'ArrowDown' });
+    await fireEvent.keyDown(screen.getByRole('button', { name: /^Operation/ }), { key: 'ArrowDown' });
 
     expect(await screen.findByRole('option', { name: 'Batch terminate' })).toBeInTheDocument();
     // A bare `Batch` would match nothing: the middleware records the action it ran

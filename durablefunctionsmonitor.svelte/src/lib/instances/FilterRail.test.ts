@@ -27,8 +27,8 @@ describe('FilterRail', () => {
   it('is the row of the mockup: column, operator, value, Apply and Refresh', async () => {
     mount();
 
-    expect(screen.getByRole('button', { name: 'Filtered column' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Filter operator' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Filtered column/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Filter operator/ })).toBeInTheDocument();
 
     const value = screen.getByRole('textbox', { name: 'Filter value' });
     expect(value).toHaveClass('input', 'mono');
@@ -83,7 +83,7 @@ describe('FilterRail', () => {
 
     await waitFor(() => expect(onQuery).toHaveBeenCalledOnce());
 
-    const trigger = screen.getByRole('button', { name: 'Filter operator' });
+    const trigger = screen.getByRole('button', { name: /^Filter operator/ });
     await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
 
     const option = await screen.findByRole('option', { name: 'Contains' });

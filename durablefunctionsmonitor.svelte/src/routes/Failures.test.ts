@@ -59,7 +59,7 @@ describe('Failures: the title row', () => {
 
     expect(document.querySelector('section.page[data-screen-label="Failures"]')).not.toBeNull();
     expect(screen.getByRole('heading', { name: 'Failures', level: 1 })).toHaveClass('display');
-    expect(screen.getByRole('button', { name: 'Time range' })).toHaveTextContent('Last 24 hours');
+    expect(screen.getByRole('button', { name: /^Time range/ })).toHaveTextContent('Last 24 hours');
 
     // ScreenFailures.dc.html L20-L21
     const meta = document.querySelector('.ptitle .meta') as HTMLElement;
@@ -84,7 +84,7 @@ describe('Failures: the title row', () => {
   it('reloads for the range the user picks, and shares it with every screen', async () => {
     const { app } = await mounted();
 
-    await fireEvent.keyDown(screen.getByRole('button', { name: 'Time range' }), { key: 'ArrowDown' });
+    await fireEvent.keyDown(screen.getByRole('button', { name: /^Time range/ }), { key: 'ArrowDown' });
 
     // bits-ui selects on pointerup, which is what a click in jsdom is not
     const option = await screen.findByRole('option', { name: 'Last 7 days' });

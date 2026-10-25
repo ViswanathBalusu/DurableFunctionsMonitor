@@ -50,7 +50,7 @@ describe('Overview: the title row', () => {
     expect(document.querySelector('section.page[data-screen-label="Overview"]')).not.toBeNull();
     expect(screen.getByRole('heading', { name: 'Overview', level: 1 })).toHaveClass('display');
 
-    expect(screen.getByRole('button', { name: 'Time range' })).toHaveTextContent('Last 24 hours');
+    expect(screen.getByRole('button', { name: /^Time range/ })).toHaveTextContent('Last 24 hours');
     expect(screen.getByRole('button', { name: 'Refresh' })).toHaveClass('ghost');
 
     await waitFor(() =>

@@ -72,23 +72,32 @@ describe('Select', () => {
   it('shows the label of the chosen option inside a .sel wrapper', () => {
     render(Select, { props: { options, value: '24h', ariaLabel: 'Time range' } as never });
 
-    const trigger = screen.getByRole('button', { name: 'Time range' });
+    const trigger = screen.getByRole('button', { name: /^Time range/ });
     expect(trigger).toHaveClass('input');
     expect(trigger.textContent?.trim()).toBe('Last 24 hours');
     expect(trigger.closest('.sel')).not.toBeNull();
   });
 
+  it('is named after its label and the option chosen, so that what is on the button is in its name', async () => {
+    render(Select, { props: { options, value: '24h', ariaLabel: 'Time range' } as never });
+
+    // WCAG 2.5.3 (axe: label-content-name-mismatch): an aria-label of its own would hide the value
+    // from a screen reader and leave a person who speaks what they see with nothing to say
+    const trigger = screen.getByRole('button', { name: 'Time range: Last 24 hours' });
+    expect(trigger.textContent?.trim()).toBe('Last 24 hours');
+  });
+
   it('renders as a filter chip when asked', () => {
     render(Select, { props: { options, value: '24h', ariaLabel: 'Time range', chip: true } as never });
 
-    expect(screen.getByRole('button', { name: 'Time range' })).toHaveClass('fchip');
+    expect(screen.getByRole('button', { name: /^Time range/ })).toHaveClass('fchip');
   });
 
   it('opens with the keyboard and chooses with Enter', async () => {
     const onchange = vi.fn();
     render(Select, { props: { options, value: '24h', ariaLabel: 'Time range', onchange } as never });
 
-    const trigger = screen.getByRole('button', { name: 'Time range' });
+    const trigger = screen.getByRole('button', { name: /^Time range/ });
 
     await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
     await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument());
@@ -100,13 +109,14 @@ describe('Select', () => {
     await fireEvent.click(option);
 
     await waitFor(() => expect(onchange).toHaveBeenCalledWith('7d'));
-    expect(screen.getByRole('button', { name: 'Time range' }).textContent?.trim()).toBe('Last 7 days');
+    expect(screen.getByRole('button', { name: /^Time range/ }).textContent?.trim()).toBe('Last 7 days');
+    expect(screen.getByRole('button', { name: 'Time range: Last 7 days' })).toBeInTheDocument();
   });
 
   it('closes on Escape', async () => {
     render(Select, { props: { options, value: '24h', ariaLabel: 'Time range' } as never });
 
-    const trigger = screen.getByRole('button', { name: 'Time range' });
+    const trigger = screen.getByRole('button', { name: /^Time range/ });
 
     await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
     await waitFor(() => expect(screen.getByRole('listbox')).toBeInTheDocument());
@@ -119,7 +129,7 @@ describe('Select', () => {
   it('lists the options in a .pop as .mi rows', async () => {
     render(Select, { props: { options, value: '24h', ariaLabel: 'Time range' } as never });
 
-    await fireEvent.keyDown(screen.getByRole('button', { name: 'Time range' }), { key: 'ArrowDown' });
+    await fireEvent.keyDown(screen.getByRole('button', { name: /^Time range/ }), { key: 'ArrowDown' });
 
     await waitFor(() => expect(document.querySelector('.pop')).not.toBeNull());
     expect(document.querySelectorAll('.pop .mi').length).toBe(3);
@@ -129,7 +139,11 @@ describe('Select', () => {
     render(Select, { props: { options, value: '24h', ariaLabel: 'Time range', width: '190px' } as never });
 
     expect(
-      screen.getByRole('button', { name: 'Time range' }).closest('.sel')?.getAttribute('style')?.replace(/\s/g, ''),
+      screen
+        .getByRole('button', { name: /^Time range/ })
+        .closest('.sel')
+        ?.getAttribute('style')
+        ?.replace(/\s/g, ''),
     ).toContain('width:190px');
   });
 });

@@ -65,7 +65,7 @@ describe('TopBar', () => {
 
     expect(screen.getByText('Durable Functions Monitor')).toHaveClass('display');
     expect(await screen.findByRole('button', { name: /DurableFunctionsHub/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Auto-refresh' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Auto-refresh/ })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Show time as' })).toBeInTheDocument();
   });
 

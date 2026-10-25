@@ -21,7 +21,7 @@ function mount(path = '/DurableFunctionsHub') {
 
 /** bits-ui opens on ArrowDown and selects on pointerup, which is what a click in jsdom is not. */
 async function choose(name: string): Promise<void> {
-  await fireEvent.keyDown(screen.getByRole('button', { name: 'Time range' }), { key: 'ArrowDown' });
+  await fireEvent.keyDown(screen.getByRole('button', { name: /^Time range/ }), { key: 'ArrowDown' });
 
   const option = await screen.findByRole('option', { name });
 
@@ -31,7 +31,7 @@ async function choose(name: string): Promise<void> {
 }
 
 function trigger(): HTMLElement {
-  return screen.getByRole('button', { name: 'Time range' });
+  return screen.getByRole('button', { name: /^Time range/ });
 }
 
 describe('TimeRangeSelect', () => {

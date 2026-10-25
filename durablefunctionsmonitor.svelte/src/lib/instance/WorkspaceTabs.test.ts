@@ -129,7 +129,7 @@ describe('WorkspaceTabs', () => {
 
     await waitFor(() => expect(loads).toBe(1));
 
-    const trigger = screen.getByRole('button', { name: 'Auto-refresh' });
+    const trigger = screen.getByRole('button', { name: /^Auto-refresh/ });
     expect(trigger.textContent?.trim()).toBe('Never');
 
     await fireEvent.keyDown(trigger, { key: 'ArrowDown' });
