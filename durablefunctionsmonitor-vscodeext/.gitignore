@@ -1,5 +1,5 @@
-# custom backend binaries for local debugging
-custom-backends
+# custom backend binaries for local debugging (anchored: only the folder at the root of the extension, not src/backend)
+/custom-backends
 
 # vscode test files
 .vscode-test
@@ -7,8 +7,8 @@ custom-backends
 # build output
 *.vsix
 
-# DurableFunctionsMonitor.Functions build output
-backend
+# DurableFunctionsMonitor.Functions build output (anchored: src/backend holds sources)
+/backend
 
 # Logs
 logs
