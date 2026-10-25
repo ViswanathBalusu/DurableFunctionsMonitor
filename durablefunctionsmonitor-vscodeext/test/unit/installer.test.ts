@@ -173,4 +173,38 @@ describe('installCoreTools', () => {
         expect(fs.readFileSync(a, 'utf8')).toBe('func');
         expect(fs.readdirSync(path.join(storage, '4.16.0'))).toEqual([platform.rid]);
     });
+
+    test('many installations at the same time leave nothing behind but the one that works', async () => {
+
+        // A file system that lets a file be removed while another reader has it open (every one but Windows) used to fail one of them
+        const download = publish('4.16.0');
+
+        const paths = await Promise.all(Array.from({ length: 5 }, () => installCoreTools({ storageFolder: storage, platform, download })));
+
+        expect(new Set(paths).size).toBe(1);
+        expect(fs.readFileSync(paths[0], 'utf8')).toBe('func');
+        expect(fs.readdirSync(path.join(storage, '4.16.0'))).toEqual([platform.rid]);
+        expect(fs.readdirSync(path.join(storage, '.downloads'))).toEqual([]);
+    });
+
+    test('removes what an installation that was killed left in the downloads folder, once it is a day old', async () => {
+
+        const download = publish('4.16.0');
+
+        const downloads = path.join(storage, '.downloads');
+        fs.mkdirSync(downloads, { recursive: true });
+
+        const killed = path.join(downloads, 'deadbeef.func.4.15.0.zip');
+        const inProgress = path.join(downloads, 'cafebabe.func.4.16.0.zip');
+        fs.writeFileSync(killed, 'half');
+        fs.writeFileSync(inProgress, 'half');
+
+        const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+        fs.utimesSync(killed, twoDaysAgo, twoDaysAgo);
+
+        await installCoreTools({ storageFolder: storage, platform, download });
+
+        // The one that is a few seconds old might be another window's download, which is not for us to remove
+        expect(fs.readdirSync(downloads)).toEqual(['cafebabe.func.4.16.0.zip']);
+    });
 });

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -11,6 +12,9 @@ import { extractZip } from './zip';
 
 // Marks an installation as complete. It is written last, so that an installation that was interrupted is not mistaken for a good one.
 const CompleteMarkerName = '.dfm-complete';
+
+// What an installation that was killed leaves in the downloads folder is removed after this long. A download that takes a day is not going to finish.
+const StaleDownloadAgeInMs = 24 * 60 * 60 * 1000;
 
 export type InstallPhase = 'download' | 'extract';
 
@@ -60,8 +64,15 @@ export async function installCoreTools(options: InstallOptions): Promise<string>
     }
 
     const finalFolder = getInstallFolder(storageFolder, platform, download.version);
-    const archivePath = path.join(storageFolder, '.downloads', download.file);
-    const workFolder = `${finalFolder}.${process.pid}.tmp`;
+    const downloadsFolder = path.join(storageFolder, '.downloads');
+
+    // Every attempt has names of its own: Two windows (or two calls in one window) installing the same version must not share the archive,
+    // or whoever is done first removes it from under the other, and must not extract into the same folder either.
+    const attempt = crypto.randomBytes(4).toString('hex');
+    const archivePath = path.join(downloadsFolder, `${attempt}.${download.file}`);
+    const workFolder = `${finalFolder}.${attempt}.tmp`;
+
+    await removeStaleDownloads(downloadsFolder, log);
 
     try {
 
@@ -123,6 +134,32 @@ export async function installCoreTools(options: InstallOptions): Promise<string>
     await removeOtherVersions(storageFolder, download.version, log);
 
     return installed;
+}
+
+// Removes what an installation that was killed left behind. The names of an attempt are its own, so nothing overwrites it later.
+async function removeStaleDownloads(downloadsFolder: string, log?: (line: string) => void): Promise<void> {
+
+    let names: string[];
+    try {
+        names = await fs.promises.readdir(downloadsFolder);
+    } catch {
+        return;
+    }
+
+    for (const name of names) {
+
+        const file = path.join(downloadsFolder, name);
+
+        try {
+            const stat = await fs.promises.stat(file);
+            if (stat.isFile() && Date.now() - stat.mtimeMs > StaleDownloadAgeInMs) {
+                await fs.promises.rm(file, { force: true });
+                log?.(`Removed ${name}, which an earlier installation left behind.`);
+            }
+        } catch {
+            // Another window was quicker, or the file is in use. Neither is a reason to fail an installation.
+        }
+    }
 }
 
 // Removes the versions that were installed before, once the current one is in place

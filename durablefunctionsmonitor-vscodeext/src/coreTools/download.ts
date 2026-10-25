@@ -44,7 +44,7 @@ export async function downloadFile(options: DownloadOptions): Promise<void> {
     await fs.promises.mkdir(path.dirname(destination), { recursive: true });
 
     // Two VsCode windows might download the same file at the same time, so no shared temporary name
-    const partialPath = `${destination}.${process.pid}.${Date.now()}.partial`;
+    const partialPath = `${destination}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.partial`;
 
     // Aborting on user's request and on stall, whichever comes first
     const abort = new AbortController();
