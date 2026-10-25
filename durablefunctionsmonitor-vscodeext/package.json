@@ -95,11 +95,31 @@
             },
             {
                 "command": "durable-functions-monitor.installCoreTools",
-                "title": "Durable Functions Monitor: Download Azure Functions Core Tools"
+                "title": "Durable Functions Monitor: Download Azure Functions Core Tools",
+                "shortTitle": "Download Azure Functions Core Tools",
+                "icon": "$(cloud-download)"
             },
             {
                 "command": "durable-functions-monitor.showLog",
-                "title": "Durable Functions Monitor: Show Log"
+                "title": "Durable Functions Monitor: Show Log",
+                "shortTitle": "Show Log",
+                "icon": "$(output)"
+            },
+            {
+                "command": "durable-functions-monitor.openSettings",
+                "title": "Durable Functions Monitor: Open Settings",
+                "shortTitle": "Settings",
+                "icon": "$(gear)"
+            },
+            {
+                "command": "durable-functions-monitor.configureStorageEmulator",
+                "title": "Durable Functions Monitor: Configure Storage Emulator...",
+                "shortTitle": "Configure Storage Emulator...",
+                "icon": "$(database)"
+            },
+            {
+                "command": "durable-functions-monitor.openDotnetDownload",
+                "title": "Durable Functions Monitor: Open the .NET Download Page"
             },
             {
                 "command": "durableFunctionsMonitorTreeView.attachToTaskHub",
@@ -212,6 +232,26 @@
                     "command": "durableFunctionsMonitorTreeView.attachToAnotherTaskHub",
                     "when": "view == durableFunctionsMonitorTreeView",
                     "group": "navigation@3"
+                },
+                {
+                    "command": "durable-functions-monitor.openSettings",
+                    "when": "view == durableFunctionsMonitorTreeView",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "durable-functions-monitor.configureStorageEmulator",
+                    "when": "view == durableFunctionsMonitorTreeView",
+                    "group": "1_setup@1"
+                },
+                {
+                    "command": "durable-functions-monitor.installCoreTools",
+                    "when": "view == durableFunctionsMonitorTreeView",
+                    "group": "1_setup@2"
+                },
+                {
+                    "command": "durable-functions-monitor.showLog",
+                    "when": "view == durableFunctionsMonitorTreeView",
+                    "group": "1_setup@3"
                 }
             ],
             "view/item/context": [
@@ -316,6 +356,10 @@
                 },
                 {
                     "command": "durableFunctionsMonitorTreeView.forgetConnectionString",
+                    "when": "false"
+                },
+                {
+                    "command": "durable-functions-monitor.openDotnetDownload",
                     "when": "false"
                 }
             ]

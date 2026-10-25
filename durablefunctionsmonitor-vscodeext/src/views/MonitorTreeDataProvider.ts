@@ -21,6 +21,9 @@ import { EventHubPicker } from '../azure/EventHubPicker';
 import { getArmEndpoint } from '../azure/azureResources';
 import { getIdentityHeadersProvider } from '../azure/identityHeaders';
 import type { Log } from '../logging';
+import { SettingsSection } from '../constants';
+import { SetupSettings, type SetupService } from '../setup/SetupService';
+import { type SetupRow, SetupCommands } from '../setup/rows';
 
 // Root object in the hierarchy. Also serves data for the TreeView.
 export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.TreeItem>, vscode.Disposable {
@@ -31,6 +34,7 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
         functionGraphList: FunctionGraphList,
         coreTools: CoreToolsService,
         dotnet: DotnetRuntimeService,
+        private _setup: SetupService,
         private _log: Log) {
 
         this._connStringRepo = new ConnStringRepository(this._context);
@@ -55,7 +59,16 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
             this._azureProvider.onDidSignIn(() => this.refresh()),
             this._azureProvider.onDidSignOut(() => this.refresh()),
             vscode.workspace.onDidGrantWorkspaceTrust(() => this.refresh()),
-            vscode.workspace.onDidChangeWorkspaceFolders(() => this._onDidChangeTreeData.fire(undefined))
+            vscode.workspace.onDidChangeWorkspaceFolders(() => this._onDidChangeTreeData.fire(undefined)),
+
+            // The Setup rows say what the settings say, and what was downloaded
+            vscode.workspace.onDidChangeConfiguration(e => {
+
+                if (SetupSettings.some(name => e.affectsConfiguration(`${SettingsSection}.${name}`))) {
+                    this.refresh();
+                }
+            }),
+            coreTools.onDidInstall(() => this.refresh())
         );
     }
 
@@ -123,6 +136,22 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
                         iconPath: this.icon('storageEmulator.svg'),
                         collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
                     });
+
+                    result.push({
+                        contextValue: 'setup',
+                        label: 'Setup',
+                        tooltip: 'What the backend needs from this machine, and whether it is there',
+                        iconPath: new vscode.ThemeIcon('settings-gear'),
+                        collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+                    });
+
+                    break;
+
+                case 'setup':
+
+                    for (const row of await this._setup.getRows()) {
+                        result.push(this.setupRowToTreeItem(row));
+                    }
 
                     break;
 
@@ -426,6 +455,17 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
                         result.push({
                             label: `Failed to load Task Hubs. ${err.message ?? err}`,
                             tooltip: `Is the Storage Emulator running? The connection string it is looked for with is the setting 'storageEmulatorConnectionString'.`
+                        });
+                    }
+
+                    // Nothing to attach to: the way out is one click away, not in the settings
+                    if (!result.some(node => /^taskHub-/.test(node.contextValue ?? ''))) {
+
+                        result.push({
+                            label: 'Configure Storage Emulator...',
+                            tooltip: 'Say on which ports the emulator listens',
+                            iconPath: new vscode.ThemeIcon('gear'),
+                            command: { title: 'Configure Storage Emulator...', command: SetupCommands.configureStorageEmulator, arguments: [] }
                         });
                     }
 
@@ -795,6 +835,26 @@ export class MonitorTreeDataProvider implements vscode.TreeDataProvider<vscode.T
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined> = this._onDidChangeTreeData.event;
 
     private _hostJsonWatchers: { [path: string]: vscode.FileSystemWatcher } = {};
+
+    // A row of the Setup group, as a tree item
+    private setupRowToTreeItem(row: SetupRow): vscode.TreeItem {
+
+        const icon = row.icon === 'ok'
+            ? new vscode.ThemeIcon('pass', new vscode.ThemeColor('testing.iconPassed'))
+            : row.icon === 'warning'
+                ? new vscode.ThemeIcon('warning', new vscode.ThemeColor('list.warningForeground'))
+                : new vscode.ThemeIcon('error', new vscode.ThemeColor('list.errorForeground'));
+
+        return {
+            contextValue: 'setupRow',
+            id: `setup.${row.id}`,
+            label: row.label,
+            description: row.description,
+            tooltip: row.tooltip,
+            iconPath: icon,
+            command: row.command ? { title: row.label, command: row.command.command, arguments: row.command.arguments ?? [] } : undefined
+        };
+    }
 
     private icon(fileName: string): vscode.Uri {
         return vscode.Uri.file(path.join(this._resourcesFolderPath, fileName));

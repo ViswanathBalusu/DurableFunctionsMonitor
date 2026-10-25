@@ -12,6 +12,7 @@ import { findInstalledFunc, resolveCommandOnPath } from './discovery';
 import { getInstalledFuncPath, installCoreTools } from './installer';
 import { CoreToolsManifest, getCoreToolsDownload, getMinimumCoreToolsVersion } from './manifest';
 import { getCoreToolsPlatform } from './platform';
+import { type CoreToolsStatus, resolveCoreToolsStatus } from './status';
 import { formatVersion } from '../backend/versions';
 
 // Thrown when there is no Azure Functions Core Tools to run the backend with, and none is going to be had
@@ -27,14 +28,41 @@ export class CoreToolsService {
 
     constructor(private _context: vscode.ExtensionContext, private _log: Log) { }
 
+    // Fires when Azure Functions Core Tools were downloaded, whoever asked for it
+    get onDidInstall(): vscode.Event<void> {
+        return this._onDidInstall.event;
+    }
+
+    private readonly _onDidInstall = new vscode.EventEmitter<void>();
+
+    // Where func would come from, which is what the Setup view says. Looks, and downloads nothing.
+    getStatus(): Promise<CoreToolsStatus> {
+
+        const platform = getCoreToolsPlatform();
+        const download = platform ? getCoreToolsDownload(platform) : undefined;
+
+        return resolveCoreToolsStatus({
+            customPath: Settings().customPathToAzureFunctionsHost,
+            resolveCustomPath: CoreToolsService.resolveCustomPath,
+            managed: platform && download ? { path: getInstalledFuncPath(this.storageFolder, platform, download.version), version: download.version, size: download.size } : undefined,
+            search: () => findInstalledFunc(getMinimumCoreToolsVersion(), undefined, this._log),
+            minimumVersion: getMinimumCoreToolsVersion(),
+            platform: `${process.platform}/${process.arch}`
+        });
+    }
+
+    // The setting used to take a plain command name ('func') as well, which is what a shell finds on PATH
+    private static resolveCustomPath(custom: string): string | undefined {
+        return fs.existsSync(custom) ? custom : resolveCommandOnPath(custom);
+    }
+
     // Returns the path to func, downloading Azure Functions Core Tools first, if that is what it takes
     async getFuncPath(): Promise<string> {
 
         const custom = Settings().customPathToAzureFunctionsHost.trim();
         if (custom) {
 
-            // The setting used to take a plain command name ('func') as well, which is what a shell finds on PATH
-            const resolved = fs.existsSync(custom) ? custom : resolveCommandOnPath(custom);
+            const resolved = CoreToolsService.resolveCustomPath(custom);
 
             if (!resolved) {
                 throw new CoreToolsUnavailableError(`The setting '${SettingsSection}.customPathToAzureFunctionsHost' points to ${custom}, and there is nothing there.`);
@@ -199,6 +227,7 @@ export class CoreToolsService {
                 });
 
                 this._log(`Azure Functions Core Tools ${download.version} are installed in ${funcPath}`);
+                this._onDidInstall.fire();
                 return funcPath;
 
             } catch (err: any) {

@@ -8,6 +8,7 @@ import { DotnetRuntimeService } from './backend/DotnetRuntimeService';
 import { CoreToolsService } from './coreTools/CoreToolsService';
 import { FunctionGraphList } from './functionGraph/FunctionGraphList';
 import type { Log } from './logging';
+import { SetupService } from './setup/SetupService';
 import { MonitorTreeDataProvider } from './views/MonitorTreeDataProvider';
 
 // What activate() hands out. Not an API for other extensions: the integration tests need to get at the tree, which VsCode gives
@@ -36,7 +37,8 @@ export function activate(context: vscode.ExtensionContext): ExtensionTestApi {
     const dotnet = new DotnetRuntimeService(context.extension.id, log);
 
     const graphList = functionGraphList = new FunctionGraphList(context, log);
-    const treeProvider = monitorTreeDataProvider = new MonitorTreeDataProvider(azureProvider, context, graphList, coreTools, dotnet, log);
+    const setup = new SetupService(context, coreTools, log);
+    const treeProvider = monitorTreeDataProvider = new MonitorTreeDataProvider(azureProvider, context, graphList, coreTools, dotnet, setup, log);
 
     // A command that fails says so, instead of leaving the user with a command that did nothing
     const register = (command: string, handler: (...args: any[]) => any) => {
@@ -95,6 +97,15 @@ export function activate(context: vscode.ExtensionContext): ExtensionTestApi {
 
         register('durable-functions-monitor.showLog',
             () => logChannel.show()),
+
+        register('durable-functions-monitor.openSettings',
+            (setting?: string) => setup.openSettings(typeof setting === 'string' ? setting : undefined)),
+
+        register('durable-functions-monitor.configureStorageEmulator',
+            () => setup.configureStorageEmulator()),
+
+        register('durable-functions-monitor.openDotnetDownload',
+            (needed?: string) => setup.openDotnetDownload(typeof needed === 'string' ? needed : undefined)),
 
         register('durableFunctionsMonitorTreeView.purgeHistory',
             (item) => treeProvider.attachToTaskHub(item, { id: 'purgeHistory' })),

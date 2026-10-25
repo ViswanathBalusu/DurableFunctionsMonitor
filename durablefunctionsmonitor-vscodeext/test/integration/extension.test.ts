@@ -94,6 +94,17 @@ function getClosedPort(): Promise<number> {
     });
 }
 
+// The connection string of the emulator, with its services on this port instead of the default ones
+function emulatorOnPort(port: number): string {
+
+    let connString: string = manifest.contributes.configuration.properties[`${Section}.storageEmulatorConnectionString`].default;
+    for (const defaultPort of [10000, 10001, 10002]) {
+        connString = connString.split(`127.0.0.1:${defaultPort}/`).join(`127.0.0.1:${port}/`);
+    }
+
+    return connString;
+}
+
 const isAlive = (pid: number) => { try { process.kill(pid, 0); return true; } catch { return false; } };
 
 const findDfmTabs = () => vscode.window.tabGroups.all
@@ -165,7 +176,7 @@ suite('Durable Functions Monitor', () => {
     test('shows the project of the workspace, with the Task Hub its files name', async () => {
 
         const root = await api.treeDataProvider.getChildren();
-        assert.deepStrictEqual(root.map(n => n.contextValue), ['subscriptions', 'connectionStrings', 'localProject', 'storageEmulator']);
+        assert.deepStrictEqual(root.map(n => n.contextValue), ['subscriptions', 'connectionStrings', 'localProject', 'storageEmulator', 'setup']);
 
         const project = await api.treeDataProvider.getChildren(root[2]);
         assert.strictEqual(project.length, 1);
@@ -177,21 +188,47 @@ suite('Durable Functions Monitor', () => {
 
         // The default ports are not free of an emulator: CI starts one there, with a Task Hub in it, and so might a developer's machine.
         // So the emulator is looked for where nothing is.
-        const closed = await getClosedPort();
-        // (The tests are transpiled one by one, not bundled, so they read the manifest and do not import the source)
-        let connString: string = manifest.contributes.configuration.properties[`${Section}.storageEmulatorConnectionString`].default;
-        for (const port of [10000, 10001, 10002]) {
-            connString = connString.split(`127.0.0.1:${port}/`).join(`127.0.0.1:${closed}/`);
-        }
-        await setUserSetting('storageEmulatorConnectionString', connString);
+        await setUserSetting('storageEmulatorConnectionString', emulatorOnPort(await getClosedPort()));
 
         try {
 
             const root = await api.treeDataProvider.getChildren();
             const emulator = await api.treeDataProvider.getChildren(root.find(n => n.contextValue === 'storageEmulator'));
 
-            assert.strictEqual(emulator.length, 1);
+            // What is wrong, and the way out of it
+            assert.strictEqual(emulator.length, 2);
             assert.match(String(emulator[0].label), /No Task Hubs found|Failed to load Task Hubs/);
+            assert.strictEqual(emulator[1].label, 'Configure Storage Emulator...');
+            assert.strictEqual(emulator[1].command?.command, 'durable-functions-monitor.configureStorageEmulator');
+
+        } finally {
+
+            await setUserSetting('storageEmulatorConnectionString', undefined);
+        }
+    });
+
+    test('says in its Setup group what the backend needs, and whether the machine has it', async () => {
+
+        const closed = await getClosedPort();
+        await setUserSetting('storageEmulatorConnectionString', emulatorOnPort(closed));
+
+        try {
+
+            const root = await api.treeDataProvider.getChildren();
+            const setup = root.find(n => n.contextValue === 'setup');
+            assert.ok(setup, 'there is no Setup group');
+
+            const rows = await api.treeDataProvider.getChildren(setup);
+            assert.deepStrictEqual(rows.map(r => r.label), ['Azure Functions Core Tools', '.NET runtime', 'Storage emulator']);
+
+            for (const row of rows) {
+                assert.ok(row.description, `${row.label} says nothing`);
+                assert.ok(row.iconPath, `${row.label} has no icon`);
+            }
+
+            // Where the emulator is looked for is known, and nothing listens there
+            assert.strictEqual(rows[2].description, `127.0.0.1:${closed}, nothing is listening`);
+            assert.strictEqual(rows[2].command?.command, 'durable-functions-monitor.configureStorageEmulator');
 
         } finally {
 

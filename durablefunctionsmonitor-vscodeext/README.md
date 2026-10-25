@@ -41,7 +41,7 @@ The first time you open a Task Hub, the monitor starts its backend, and for that
 **DURABLE FUNCTIONS** tab shows Task Hubs automatically discovered from:
 * Your Azure Subscription(s), if you're signed in into Azure. To sign in into Azure click **Sign in to Azure...** in the view. If you have the [Azure Resources](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azureresourcegroups) extension, its `Azure: Select Subscriptions` filter is respected.
 * Your currently opened project, if it is an Azure Functions project (and the workspace is [trusted](https://code.visualstudio.com/docs/editor/workspace-trust): the connection strings of `local.settings.json` are not read from a workspace that is not).
-* Local Storage Emulator, if it is running. On Windows, Hyper-V and WSL may reserve the default Azurite ports (10000-10002) for themselves, and then Azurite fails with `EACCES`. Start it on other ports and put them into the `durableFunctionsMonitor.storageEmulatorConnectionString` setting.
+* Local Storage Emulator, if it is running. On Windows, Hyper-V and WSL may reserve the default Azurite ports (10000-10002) for themselves, and then Azurite fails with `EACCES`. Start it on other ports, and tell the extension which: **Durable Functions Monitor: Configure Storage Emulator...** (also in the `...` menu of the view, and under the emulator when it lists nothing) asks for the first port and writes the `durableFunctionsMonitor.storageEmulatorConnectionString` setting for you.
 
 In addition to that you can also connect to arbitrary Storage accounts or Microsoft SQL Server/Azure SQL databases. Either click on ![image](https://user-images.githubusercontent.com/5447190/216996327-8a31e4cf-9446-4302-b147-f85fb0a85b9c.png)
  button or use `Attach to Task Hub...` command. You will be asked for a Connection String (it can be either Azure Storage or Microsoft SQL Server connection string) and a Task Hub name to connect to. The entered Connection Strings are persisted with [VsCode SecretStorage API](https://code.visualstudio.com/api/references/vscode-api#SecretStorage) (On Windows you should be able to see them in Windows Credential Manager). 
@@ -103,6 +103,16 @@ To **Purge Orchestration History/Clean Entity Storage/Delete a Task Hub** right-
 
 and follow the flow.
 
+
+### Setup
+
+The last node of the tree, **Setup**, checks what the backend needs from your machine and says what it found, one row each:
+
+* **Azure Functions Core Tools**: which one would run the backend (the one your settings point to, the one the extension downloaded, or one that is installed), or that there is none. A click on the row downloads them.
+* **.NET runtime**: whether the .NET the backend was built for is installed. A click opens its download page.
+* **Storage emulator**: the ports the extension looks for the emulator on, and whether something is listening there. A click opens **Configure Storage Emulator...**, which asks for the port of the blob service (the queue and the table are expected on the two after it, which is how Azurite numbers them) and tells you how to start Azurite there, if it is not running.
+
+The toolbar of the view has a gear for the settings of this extension. Its `...` menu has **Configure Storage Emulator...**, **Download Azure Functions Core Tools** and **Show Log**.
 
 ## Prerequisites
 

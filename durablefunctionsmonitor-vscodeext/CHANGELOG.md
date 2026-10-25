@@ -1,5 +1,13 @@
 # Change Log
 
+# Unreleased
+
+- **A Setup group in the tree** says what the backend needs from your machine and what it found: which Azure Functions Core Tools would run it (your settings, the copy the extension downloaded, or one that is installed), the .NET runtime, and where the local Storage emulator is looked for and whether something listens there. A row that is not fine can be clicked to fix it.
+
+- **Configure Storage Emulator...** writes the `storageEmulatorConnectionString` setting for you: you give the first port, and the queue and the table follow it, the way Azurite numbers them. It was a long connection string to edit by hand, and you had to, wherever Windows reserves the default ports. The command is in the menu of the view, and under the emulator when it lists no Task Hubs.
+
+- **The toolbar of the view has a gear** that opens the settings of this extension, and its `...` menu has **Configure Storage Emulator...**, **Download Azure Functions Core Tools** and **Show Log**.
+
 # Version 6.13.0
 
 - **The extension starts again.** Every route of the backend lives under `/durable-functions-monitor/` since the backend was made hostable at any path, but the extension kept waiting for it on `/a/p/i/...`. The backend came up, the extension never saw it, and gave up after 60 seconds with "No response". The extension now asks where the backend serves, and a test reads the backend's source to keep it that way.

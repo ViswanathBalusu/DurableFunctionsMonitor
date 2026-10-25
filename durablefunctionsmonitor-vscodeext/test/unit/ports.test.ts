@@ -21,9 +21,12 @@ function occupy(port: number = 0, host: string = '127.0.0.1'): Promise<number> {
     });
 }
 
-afterEach(async () => {
-    await Promise.all(servers.splice(0).map(s => new Promise<void>(resolve => s.close(() => resolve()))));
-});
+// Gives back every port this test took
+function releaseAll(): Promise<unknown> {
+    return Promise.all(servers.splice(0).map(s => new Promise<void>(resolve => s.close(() => resolve()))));
+}
+
+afterEach(releaseAll);
 
 describe('ports', () => {
 
@@ -44,17 +47,25 @@ describe('ports', () => {
 
     test('finds a free port in the range, skipping the ones that are taken', async () => {
 
-        const first = await occupy();
-        const second = await occupy(first + 1).catch(() => undefined);
+        // Two ports in a row that this test takes, and a third after them that nothing uses. It is looked for, not assumed: other test
+        // files bind ports at the same moment, and Windows hands out ephemeral ports one after another, so a neighbour is often theirs.
+        let first = 0;
 
-        // The range is those two (or the one, if the neighbour was not available)
-        const to = second ? first + 2 : first + 1;
-        const found = await findFreePort(first, to);
+        for (let attempt = 0; attempt < 20 && !first; attempt++) {
 
-        expect(found).not.toBe(first);
-        expect(found).not.toBe(second);
-        expect(found).toBeGreaterThanOrEqual(first);
-        expect(found).toBeLessThanOrEqual(to);
+            const candidate = await occupy();
+            const second = await occupy(candidate + 1).catch(() => undefined);
+
+            if (second && await isPortFree(candidate + 2)) {
+                first = candidate;
+            } else {
+                await releaseAll();
+            }
+        }
+
+        expect(first, 'three ports in a row, the first two free to take').toBeGreaterThan(0);
+
+        expect(await findFreePort(first, first + 2)).toBe(first + 2);
     });
 
     test('says so, when the whole range is taken', async () => {
