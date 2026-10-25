@@ -1,6 +1,6 @@
 # Change Log
 
-# Unreleased
+# Version 6.14.0
 
 - **A Setup group in the tree** says what the backend needs from your machine and what it found: which Azure Functions Core Tools would run it (your settings, the copy the extension downloaded, or one that is installed), the .NET runtime, and where the local Storage emulator is looked for and whether something listens there. A row that is not fine can be clicked to fix it.
 
