@@ -2,6 +2,8 @@
 
 # Unreleased
 
+- **The backends are built with `Azure.Functions.Sdk`**, Microsoft's replacement for the `Microsoft.Azure.Functions.Worker.Sdk` package. What they publish is the same: the same files, the same extensions, the same behaviour. The NuGet package `DurableFunctionsMonitor.DotNetIsolated` no longer depends on `Microsoft.Azure.Functions.Worker.Sdk`: an MSBuild SDK is chosen in the project file of the Function App that uses the package (`<Project Sdk="Azure.Functions.Sdk/...">`), and a package cannot depend on one. A Function App that moves to the new SDK and still gets the old one from this package has both, and the build warns (MSB4011, AZFW0110).
+
 - **Updated dependencies.** The Durable Task extension of the backends is 1.20.1, the UI libraries are at their current patch releases, and the test tooling no longer pulls in the deprecated `glob` 10. `System.Security.Cryptography.Pkcs` in the MSSQL backend is 10.0.14 (SqlClient still asks for a 9.0.x version with two known advisories, so the pin stays). There are no deprecated or vulnerable packages left that this project can remove: the one that remains, `@azure/ms-rest-azure-env`, comes with the Azure sign-in library.
 
 # Version 6.14.0

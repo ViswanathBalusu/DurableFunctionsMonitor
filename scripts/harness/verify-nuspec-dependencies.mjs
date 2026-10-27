@@ -36,7 +36,7 @@
 // never binds down - same exception, different cause.
 //
 // Dependencies declared beyond that rule are fine and reported as notes: they are the packages the
-// consumer's own Function App needs (Worker.Sdk, the DurableTask provider extensions).
+// consumer's own Function App needs (the DurableTask provider extensions).
 //
 // Exit code 0 when every rule holds, 1 otherwise (each violation is printed).
 import fs from 'node:fs';

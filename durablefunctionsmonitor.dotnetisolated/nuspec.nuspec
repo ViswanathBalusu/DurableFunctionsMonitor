@@ -19,11 +19,13 @@
             So it has to cover every <PackageReference> of every .csproj whose assembly is packed into
             lib/ below, at a version no lower than the one that project builds against.
             scripts/harness/verify-nuspec-dependencies.mjs enforces exactly that, in CI before packing.
-            Entries beyond that (Worker.Sdk here) are what the consumer's own Function App needs.
+            Entries beyond that are what the consumer's own Function App needs.
+
+            The Azure Functions SDK is not one of them: it is an MSBuild SDK, which a project file chooses
+            (<Project Sdk="Azure.Functions.Sdk/...">), and a package cannot depend on.
         -->
         <dependencies>
             <dependency id="Microsoft.Azure.Functions.Worker" version="2.52.0" />
-            <dependency id="Microsoft.Azure.Functions.Worker.Sdk" version="2.1.0" />
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.20.1" />
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.Http" version="3.3.0" />
             <dependency id="Azure.Data.Tables" version="12.13.0" />

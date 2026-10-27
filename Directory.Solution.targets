@@ -1,0 +1,15 @@
+<Project>
+
+  <!--
+    Azure.Functions.Sdk generates a small project next to each Function App, to restore the extensions the Functions host loads
+    (Durable Task, Http, ...). It does that when the Function App itself is restored. Restoring a solution restores the projects of
+    it one by one and does not reach that step, and the SDK then restores that project while it builds (warning AZFW0108), which
+    "may cause issues in some build environments". This asks the projects of the solution for that step after the solution is restored.
+    https://github.com/Azure/azure-functions-dotnet-worker/blob/main/docs/sdk-rules/AZFW0108.md
+  -->
+  <Target Name="_RecursiveGenerateFunctionsExtensionProject" AfterTargets="Restore">
+    <MSBuild Projects="@(ProjectReference)" Targets="_RecursiveGenerateFunctionsExtensionProject" SkipNonexistentProjects="true" SkipNonexistentTargets="true" />
+    <MSBuild Projects="@(ProjectReference)" Targets="GenerateFunctionsExtensionProject" SkipNonexistentProjects="true" SkipNonexistentTargets="true" />
+  </Target>
+
+</Project>
