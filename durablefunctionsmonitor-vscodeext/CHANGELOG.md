@@ -1,6 +1,6 @@
 # Change Log
 
-# Unreleased
+# Version 6.15.0
 
 - **The backends are built with `Azure.Functions.Sdk`**, Microsoft's replacement for the `Microsoft.Azure.Functions.Worker.Sdk` package. What they publish is the same: the same files, the same extensions, the same behaviour. The NuGet package `DurableFunctionsMonitor.DotNetIsolated` no longer depends on `Microsoft.Azure.Functions.Worker.Sdk`: an MSBuild SDK is chosen in the project file of the Function App that uses the package (`<Project Sdk="Azure.Functions.Sdk/...">`), and a package cannot depend on one. A Function App that moves to the new SDK and still gets the old one from this package has both, and the build warns (MSB4011, AZFW0110).
 
