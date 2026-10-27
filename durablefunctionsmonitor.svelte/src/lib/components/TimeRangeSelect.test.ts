@@ -156,9 +156,10 @@ describe('TimeRangeSelect: the backend maximum', () => {
     expect(document.querySelector('.cal')?.getAttribute('aria-label')).toContain('Time range days');
     expect(document.querySelectorAll('.cal-grid')).toHaveLength(2);
 
-    // The 24 hours in force are already drawn on it: two ends, one of them today
-    expect(document.querySelectorAll('.cal-day[data-selection-start]')).toHaveLength(1);
-    expect(document.querySelectorAll('.cal-day[data-selection-end]')).toHaveLength(1);
+    // The 24 hours in force are already drawn on it: two ends, one of them today. Only the days that belong to a month are counted: the days
+    // before the first of the second month are the last days of the first, drawn again (greyed out), and which dates those are depends on today.
+    expect(document.querySelectorAll('.cal-day[data-selection-start]:not([data-outside-month])')).toHaveLength(1);
+    expect(document.querySelectorAll('.cal-day[data-selection-end]:not([data-outside-month])')).toHaveLength(1);
     expect(screen.getByLabelText('From')).toBeInTheDocument();
     expect(screen.getByLabelText('To')).toBeInTheDocument();
   });
