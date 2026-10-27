@@ -24,7 +24,7 @@
         <dependencies>
             <dependency id="Microsoft.Azure.Functions.Worker" version="2.52.0" />
             <dependency id="Microsoft.Azure.Functions.Worker.Sdk" version="2.1.0" />
-            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.20.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.20.1" />
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.Http" version="3.3.0" />
             <dependency id="Azure.Data.Tables" version="12.13.0" />
             <dependency id="Azure.Storage.Blobs" version="12.30.1" />

@@ -1,5 +1,9 @@
 # Change Log
 
+# Unreleased
+
+- **Updated dependencies.** The Durable Task extension of the backends is 1.20.1, the UI libraries are at their current patch releases, and the test tooling no longer pulls in the deprecated `glob` 10. `System.Security.Cryptography.Pkcs` in the MSSQL backend is 10.0.14 (SqlClient still asks for a 9.0.x version with two known advisories, so the pin stays). There are no deprecated or vulnerable packages left that this project can remove: the one that remains, `@azure/ms-rest-azure-env`, comes with the Azure sign-in library.
+
 # Version 6.14.0
 
 - **A Setup group in the tree** says what the backend needs from your machine and what it found: which Azure Functions Core Tools would run it (your settings, the copy the extension downloaded, or one that is installed), the .NET runtime, and where the local Storage emulator is looked for and whether something listens there. A row that is not fine can be clicked to fix it.

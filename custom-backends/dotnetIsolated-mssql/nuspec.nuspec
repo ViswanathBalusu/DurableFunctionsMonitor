@@ -28,9 +28,9 @@
         <dependencies>
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask.SqlServer" version="1.8.1" />
             <dependency id="Microsoft.Data.SqlClient" version="7.1.1" />
-            <dependency id="System.Security.Cryptography.Pkcs" version="10.0.13" />
+            <dependency id="System.Security.Cryptography.Pkcs" version="10.0.14" />
             <dependency id="Microsoft.Azure.Functions.Worker" version="2.52.0" />
-            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.20.0" />
+            <dependency id="Microsoft.Azure.Functions.Worker.Extensions.DurableTask" version="1.20.1" />
             <dependency id="Microsoft.Azure.Functions.Worker.Extensions.Http" version="3.3.0" />
             <dependency id="Azure.Data.Tables" version="12.13.0" />
             <dependency id="Azure.Storage.Blobs" version="12.30.1" />

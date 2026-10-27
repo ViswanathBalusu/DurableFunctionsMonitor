@@ -46,7 +46,7 @@ jobs:
       latest: ${{ steps.v.outputs.latest }}
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: resolve the image tag
       id: v
@@ -111,7 +111,7 @@ jobs:
       DFM_TEST_REQUIRE_STORAGE: "true"
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     # Storage emulator for tests/durablefunctionsmonitor.dotnetisolated.core.integrationtests.
     # Started from npm and not as a service container, for the reason build.yml gives at its 'start Azurite' step:
@@ -125,7 +125,7 @@ jobs:
     # Testing .NET
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v6
       with:
         dotnet-version: 10.0.x
 

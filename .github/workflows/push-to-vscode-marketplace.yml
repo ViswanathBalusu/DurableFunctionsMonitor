@@ -29,7 +29,7 @@ jobs:
       version: ${{ steps.v.outputs.version }}
       publish: ${{ steps.v.outputs.publish }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     # One step answers both questions, because a job output can only come from one step: is this ref
     # something to publish, and is there a publisher to publish it as.
