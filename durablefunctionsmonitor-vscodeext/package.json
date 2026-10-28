@@ -2,7 +2,7 @@
     "name": "durablefunctionsmonitor-reimagined",
     "displayName": "Durable Functions Monitor Reimagined",
     "description": "Monitoring/debugging UI tool for Azure Durable Functions",
-    "version": "6.15.0",
+    "version": "6.16.0",
     "publisher": "DurableFunctionsMonitor",
     "license": "MIT",
     "icon": "logo.png",
