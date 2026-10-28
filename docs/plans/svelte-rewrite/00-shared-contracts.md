@@ -262,7 +262,7 @@ All relative to the hub. Existing endpoints keep their shapes (see `src/lib/api/
 | `/clean-entity-storage` | POST | `capabilities.cleanEntityStorage` | `{ removeEmptyEntities, releaseOrphanedLocks }` → `{ numberOfEmptyEntitiesRemoved, numberOfOrphanedLocksRemoved }` |
 | `/delete-task-hub` | POST | `capabilities.deleteTaskHub` | |
 | `/manage-connection` | GET | always | `{ connectionString (masked), hubName, isReadOnly: true }` |
-| `../easyauth-config` | GET | browser | `{ clientId?: string; authority?: string; userName?: string }` |
+| `../easyauth-config` | GET | browser | `{ clientId?: string; authority?: string; userName?: string; identity?: ServerIdentity }`; `identity` only in the server-directed flow: `{ userName, name, email, objectId, tenantId, roles: string[], authMethod }` (each null when the token has no such claim), read from the claims the backend validated |
 | `../task-hub-names` | GET | browser | `string[]` |
 | `/stats?from&to&bins&stuckAfterMinutes&pendingAfterMinutes` | GET | `stats` (B1) | `StatsResponse` |
 | `/orchestrations('{id}')/children` | GET | `children` (B1) | `ChildrenResponse` |
@@ -370,7 +370,7 @@ export interface EntityRow { instanceId: string; entityName: string; key: string
 export interface EntitiesResponse { entities: EntityRow[]; hasMore: boolean }
 
 // B5
-export interface AuditRow { at: string; user: string; operation: string; kind: 'Write' | 'Dangerous'; instanceId: string | null; outcome: 'ok' | 'failed'; status: number; message: string | null }
+export interface AuditRow { at: string; user: string; name?: string | null; email?: string | null; objectId?: string | null; tenantId?: string | null; roles?: string[] | null; authMethod?: string | null; operation: string; kind: 'Write' | 'Dangerous'; instanceId: string | null; outcome: 'ok' | 'failed'; status: number; message: string | null }
 export interface AuditResponse { rows: AuditRow[]; hasMore: boolean }
 ```
 

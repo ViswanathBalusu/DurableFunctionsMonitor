@@ -174,7 +174,11 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_OPENID_ISSUER, issuer);
 
                 var principal = new ClaimsPrincipal(new ClaimsIdentity([
-                    new(Auth.PreferredUserNameClaim, userName)
+                    new(Auth.PreferredUserNameClaim, userName),
+                    new("name", "Test User"),
+                    new("oid", "11111111-2222-3333-4444-555555555555"),
+                    new("tid", "66666666-7777-8888-9999-000000000000"),
+                    new(Auth.RolesClaim, "Operator")
                 ], "TestAuthType"));
 
                 SecurityToken st = null;
@@ -206,6 +210,14 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
                 // Assert
                 Assert.AreEqual(userName, (string)result.userName);
+
+                // And everything else the validated claims say, for the account menu
+                Assert.AreEqual(userName, (string)result.identity.userName);
+                Assert.AreEqual("Test User", (string)result.identity.name);
+                Assert.AreEqual("11111111-2222-3333-4444-555555555555", (string)result.identity.objectId);
+                Assert.AreEqual("66666666-7777-8888-9999-000000000000", (string)result.identity.tenantId);
+                Assert.AreEqual("Operator", (string)result.identity.roles[0]);
+                Assert.AreEqual("bearer", (string)result.identity.authMethod);
             }
             finally
             {

@@ -1,5 +1,13 @@
 # Change Log
 
+# Version 6.16.0
+
+- **The signed-in user shows up again.** The user menu named nobody for a person signed in through Easy Auth or Microsoft Entra ID: it read the name from the host's client configuration (`DFM_CLIENT_CONFIG`), not from the identity that signed in. It now shows the display name and the user name, and a new **Account details** item opens everything that is known about the account: for a browser signed in through MSAL its ID token claims, the scopes and expiry of the access token; for an Easy Auth login the claims the backend validated.
+
+- **The audit log records who made a call, not just a name.** Every audited call now stores the display name, email, object id, tenant id, app roles and how it was authenticated (`easyauth`, `bearer`, `vscode` or `anonymous`), next to the user name. The backend reads them from the identity it validated for the call, never from what the browser says about itself, and a call that is refused (not on the allow-list, read-only) is recorded under the name of the one who made it. On the Activity screen a click on the user opens these details. `/audit` rows and `easyauth-config` carry the new fields; records written by older versions keep the user name only, and no existing field changed.
+
+- **A new logo and favicon.** A bold bolt on the poster-yellow tile with its echo behind it, in the sidebar, the top bar, the sign-in screen, the browser tab, the web app manifest, the extension's icon and its Activity Bar icon. The sidebar logo was an empty yellow square.
+
 # Version 6.15.0
 
 - **The backends are built with `Azure.Functions.Sdk`**, Microsoft's replacement for the `Microsoft.Azure.Functions.Worker.Sdk` package. What they publish is the same: the same files, the same extensions, the same behaviour. The NuGet package `DurableFunctionsMonitor.DotNetIsolated` no longer depends on `Microsoft.Azure.Functions.Worker.Sdk`: an MSBuild SDK is chosen in the project file of the Function App that uses the package (`<Project Sdk="Azure.Functions.Sdk/...">`), and a package cannot depend on one. A Function App that moves to the new SDK and still gets the old one from this package has both, and the build warns (MSB4011, AZFW0110).

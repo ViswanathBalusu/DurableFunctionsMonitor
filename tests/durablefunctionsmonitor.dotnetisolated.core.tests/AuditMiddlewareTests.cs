@@ -266,6 +266,69 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        public void RecordsWhatTheIdentityOfTheCallerSays()
+        {
+            // Arrange: Auth published the whole identity, not just the name
+
+            var context = Context();
+            context.Items[Globals.DfmIdentityContextValue] = new DfmIdentity
+            {
+                UserName = "alice@contoso.com",
+                Name = "Alice Smith",
+                Email = "alice.smith@contoso.com",
+                ObjectId = "11111111-2222-3333-4444-555555555555",
+                TenantId = "66666666-7777-8888-9999-000000000000",
+                Roles = new[] { "Operator", "Reader" },
+                AuthMethod = DfmIdentity.Bearer
+            };
+
+            // Act
+
+            var record = AuditWriter.BuildRecord(
+                context,
+                Request("/a/p/i/--DurableFunctionsHub/orchestrations('order-1')/terminate", "POST"),
+                OperationKind.Write,
+                HttpStatusCode.OK,
+                responseBody: null);
+
+            // Assert
+
+            Assert.AreEqual("alice@contoso.com", record.User);
+            Assert.AreEqual("Alice Smith", record.Name);
+            Assert.AreEqual("alice.smith@contoso.com", record.Email);
+            Assert.AreEqual("11111111-2222-3333-4444-555555555555", record.ObjectId);
+            Assert.AreEqual("66666666-7777-8888-9999-000000000000", record.TenantId);
+            CollectionAssert.AreEqual(new[] { "Operator", "Reader" }, record.Roles.ToArray());
+            Assert.AreEqual("bearer", record.AuthMethod);
+        }
+
+        [TestMethod]
+        public void ClaimsNothingAboutACallerWhoseIdentityIsUnknown()
+        {
+            // Arrange: only a user name, no identity (a call that never got as far as being identified)
+
+            var context = Context();
+
+            // Act
+
+            var record = AuditWriter.BuildRecord(
+                context,
+                Request("/a/p/i/--DurableFunctionsHub/purge-history", "POST"),
+                OperationKind.Write,
+                HttpStatusCode.Unauthorized,
+                responseBody: null);
+
+            // Assert: null and empty, never a guess
+
+            Assert.IsNull(record.Name);
+            Assert.IsNull(record.Email);
+            Assert.IsNull(record.ObjectId);
+            Assert.IsNull(record.TenantId);
+            Assert.AreEqual(0, record.Roles.Count);
+            Assert.IsNull(record.AuthMethod);
+        }
+
+        [TestMethod]
         public void AnUnidentifiedCallerIsRecordedAsAnonymous()
         {
             // Arrange: authentication is disabled, so the middleware published no user name

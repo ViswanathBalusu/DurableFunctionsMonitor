@@ -13,12 +13,17 @@ import { Login, MAX_HUBS_PROBED, type LoginOptions } from './login.svelte';
  * The MSAL module, mocked: these tests are about what the login state does with an account, not
  * about @azure/msal-browser itself. `msal` below is what the fake app was asked to do.
  */
+/** What MSAL knows about an account; the tests give as much of it as they care about. */
+type FakeAccount = { username: string; [field: string]: unknown };
+
 const msal = {
   created: [] as unknown[],
-  accounts: [] as { username: string }[],
-  redirectResult: null as { account: { username: string } } | null,
+  accounts: [] as FakeAccount[],
+  redirectResult: null as { account: FakeAccount } | null,
   handleRedirectRejects: false,
   silentToken: 'access-token' as string | null,
+  /** The rest of what a token request answers: the scopes, when it expires. */
+  silentExtras: {} as Record<string, unknown>,
   silentRejects: false,
   calls: [] as string[],
 };
@@ -59,7 +64,7 @@ vi.mock('@azure/msal-browser', () => ({
         throw new Error('interaction required');
       }
 
-      return { accessToken: msal.silentToken, idToken: 'id-token' };
+      return { accessToken: msal.silentToken, idToken: 'id-token', ...msal.silentExtras };
     }
     async acquireTokenRedirect() {
       msal.calls.push('acquireTokenRedirect');
@@ -103,6 +108,7 @@ beforeEach(() => {
   msal.redirectResult = null;
   msal.handleRedirectRejects = false;
   msal.silentToken = 'access-token';
+  msal.silentExtras = {};
   msal.silentRejects = false;
   msal.calls = [];
 });
@@ -129,6 +135,56 @@ describe('Login without a clientId', () => {
 
     expect(login.userName).toBe('chandra@contoso.com');
     expect(login.isAnonymous).toBe(false);
+  });
+
+  it('keeps everything the backend validated about the user, to show in the account menu', async () => {
+    const login = loginWith({
+      path: '/DurableFunctionsHub',
+      endpoints: endpointsWith({
+        easyAuthConfig: async () => ({
+          userName: 'chandra@contoso.com',
+          identity: {
+            userName: 'chandra@contoso.com',
+            name: 'Chandra Balusu',
+            objectId: 'oid-1',
+            tenantId: 'tid-1',
+            roles: ['Operator'],
+            authMethod: 'easyauth',
+          },
+        }),
+      }),
+    });
+
+    await login.login();
+
+    expect(login.identity).toMatchObject({
+      source: 'server',
+      userName: 'chandra@contoso.com',
+      name: 'Chandra Balusu',
+      objectId: 'oid-1',
+      tenantId: 'tid-1',
+      roles: ['Operator'],
+      authMethod: 'easyauth',
+    });
+  });
+
+  it('still has an identity from a backend that sends only the user name', async () => {
+    const login = loginWith({
+      path: '/DurableFunctionsHub',
+      endpoints: endpointsWith({ easyAuthConfig: async () => ({ userName: 'chandra@contoso.com' }) }),
+    });
+
+    await login.login();
+
+    expect(login.identity).toMatchObject({ source: 'server', userName: 'chandra@contoso.com', roles: [] });
+  });
+
+  it('has no identity when nobody is signed in', async () => {
+    const login = loginWith({ path: '/DurableFunctionsHub' });
+
+    await login.login();
+
+    expect(login.identity).toBeNull();
   });
 
   it('turns on the cookie-expiry reload of the client, but only once signed in', async () => {
@@ -222,6 +278,67 @@ describe('Login with MSAL', () => {
     expect(login.userName).toBe('chandra@contoso.com');
     expect(login.isAnonymous).toBe(false);
     expect(msal.calls).toContain('setActiveAccount');
+  });
+
+  it('keeps what MSAL knows about the account, to show in the account menu', async () => {
+    msal.accounts = [
+      {
+        username: 'chandra@contoso.com',
+        name: 'Chandra Balusu',
+        tenantId: 'tid-1',
+        homeAccountId: 'oid-1.tid-1',
+        environment: 'login.microsoftonline.com',
+        idTokenClaims: { oid: 'oid-1', roles: ['Operator'], aud: 'client-id', exp: 1_788_000_000 },
+      },
+    ];
+
+    const login = loginWith({
+      path: '/DurableFunctionsHub',
+      endpoints: endpointsWith({ easyAuthConfig: async () => config }),
+    });
+
+    await login.login();
+
+    expect(login.identity).toMatchObject({
+      source: 'msal',
+      userName: 'chandra@contoso.com',
+      name: 'Chandra Balusu',
+      objectId: 'oid-1',
+      tenantId: 'tid-1',
+      roles: ['Operator'],
+      homeAccountId: 'oid-1.tid-1',
+      authority: config.authority,
+      audience: 'client-id',
+    });
+  });
+
+  it('learns what the access token is good for, and until when, as tokens are acquired', async () => {
+    msal.accounts = [{ username: 'chandra@contoso.com' }];
+    msal.silentExtras = { scopes: ['client-id/.default'], expiresOn: new Date('2026-10-28T12:00:00Z') };
+
+    const login = loginWith({
+      path: '/DurableFunctionsHub',
+      endpoints: endpointsWith({ easyAuthConfig: async () => config }),
+    });
+
+    await login.login();
+    expect(login.identity?.accessTokenExpiresAt).toBeUndefined();
+
+    await login.getAuthHeaders();
+
+    expect(login.identity?.scopes).toEqual(['client-id/.default']);
+    expect(login.identity?.accessTokenExpiresAt).toBe('2026-10-28T12:00:00.000Z');
+  });
+
+  it('has no identity while the browser is on its way to AAD', async () => {
+    const login = loginWith({
+      path: '/',
+      endpoints: endpointsWith({ easyAuthConfig: async () => config }),
+    });
+
+    await login.login();
+
+    expect(login.identity).toBeNull();
   });
 
   it('falls back to the account msal already had', async () => {

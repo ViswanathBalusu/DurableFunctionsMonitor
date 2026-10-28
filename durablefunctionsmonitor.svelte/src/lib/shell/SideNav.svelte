@@ -1,5 +1,6 @@
 <script lang="ts">
   import { getContext } from 'svelte';
+  import LogoMark from '$lib/components/icons/LogoMark.svelte';
   import NavIcon from '$lib/components/icons/NavIcon.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { cn } from '$lib/utils';
@@ -26,7 +27,7 @@
 <!-- DFM App.dc.html L26-L38. Items are hidden when their capability is missing, never disabled. -->
 <nav class="snav" aria-label="Main">
   <div class="brand">
-    <div class="logo" aria-hidden="true"></div>
+    <div class="logo" aria-hidden="true"><LogoMark /></div>
     <span class="lbl">DFM</span>
   </div>
 

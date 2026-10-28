@@ -2,6 +2,7 @@
   import { getContext } from 'svelte';
   import Chip from '$lib/components/Chip.svelte';
   import DangerBadge from '$lib/components/DangerBadge.svelte';
+  import LogoMark from '$lib/components/icons/LogoMark.svelte';
   import Segmented from '$lib/components/Segmented.svelte';
   import Select from '$lib/components/Select.svelte';
   import { timeZoneLabel } from '$lib/format/time';
@@ -65,7 +66,7 @@
 
 <!-- DFM App.dc.html L40-L95, in the order the mockup lays it out. -->
 <header class="topbar">
-  <div class="logo" aria-hidden="true"></div>
+  <div class="logo" aria-hidden="true"><LogoMark /></div>
   <span class="display hide-m" style="font-size:16px;white-space:nowrap">Durable Functions Monitor</span>
   <span class="muted hide-m" aria-hidden="true">/</span>
 

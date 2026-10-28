@@ -26,6 +26,11 @@
 
   app.setAuthHeaders(() => login.getAuthHeaders());
 
+  // The account menu reads who is signed in from the app, not from the login state
+  $effect(() => {
+    app.setIdentity(login.identity);
+  });
+
   onMount(async () => {
     if (app.host.kind === 'browser' && !(await login.login())) {
       // On the way to AAD: nothing else may run, msal has to be able to redirect the page

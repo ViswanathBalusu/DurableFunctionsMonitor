@@ -118,6 +118,16 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 [AtColumn] = at,
                 [UserColumn] = record.User ?? string.Empty,
+
+                // Empty strings again, for the same reason. What the identity says about the caller is
+                // cut to a sane length: a claim is not trusted to be short just because it came from a token.
+                [NameColumn] = Truncate(record.Name, MaxIdentityChars),
+                [EmailColumn] = Truncate(record.Email, MaxIdentityChars),
+                [ObjectIdColumn] = Truncate(record.ObjectId, MaxIdentityChars),
+                [TenantIdColumn] = Truncate(record.TenantId, MaxIdentityChars),
+                [RolesColumn] = Truncate(string.Join(RoleSeparator, record.Roles ?? Array.Empty<string>()), MaxRolesChars),
+                [AuthMethodColumn] = Truncate(record.AuthMethod, MaxIdentityChars),
+
                 [OperationColumn] = record.Operation ?? string.Empty,
                 [KindColumn] = record.Kind ?? string.Empty,
 
@@ -139,6 +149,15 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 At = entity.GetDateTimeOffset(AtColumn) ?? default,
                 User = entity.GetString(UserColumn),
+
+                // Rows written before identities were recorded have none of these columns: null, not an error
+                Name = NullIfEmpty(entity.GetString(NameColumn)),
+                Email = NullIfEmpty(entity.GetString(EmailColumn)),
+                ObjectId = NullIfEmpty(entity.GetString(ObjectIdColumn)),
+                TenantId = NullIfEmpty(entity.GetString(TenantIdColumn)),
+                Roles = SplitRoles(entity.GetString(RolesColumn)),
+                AuthMethod = NullIfEmpty(entity.GetString(AuthMethodColumn)),
+
                 Operation = entity.GetString(OperationColumn),
                 Kind = entity.GetString(KindColumn),
 
@@ -241,16 +260,38 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             return string.IsNullOrEmpty(value) ? null : value;
         }
 
+        private static IReadOnlyList<string> SplitRoles(string roles)
+        {
+            return string.IsNullOrEmpty(roles)
+                ? Array.Empty<string>()
+                : roles.Split(RoleSeparator, StringSplitOptions.RemoveEmptyEntries);
+        }
+
         /// <summary>Suffix of the audit table, appended to the Task Hub name.</summary>
         internal const string TableSuffix = "DfmAudit";
 
         /// <summary>How much of an error message is stored. Anything longer is cut off.</summary>
         internal const int MaxMessageChars = 8 * 1024;
 
+        /// <summary>How much of each claim about the caller is stored (a name, an address, a GUID are all far shorter).</summary>
+        internal const int MaxIdentityChars = 512;
+
+        /// <summary>How much of the caller's role list is stored.</summary>
+        internal const int MaxRolesChars = 2 * 1024;
+
+        /// <summary>Separates the roles in the Roles column. DFM_ALLOWED_APP_ROLES is split by it too, so a role never contains one.</summary>
+        private const char RoleSeparator = ',';
+
         private const int MaxPageSize = 1000;
 
         private const string AtColumn = "At";
         private const string UserColumn = "User";
+        private const string NameColumn = "Name";
+        private const string EmailColumn = "Email";
+        private const string ObjectIdColumn = "ObjectId";
+        private const string TenantIdColumn = "TenantId";
+        private const string RolesColumn = "Roles";
+        private const string AuthMethodColumn = "AuthMethod";
         private const string OperationColumn = "Operation";
         private const string KindColumn = "Kind";
         private const string InstanceIdColumn = "InstanceId";

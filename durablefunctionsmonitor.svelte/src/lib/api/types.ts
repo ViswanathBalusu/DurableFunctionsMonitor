@@ -414,6 +414,16 @@ export interface EntitiesResponse {
 export interface AuditRow {
   at: string;
   user: string;
+  /**
+   * What the backend recorded about the caller besides the user name (`DfmIdentity`). Absent from a backend
+   * that predates identities, and null/empty for a row written before they were recorded.
+   */
+  name?: string | null;
+  email?: string | null;
+  objectId?: string | null;
+  tenantId?: string | null;
+  roles?: string[] | null;
+  authMethod?: string | null;
   operation: string;
   kind: 'Write' | 'Dangerous';
   instanceId: string | null;
@@ -459,10 +469,27 @@ export interface ConnectionInfo {
   isReadOnly: boolean;
 }
 
+/**
+ * What the backend validated about the caller (`DfmIdentity`): the claims of the identity Easy Auth or the
+ * bearer token vouched for. The audit log records the same fields. Each is absent when the token has no such claim.
+ */
+export interface ServerIdentity {
+  userName?: string | null;
+  name?: string | null;
+  email?: string | null;
+  objectId?: string | null;
+  tenantId?: string | null;
+  roles?: string[] | null;
+  /** `easyauth`, `bearer`, `vscode` or `anonymous`. */
+  authMethod?: string | null;
+}
+
 export interface EasyAuthConfig {
   clientId?: string;
   authority?: string;
   userName?: string;
+  /** Only in the server-directed login flow, where the browser has no MSAL session of its own to ask. */
+  identity?: ServerIdentity;
 }
 
 export interface StartNewInstanceRequest {

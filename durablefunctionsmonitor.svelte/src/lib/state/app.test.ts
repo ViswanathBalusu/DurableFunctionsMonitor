@@ -328,6 +328,23 @@ describe('AppState', () => {
 
     expect(app.userName).toBe('alice@contoso.com');
   });
+
+  it('reports the signed-in identity over the user name the host injected', () => {
+    const app = appWith({ host: fakeHost({ clientConfig: { userName: 'from-the-host@contoso.com' } }) });
+
+    app.setIdentity({ source: 'server', userName: 'alice@contoso.com', roles: [] });
+
+    expect(app.userName).toBe('alice@contoso.com');
+
+    // Signing out leaves what the host said, which is all there is to say
+    app.setIdentity(null);
+    expect(app.userName).toBe('from-the-host@contoso.com');
+  });
+
+  it('has nobody signed in by default', () => {
+    expect(appWith().identity).toBeNull();
+    expect(appWith().userName).toBe('');
+  });
 });
 
 /**

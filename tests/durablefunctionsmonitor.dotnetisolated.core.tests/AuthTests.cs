@@ -366,6 +366,144 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             Assert.AreEqual(expectedMode, result);
         }
 
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_ReportsTheWholeIdentityOfTheCaller()
+        {
+            // Arrange
+            var request = new FakeHttpRequestData(new Uri("http://localhost/a/p/i/--TestHub/about"));
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.AddCookie(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
+
+            request.AddIdentity(new ClaimsIdentity(new Claim[] {
+                new Claim("preferred_username", "tino@contoso.com"),
+                new Claim("name", "Tino Hager"),
+                new Claim("oid", "11111111-2222-3333-4444-555555555555"),
+                new Claim("tid", "66666666-7777-8888-9999-000000000000"),
+                new Claim("roles", "role1")
+            }, "tino-test-auth-type"));
+
+            var settings = new DfmSettings { AllowedUserNames = null, AllowedAppRoles = null, AllowedFullAccessAppRoles = null, AllowedReadOnlyAppRoles = null };
+
+            // Act
+            var (_, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Read, settings);
+
+            // Assert
+            Assert.AreEqual("tino@contoso.com", userName);
+            Assert.AreEqual("tino@contoso.com", identity.UserName);
+            Assert.AreEqual("Tino Hager", identity.Name);
+            Assert.AreEqual("11111111-2222-3333-4444-555555555555", identity.ObjectId);
+            Assert.AreEqual("66666666-7777-8888-9999-000000000000", identity.TenantId);
+            CollectionAssert.AreEqual(new[] { "role1" }, identity.Roles.ToArray());
+            Assert.AreEqual(DfmIdentity.EasyAuth, identity.AuthMethod);
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_NamesTheCallerEvenWhenTheCallIsRefused()
+        {
+            // Arrange: a known user who is not on the allow-list
+            var request = new FakeHttpRequestData(new Uri("http://localhost/a/p/i/--TestHub/about"));
+
+            string xsrfToken = $"xsrf-token-{DateTime.Now.Ticks}";
+            request.AddCookie(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
+            request.Headers.Add(Globals.XsrfTokenCookieAndHeaderName, xsrfToken);
+
+            request.AddIdentity(new ClaimsIdentity(new Claim[] {
+                new Claim("preferred_username", "mallory@contoso.com"),
+                new Claim("oid", "99999999-2222-3333-4444-555555555555")
+            }, "tino-test-auth-type"));
+
+            var settings = new DfmSettings { AllowedUserNames = new[] { "tino@contoso.com" } };
+
+            DfmIdentity reported = null;
+
+            // Act
+            await Assert.ThrowsExactlyAsync<DfmUnauthorizedException>(
+                () => Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Write, settings, known => reported = known));
+
+            // Assert: the audit log gets to say who was turned away, not just that somebody was
+            Assert.IsNotNull(reported);
+            Assert.AreEqual("mallory@contoso.com", reported.UserName);
+            Assert.AreEqual("99999999-2222-3333-4444-555555555555", reported.ObjectId);
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_IdentifiesTheVsCodeExtensionByItsNonce()
+        {
+            // Arrange
+            string originalNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
+            try
+            {
+                Environment.SetEnvironmentVariable(EnvVariableNames.DFM_NONCE, "my-nonce");
+
+                var request = new FakeHttpRequestData(new Uri("http://localhost/a/p/i/--TestHub/about"));
+                request.Headers.Add("x-dfm-nonce", "my-nonce");
+
+                // Act
+                var (_, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Read, new DfmSettings());
+
+                // Assert
+                Assert.AreEqual(Globals.VsCodeUserName, userName);
+                Assert.AreEqual(DfmIdentity.VsCode, identity.AuthMethod);
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(EnvVariableNames.DFM_NONCE, originalNonce);
+            }
+        }
+
+        [TestMethod]
+        public async Task GetClaimsPrincipal_XMsClientPrincipalHeader_KeepsTheClaimsThatDescribeTheUser()
+        {
+            string originalSiteName = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME);
+            string originalClientId = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID);
+            try
+            {
+                // Arrange
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME, "test-site");
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID, "test-client-id");
+
+                var request = new FakeHttpRequestData(new Uri("http://localhost"));
+
+                var clientPrincipal = new
+                {
+                    auth_typ = "aad",
+                    claims = new[]
+                    {
+                        new { typ = "preferred_username", val = "testuser@example.com" },
+                        new { typ = "name", val = "Test User" },
+                        new { typ = "http://schemas.microsoft.com/identity/claims/objectidentifier", val = "11111111-2222-3333-4444-555555555555" },
+                        new { typ = "http://schemas.microsoft.com/identity/claims/tenantid", val = "66666666-7777-8888-9999-000000000000" },
+                        new { typ = "roles", val = "somerole" },
+                        // Not described anywhere in the contract, so not copied
+                        new { typ = "aio", val = "some-opaque-blob" }
+                    }
+                };
+
+                request.Headers.Add("x-ms-client-principal", Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(clientPrincipal))));
+
+                var settings = new DfmSettings();
+
+                // Act
+                var (principal, authMethod) = await Auth.ResolveClaimsPrincipal(request, settings);
+                var identity = DfmIdentity.FromPrincipal(principal, settings, authMethod);
+
+                // Assert
+                Assert.AreEqual("easyauth", authMethod);
+                Assert.AreEqual("Test User", identity.Name);
+                Assert.AreEqual("11111111-2222-3333-4444-555555555555", identity.ObjectId);
+                Assert.AreEqual("66666666-7777-8888-9999-000000000000", identity.TenantId);
+                CollectionAssert.AreEqual(new[] { "somerole" }, identity.Roles.ToArray());
+                Assert.IsFalse(principal.HasClaim(c => c.Type == "aio"));
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME, originalSiteName);
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID, originalClientId);
+            }
+        }
+
         // The only way to define a callback for ValidateToken() method
         delegate void ValidateTokenDelegate(string a, TokenValidationParameters p, out SecurityToken t);
 

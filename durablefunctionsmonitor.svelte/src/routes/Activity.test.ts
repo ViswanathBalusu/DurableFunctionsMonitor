@@ -207,6 +207,40 @@ describe('Activity: the table', () => {
     expect('instanceId' in route && route.instanceId).toBe('order-2026-09-04-000911');
   });
 
+  it('opens what the audit log recorded about the caller, when it recorded more than a name', async () => {
+    const who = auditRow({
+      user: 'alice@contoso.com',
+      name: 'Alice Smith',
+      objectId: '11111111-2222-3333-4444-555555555555',
+      tenantId: '66666666-7777-8888-9999-000000000000',
+      roles: ['Operator'],
+      authMethod: 'bearer',
+    });
+
+    mount({ response: auditFixture({ rows: [who] }) });
+    await waitFor(() => expect(rows()).toHaveLength(1));
+
+    await fireEvent.click(screen.getByRole('button', { name: 'alice@contoso.com' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Caller' });
+    const details = within(dialog).getByLabelText('Account details');
+
+    expect(within(details).getByText('Alice Smith')).toBeInTheDocument();
+    expect(within(details).getByText('11111111-2222-3333-4444-555555555555')).toBeInTheDocument();
+    expect(within(details).getByText('Operator')).toBeInTheDocument();
+    expect(within(details).getByText(/Bearer token/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/audit log: what the backend recorded/)).toBeInTheDocument();
+  });
+
+  it('shows a plain user name for a row that recorded nothing else', async () => {
+    mount({ response: auditFixture({ rows: [auditRow({ user: 'ops@contoso.com' })] }) });
+    await waitFor(() => expect(rows()).toHaveLength(1));
+
+    // Nothing to open: a dialog of one line would promise more than the log has
+    expect(screen.queryByRole('button', { name: 'ops@contoso.com' })).toBeNull();
+    expect(cells(rows()[0])[2]).toBe('ops@contoso.com');
+  });
+
   it('renders two rows that say exactly the same thing', async () => {
     // A user can run the same operation against the same instance twice inside one second, and the
     // row carries nothing else: a key built from the contents would collide and lose the second row

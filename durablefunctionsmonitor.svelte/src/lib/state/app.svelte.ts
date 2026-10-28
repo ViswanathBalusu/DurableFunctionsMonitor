@@ -15,6 +15,7 @@ import { Actions } from '../instance/actions.svelte';
 import { host as defaultHost, type Host } from '../host.svelte';
 import { Router } from '../router.svelte';
 import { ViewStateStorage } from '../storage/view-state-storage';
+import type { AccountIdentity } from './identity';
 import { Peek } from './peek.svelte';
 import { Prefs, type AutoRefreshSeconds } from './prefs.svelte';
 import { Toasts } from './toast.svelte';
@@ -67,6 +68,9 @@ export class AppState {
 
   /** The error of the last failed `/about`, so the shell can say why it is empty. */
   aboutError = $state<string | null>(null);
+
+  /** Who is signed in, as far as the browser knows; null when nobody is (E2-S7). */
+  identity = $state<AccountIdentity | null>(null);
 
   /** Where the Authorization header comes from once the login state has one (E2-S7). */
   #authHeaders: () => Record<string, string> | Promise<Record<string, string>> = () => ({});
@@ -139,9 +143,22 @@ export class AppState {
     return this.about?.dangerousOperations ?? false;
   }
 
-  /** Who the backend thinks is calling; empty when authentication is off. */
+  /**
+   * Who is calling; empty when authentication is off. The signed-in identity wins over the host's client
+   * config: that is only what the embedding host was told to say (`DFM_CLIENT_CONFIG`), and it says nothing at all
+   * for a person who signed in through Easy Auth or MSAL.
+   */
   get userName(): string {
+    if (this.identity?.userName) {
+      return this.identity.userName;
+    }
+
     return typeof this.host.clientConfig.userName === 'string' ? this.host.clientConfig.userName : '';
+  }
+
+  /** Wired by the browser's login state once it knows who signed in. */
+  setIdentity(identity: AccountIdentity | null): void {
+    this.identity = identity;
   }
 
   get busy(): boolean {

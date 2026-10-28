@@ -53,9 +53,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 // Assuming it is the server-directed login flow to be used
                 // and returning just the user name (to speed up login process)
-                var claimsPrincipal = await Auth.GetClaimsPrincipal(req, this.Settings);
-                var userNameClaim = claimsPrincipal?.Identities?.SingleOrDefault()?.FindAll(this.Settings.UserNameClaimName).SingleOrDefault();
-                return await req.ReturnJson(new { userName = userNameClaim?.Value });
+                var (claimsPrincipal, authMethod) = await Auth.ResolveClaimsPrincipal(req, this.Settings);
+                var identity = DfmIdentity.FromPrincipal(claimsPrincipal, this.Settings, authMethod);
+
+                // userName stays where it always was; identity is everything else the validated claims say,
+                // which is what the account menu shows and what the audit log records for this user
+                return await req.ReturnJson(new { userName = identity.UserName, identity });
             }
 
             // Trying to get tenantId from WEBSITE_AUTH_OPENID_ISSUER environment variable

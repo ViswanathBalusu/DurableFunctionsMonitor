@@ -14,7 +14,9 @@
   import { auditRowKey, outcomeLabel } from '$lib/activity/audit';
   import { fmtDateTime } from '$lib/format/time';
   import type { Activity } from '$lib/state/activity.svelte';
+  import AccountDialog from '$lib/shell/AccountDialog.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
+  import { identityFromAudit, type AccountIdentity } from '$lib/state/identity';
 
   interface Props {
     activity: Activity;
@@ -29,9 +31,26 @@
   /** The store hands the rows over newest first; the header says so rather than offering to re-sort. */
   const sort: SortState = { id: 'time', dir: 'desc' };
 
+  /** The caller whose details are open; null while the dialog is closed. */
+  let caller = $state<AccountIdentity | null>(null);
+  let callerOpen = $state(false);
+
+  /**
+   * Whether the record says more about the caller than a user name. Older rows, and those of a deployment with
+   * authentication off, do not, and a button that opens a dialog of one line would promise more than it has.
+   */
+  function hasDetails(row: AuditRow): boolean {
+    return !!(row.name || row.email || row.objectId || row.tenantId || row.roles?.length || row.authMethod);
+  }
+
+  function showCaller(row: AuditRow): void {
+    caller = identityFromAudit(row);
+    callerOpen = true;
+  }
+
   const columns = $derived<ColumnDef<AuditRow>[]>([
     { id: 'time', header: 'time', mono: true, cell: timeCell },
-    { id: 'user', header: 'user', accessor: (row) => row.user },
+    { id: 'user', header: 'user', accessor: (row) => row.user, cell: userCell },
     { id: 'operation', header: 'operation', cell: operationCell },
     { id: 'instance', header: 'instance', mono: true, cell: instanceCell },
     { id: 'outcome', header: 'outcome', cell: outcomeCell },
@@ -45,6 +64,15 @@
 
 {#snippet timeCell(row: AuditRow)}
   {fmtDateTime(row.at, showTimeAs)}
+{/snippet}
+
+{#snippet userCell(row: AuditRow)}
+  {#if hasDetails(row)}
+    <!-- The name is the title: who this is, without opening anything -->
+    <LinkButton onclick={() => showCaller(row)} title={row.name ?? row.user}>{row.user}</LinkButton>
+  {:else}
+    {row.user}
+  {/if}
 {/snippet}
 
 {#snippet operationCell(row: AuditRow)}
@@ -94,3 +122,5 @@
     {/if}
   {/snippet}
 </DataTable>
+
+<AccountDialog bind:open={callerOpen} identity={caller} title="Caller" />

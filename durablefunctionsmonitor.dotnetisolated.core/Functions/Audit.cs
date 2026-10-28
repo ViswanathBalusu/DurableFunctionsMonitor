@@ -20,6 +20,24 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// <summary>Who made the call ('anonymous' when authentication is disabled).</summary>
         public string User { get; set; }
 
+        /// <summary>Display name of the caller. Null when the identity had none, and for records written before identities were recorded.</summary>
+        public string Name { get; set; }
+
+        /// <summary>The caller's 'email' claim. Null when there is none.</summary>
+        public string Email { get; set; }
+
+        /// <summary>The caller's object id in the directory.</summary>
+        public string ObjectId { get; set; }
+
+        /// <summary>The directory the caller signed in to.</summary>
+        public string TenantId { get; set; }
+
+        /// <summary>App roles the caller held. Empty when there were none.</summary>
+        public IReadOnlyList<string> Roles { get; set; } = Array.Empty<string>();
+
+        /// <summary>'easyauth', 'bearer', 'vscode' or 'anonymous'. Null for older records.</summary>
+        public string AuthMethod { get; set; }
+
         /// <summary>Human readable operation name, e.g. 'Terminate'.</summary>
         public string Operation { get; set; }
 
@@ -159,6 +177,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 At = record.At,
                 User = record.User,
+                Name = record.Name,
+                Email = record.Email,
+                ObjectId = record.ObjectId,
+                TenantId = record.TenantId,
+                Roles = record.Roles ?? Array.Empty<string>(),
+                AuthMethod = record.AuthMethod,
                 Operation = record.Operation,
                 Kind = record.Kind,
                 InstanceId = record.InstanceId,

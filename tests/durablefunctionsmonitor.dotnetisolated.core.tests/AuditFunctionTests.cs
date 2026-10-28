@@ -50,6 +50,12 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                     {
                         At = new DateTimeOffset(2026, 9, 4, 12, 0, 0, TimeSpan.Zero),
                         User = "alice@contoso.com",
+                        Name = "Alice Smith",
+                        Email = "alice.smith@contoso.com",
+                        ObjectId = "11111111-2222-3333-4444-555555555555",
+                        TenantId = "66666666-7777-8888-9999-000000000000",
+                        Roles = new[] { "Operator", "Reader" },
+                        AuthMethod = "easyauth",
                         Operation = "Terminate",
                         Kind = "Write",
                         InstanceId = "order-1",
@@ -93,11 +99,20 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             // Route stays in the store: it is for troubleshooting, not part of the contract
             CollectionAssert.AreEquivalent(
-                new[] { "at", "user", "operation", "kind", "instanceId", "outcome", "status", "message" },
+                new[] { "at", "user", "name", "email", "objectId", "tenantId", "roles", "authMethod", "operation", "kind", "instanceId", "outcome", "status", "message" },
                 row.Properties().Select(p => p.Name).ToArray());
 
             Assert.AreEqual("2026-09-04T12:00:00Z", row.Value<string>("at"));
             Assert.AreEqual("alice@contoso.com", row.Value<string>("user"));
+
+            // What the audit log knows about the caller beyond the user name
+            Assert.AreEqual("Alice Smith", row.Value<string>("name"));
+            Assert.AreEqual("alice.smith@contoso.com", row.Value<string>("email"));
+            Assert.AreEqual("11111111-2222-3333-4444-555555555555", row.Value<string>("objectId"));
+            Assert.AreEqual("66666666-7777-8888-9999-000000000000", row.Value<string>("tenantId"));
+            CollectionAssert.AreEqual(new[] { "Operator", "Reader" }, row["roles"].Values<string>().ToArray());
+            Assert.AreEqual("easyauth", row.Value<string>("authMethod"));
+
             Assert.AreEqual("Terminate", row.Value<string>("operation"));
             Assert.AreEqual("Write", row.Value<string>("kind"));
             Assert.AreEqual("order-1", row.Value<string>("instanceId"));

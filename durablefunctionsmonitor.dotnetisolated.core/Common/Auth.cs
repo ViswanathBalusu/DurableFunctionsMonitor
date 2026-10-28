@@ -108,7 +108,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// call, or 'anonymous' when authentication is disabled. The audit log (B5) records that name, and
         /// nothing else in DfMon needs to look the identity up a second time.
         /// </summary>
-        public static async Task<(DfmMode Mode, string UserName)> ValidateIdentityAndGetUserAsync(HttpRequestData request, OperationKind operationKind, DfmSettings settings)
+        public static async Task<(DfmMode Mode, string UserName, DfmIdentity Identity)> ValidateIdentityAndGetUserAsync(HttpRequestData request, OperationKind operationKind, DfmSettings settings, Action<DfmIdentity> onIdentified = null)
         {
             // Dangerous operations are off unless this deployment explicitly opted in
             if (operationKind == OperationKind.Dangerous && !settings.DangerousOperationsEnabled)
@@ -127,19 +127,27 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 // DisableAuthentication means nobody was identified at all; a matching DFM_NONCE means the
                 // call came through the VS Code extension (or the local harness that impersonates it).
-                return (settings.Mode, settings.DisableAuthentication ? Globals.AnonymousUserName : Globals.VsCodeUserName);
+                var nonceIdentity = settings.DisableAuthentication ? DfmIdentity.ForAnonymous() : DfmIdentity.ForVsCode();
+                onIdentified?.Invoke(nonceIdentity);
+
+                return (settings.Mode, nonceIdentity.UserName, nonceIdentity);
             }
 
             // Then validating anti-forgery token
             ThrowIfXsrfTokenIsInvalid(request.Headers, request.Cookies);
 
-            var principal = await GetClaimsPrincipal(request, settings);
+            var (principal, authMethod) = await ResolveClaimsPrincipal(request, settings);
             var userNameClaim = principal.FindAll(settings.UserNameClaimName).SingleOrDefault();
 
             if (userNameClaim == null)
             {
                 throw new DfmUnauthorizedException($"'{settings.UserNameClaimName}' claim is missing in the incoming identity. Call is rejected.");
             }
+
+            // Reporting who this is before deciding whether they may do it, so that a call which is then
+            // refused is still recorded under the name of the one who made it
+            var identity = DfmIdentity.FromPrincipal(principal, settings, authMethod);
+            onIdentified?.Invoke(identity);
 
             if (settings.AllowedUserNames?.Contains(userNameClaim.Value) == false)
             {
@@ -167,7 +175,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
                 if (userIsInFullAccessRole)
                 {
-                    return (settings.Mode, userNameClaim.Value);
+                    return (settings.Mode, userNameClaim.Value, identity);
                 }
 
                 // If current operation modifies any data, then validating that user is _not_ in ReadOnly mode
@@ -176,10 +184,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                     throw new DfmAccessViolationException($"User {userNameClaim.Value} is in read-only mode");
                 }
 
-                return (userIsInReadonlyRole ? DfmMode.ReadOnly : settings.Mode, userNameClaim.Value);
+                return (userIsInReadonlyRole ? DfmMode.ReadOnly : settings.Mode, userNameClaim.Value, identity);
             }
 
-            return (settings.Mode, userNameClaim.Value);
+            return (settings.Mode, userNameClaim.Value, identity);
         }
 
         public static async Task<IEnumerable<string>> GetTaskHubNamesFromStorage(string connStringName)
@@ -368,24 +376,33 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         public static async Task<ClaimsPrincipal> GetClaimsPrincipal(HttpRequestData request, DfmSettings settings)
         {
+            return (await ResolveClaimsPrincipal(request, settings)).Principal;
+        }
+
+        /// <summary>
+        /// <see cref="GetClaimsPrincipal"/>, and also how the principal was obtained: the audit log records
+        /// whether Easy Auth or DfMon itself vouched for the caller.
+        /// </summary>
+        internal static async Task<(ClaimsPrincipal Principal, string AuthMethod)> ResolveClaimsPrincipal(HttpRequestData request, DfmSettings settings)
+        {
             // First trying the request object
             var easyAuthPrincipal = new ClaimsPrincipal(request.Identities);
 
             if (easyAuthPrincipal.Identity != null && easyAuthPrincipal.Identity.IsAuthenticated && easyAuthPrincipal.HasClaim(c => c.Type == settings.UserNameClaimName))
             {
                 // Authentication was done by EasyAuth and converted into a ClaimsPrincipal by the Functions runtime. Returning immediately.
-                return easyAuthPrincipal;
+                return (easyAuthPrincipal, DfmIdentity.EasyAuth);
             }
 
             // Then trying to parse the x-ms-client-principal header
             if (request.Headers.TryGetValues("x-ms-client-principal", out var clientPrincipalHeaderValues))
             {
-                return ParseMsClientPrincipalHeader(clientPrincipalHeaderValues.Single(), settings);
+                return (ParseMsClientPrincipalHeader(clientPrincipalHeaderValues.Single(), settings), DfmIdentity.EasyAuth);
             }
 
             // Validating and parsing the access token ourselves
             request.Headers.TryGetValues("Authorization", out var authHeaderValues);
-            return await ValidateToken(authHeaderValues?.SingleOrDefault());
+            return (await ValidateToken(authHeaderValues?.SingleOrDefault()), DfmIdentity.Bearer);
         }
 
         // parsing header directly as per the guidance here: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=python-v2%2Cisolated-process%2Cnodejs-v4%2Cfunctionsv2&pivots=programming-language-csharp#working-with-client-identities
@@ -420,6 +437,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
                 var roles = claims.Where(c => c.typ == settings.RolesClaimName).Select(c => (string)c.val);
                 identity.AddClaims(roles.Select(r => new Claim(settings.RolesClaimName, r)));
+
+                // And the claims that describe the user. Only these: the header is not a bag to copy wholesale.
+                foreach (var claim in claims.Where(c => DfmIdentity.DescriptiveClaimTypes.Contains((string)c.typ)))
+                {
+                    identity.AddClaim(new Claim((string)claim.typ, (string)claim.val));
+                }
 
                 return new ClaimsPrincipal(identity);
             }

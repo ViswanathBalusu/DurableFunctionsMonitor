@@ -102,6 +102,84 @@ namespace durablefunctionsmonitor.dotnetisolated.core.integrationtests
         }
 
         [TestMethod]
+        public async Task StoresWhoMadeTheCallAndReadsItBack()
+        {
+            // Arrange
+
+            var record = Record("Terminate", this._now.AddMinutes(-1));
+            record.Name = "Alice Smith";
+            record.Email = "alice.smith@contoso.com";
+            record.ObjectId = "11111111-2222-3333-4444-555555555555";
+            record.TenantId = "66666666-7777-8888-9999-000000000000";
+            record.Roles = new[] { "Operator", "Reader" };
+            record.AuthMethod = "easyauth";
+
+            // Act
+
+            await AuditStore.WriteAsync(ConnStringName, this._hubName, record);
+
+            var row = (await AuditStore.ReadAsync(ConnStringName, this._hubName, this.Query(top: 10))).Rows.Single();
+
+            // Assert
+
+            Assert.AreEqual("Alice Smith", row.Name);
+            Assert.AreEqual("alice.smith@contoso.com", row.Email);
+            Assert.AreEqual("11111111-2222-3333-4444-555555555555", row.ObjectId);
+            Assert.AreEqual("66666666-7777-8888-9999-000000000000", row.TenantId);
+            CollectionAssert.AreEqual(new[] { "Operator", "Reader" }, row.Roles.ToArray());
+            Assert.AreEqual("easyauth", row.AuthMethod);
+        }
+
+        [TestMethod]
+        public async Task ReadsARecordWrittenBeforeIdentitiesWereStored()
+        {
+            // Arrange: a row with none of the identity columns, as an older version wrote it
+
+            await AuditStore.WriteAsync(ConnStringName, this._hubName, Record("Terminate", this._now.AddMinutes(-2)));
+
+            var table = this._tableService.GetTableClient(this.AuditTable);
+            var entity = table.Query<TableEntity>().Single();
+
+            foreach (var column in new[] { "Name", "Email", "ObjectId", "TenantId", "Roles", "AuthMethod" })
+            {
+                entity.Remove(column);
+            }
+
+            await table.UpsertEntityAsync(entity, TableUpdateMode.Replace);
+
+            // Act
+
+            var row = (await AuditStore.ReadAsync(ConnStringName, this._hubName, this.Query(top: 10))).Rows.Single();
+
+            // Assert: nothing is made up, and nothing throws
+
+            Assert.AreEqual("Terminate", row.Operation);
+            Assert.IsNull(row.Name);
+            Assert.IsNull(row.ObjectId);
+            Assert.IsNull(row.AuthMethod);
+            Assert.AreEqual(0, row.Roles.Count);
+        }
+
+        [TestMethod]
+        public async Task CutsAnOverlongClaimInsteadOfStoringIt()
+        {
+            // Arrange
+
+            var record = Record("Terminate", this._now.AddMinutes(-1));
+            record.Name = new string('n', AuditStore.MaxIdentityChars + 100);
+
+            // Act
+
+            await AuditStore.WriteAsync(ConnStringName, this._hubName, record);
+
+            var row = (await AuditStore.ReadAsync(ConnStringName, this._hubName, this.Query(top: 10))).Rows.Single();
+
+            // Assert
+
+            Assert.AreEqual(AuditStore.MaxIdentityChars, row.Name.Length);
+        }
+
+        [TestMethod]
         public async Task ReturnsRecordsNewestFirstAcrossDays()
         {
             // Arrange: three records spread over two days

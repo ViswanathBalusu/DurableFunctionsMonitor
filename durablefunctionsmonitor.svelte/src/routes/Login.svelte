@@ -3,6 +3,7 @@
   import Button from '$lib/components/Button.svelte';
   import Card from '$lib/components/Card.svelte';
   import Chip from '$lib/components/Chip.svelte';
+  import LogoMark from '$lib/components/icons/LogoMark.svelte';
   import HubRow from '$lib/login/HubRow.svelte';
   import type { Login } from '$lib/state/login.svelte';
 
@@ -24,7 +25,9 @@
 <section class="login" data-screen-label="Login">
   <div style="width:min(560px,100%);display:grid;gap:24px">
     <div style="display:flex;align-items:center;gap:14px">
-      <div class="logo" style="width:56px;height:56px;box-shadow:var(--shadow-brutal)" aria-hidden="true"></div>
+      <div class="logo" style="width:56px;height:56px;box-shadow:var(--shadow-brutal)" aria-hidden="true">
+        <LogoMark />
+      </div>
       <div>
         <h1 class="display" style="font-size:32px">Durable Functions Monitor</h1>
         {#if login.version || host}

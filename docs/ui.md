@@ -192,6 +192,19 @@ outcome and the details. Recorded only when `DFM_AUDIT_ENABLED=true`, and readab
 provider that can read the audit table back; the screen says so when it is off rather than showing an
 empty table.
 
+"Who" is the user name, and for a caller the backend could identify, a click on it opens everything the
+audit record holds about them: display name, object id, tenant id, app roles and how the call was
+authenticated (Easy Auth, a bearer token DfMon validated, or the VS Code extension). The backend reads
+all of that from the identity it validated for the call, never from what the browser says about itself.
+Records written before 6.16 hold the user name only, and so does a deployment with authentication off.
+
+### Your account — the user menu
+
+The menu at the top right names whoever is signed in, and "Account details" opens what is known about them:
+for a browser signed in through Microsoft Entra ID (MSAL) that is the account, the claims of its ID token, the
+scopes and expiry of the access token; for an Easy Auth login it is the claims the backend validated. Only what
+is known is shown. The same identity is what the audit log records for the changes you make.
+
 ### Settings — `/{hub}/settings`
 
 ![Settings](../readme/screenshots/dfm-settings.png)

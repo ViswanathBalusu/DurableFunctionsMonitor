@@ -98,7 +98,17 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                         if (operationKind.HasValue)
                         {
                             // If so, invoking DfMon's auth logic
-                            var (dfmMode, userName) = await Auth.ValidateIdentityAndGetUserAsync(request, operationKind.Value, settings);
+                            // The identity is published the moment it is known (before the checks that may refuse it),
+                            // so that even a rejected call is audited under the name of the one who made it
+                            var (dfmMode, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(
+                                request,
+                                operationKind.Value,
+                                settings,
+                                known =>
+                                {
+                                    context.Items[Globals.DfmUserNameContextValue] = known.UserName;
+                                    context.Items[Globals.DfmIdentityContextValue] = known;
+                                });
 
                             // Also validating task hub name (if it is a part of the request).
                             // But only after validating user identity (because validating task hub name involves querying the Storage).
@@ -110,6 +120,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                             // And who the caller is, so that Functions (and the audit record below) do not
                             // have to look the identity up again
                             context.Items[Globals.DfmUserNameContextValue] = userName;
+                            context.Items[Globals.DfmIdentityContextValue] = identity;
                         }
 
                         await next();

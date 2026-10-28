@@ -133,9 +133,19 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             int statusCode = (int)status;
 
+            // What Auth validated about the caller. Absent when it never got that far, and then nothing is claimed.
+            var identity = context.Items.TryGetValue(Globals.DfmIdentityContextValue, out var known) ? known as DfmIdentity : null;
+
             return new AuditRecord
             {
                 At = DateTimeOffset.UtcNow,
+
+                Name = identity?.Name,
+                Email = identity?.Email,
+                ObjectId = identity?.ObjectId,
+                TenantId = identity?.TenantId,
+                Roles = identity?.Roles ?? Array.Empty<string>(),
+                AuthMethod = identity?.AuthMethod,
 
                 // Auth put the name there when it validated the call; the fallback is the same value it
                 // would have used, so a record never claims more than DfMon actually knows.

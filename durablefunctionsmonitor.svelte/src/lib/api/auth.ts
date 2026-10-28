@@ -7,11 +7,19 @@
 
 import { PublicClientApplication, type AccountInfo } from '@azure/msal-browser';
 
+/** What the last token request told us: MSAL reports these with every token, not with the account. */
+export interface TokenInfo {
+  scopes: string[];
+  expiresOn: Date | null;
+}
+
 export interface AadConfig {
   clientId: string;
   authority?: string;
   /** Everything before the task hub segment, so AAD comes back to the app and not into a hub. */
   redirectUri: string;
+  /** Told about every token the app gets, so the account menu can say what it is good for and until when. */
+  onToken?: (token: TokenInfo) => void;
 }
 
 export class AadAuth {
@@ -20,10 +28,12 @@ export class AadAuth {
 
   readonly #app: PublicClientApplication;
   readonly #clientId: string;
+  readonly #onToken?: (token: TokenInfo) => void;
 
-  private constructor(app: PublicClientApplication, clientId: string) {
+  private constructor(app: PublicClientApplication, clientId: string, onToken?: (token: TokenInfo) => void) {
     this.#app = app;
     this.#clientId = clientId;
+    this.#onToken = onToken;
   }
 
   /**
@@ -38,7 +48,7 @@ export class AadAuth {
 
     await app.initialize();
 
-    const auth = new AadAuth(app, config.clientId);
+    const auth = new AadAuth(app, config.clientId, config.onToken);
 
     try {
       const result = await app.handleRedirectPromise();
@@ -77,6 +87,8 @@ export class AadAuth {
 
       // msal can return a null access token; the id token is the same token in that case
       const token = result.accessToken || result.idToken;
+
+      this.#onToken?.({ scopes: result.scopes ?? [], expiresOn: result.expiresOn ?? null });
 
       return token ? { Authorization: `Bearer ${token}` } : {};
     } catch (error) {

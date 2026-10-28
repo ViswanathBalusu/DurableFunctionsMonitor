@@ -11,6 +11,7 @@
   import { host } from '$lib/host.svelte';
   import { normalizeAbout } from '$lib/api/endpoints';
   import type { Capabilities } from '$lib/api/types';
+  import type { AccountIdentity } from '$lib/state/identity';
 
   let {
     path = '/DurableFunctionsHub',
@@ -22,6 +23,7 @@
     hubNames = ['DurableFunctionsHub'],
     suggestions = [],
     userName = '',
+    identity = null,
     endpoints = {},
     onOpenPalette,
     onSignOut,
@@ -37,6 +39,8 @@
     hubNames?: string[];
     suggestions?: string[];
     userName?: string;
+    /** Who the login state says is signed in; the account menu reads it from the app. */
+    identity?: AccountIdentity | null;
     /** What the shell's own overlays call - the action confirms, mainly; the rest are stubbed. */
     endpoints?: Partial<Endpoints>;
     onOpenPalette?: () => void;
@@ -80,6 +84,9 @@
 
   // svelte-ignore state_referenced_locally
   app.failuresCount = failuresCount;
+
+  // svelte-ignore state_referenced_locally
+  app.setIdentity(identity);
 
   setContext(APP_CONTEXT_KEY, app);
 

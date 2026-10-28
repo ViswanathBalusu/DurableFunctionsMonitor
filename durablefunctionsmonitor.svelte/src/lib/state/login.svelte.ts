@@ -12,6 +12,7 @@ import { HttpBackendClient } from '$lib/api/http-client';
 import type { About } from '$lib/api/types';
 import type { Host } from '$lib/host.svelte';
 import { parsePath, type Router } from '$lib/router.svelte';
+import { identityFromMsal, identityFromServer, withToken, type AccountIdentity } from './identity';
 
 /** One row of the hub picker. */
 export interface HubOption {
@@ -43,6 +44,12 @@ export interface LoginOptions {
 export class Login {
   /** Who the backend thinks we are; empty when nobody is signed in (anonymous or local). */
   userName = $state('');
+
+  /**
+   * Everything known about whoever is signed in: the MSAL session of this browser, or the claims the backend
+   * validated for an Easy Auth login. Null when nobody is. For display; the audit log has the backend's own record.
+   */
+  identity = $state<AccountIdentity | null>(null);
 
   /** True once we know which hub to show, or the picker has the list it needs. */
   isLoggedIn = $state(false);
@@ -123,7 +130,8 @@ export class Login {
 
       if (!config.clientId) {
         // Localhost, or a server-directed flow: whoever the cookie says we are
-        this.userName = config.userName ?? '';
+        this.userName = config.userName ?? config.identity?.userName ?? '';
+        this.identity = identityFromServer(config.identity, this.userName);
 
         if (this.#options.client) {
           this.#options.client.reloadOnNetworkError = true;
@@ -136,6 +144,12 @@ export class Login {
         clientId: config.clientId,
         authority: config.authority,
         redirectUri: this.rootUri,
+        // Each token says how long it lasts and what for: the account menu shows the latest
+        onToken: (token) => {
+          if (this.identity) {
+            this.identity = withToken(this.identity, token);
+          }
+        },
       });
 
       if (!this.#aad.account) {
@@ -147,6 +161,7 @@ export class Login {
       }
 
       this.userName = this.#aad.account.username;
+      this.identity = identityFromMsal(this.#aad.account, config.authority);
 
       return await this.#afterSignIn();
     } catch (error) {

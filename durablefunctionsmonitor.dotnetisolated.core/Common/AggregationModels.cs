@@ -540,6 +540,24 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// <summary>Who made the call ('anonymous' when authentication is disabled).</summary>
         public string User { get; set; }
 
+        /// <summary>Display name of the caller ('name' claim). Null when the identity has none, and for records written before identities were recorded.</summary>
+        public string Name { get; set; }
+
+        /// <summary>The caller's 'email' claim. Null when there is none.</summary>
+        public string Email { get; set; }
+
+        /// <summary>The caller's object id in the directory ('oid' claim), which survives a rename of the user.</summary>
+        public string ObjectId { get; set; }
+
+        /// <summary>The directory the caller signed in to ('tid' claim).</summary>
+        public string TenantId { get; set; }
+
+        /// <summary>App roles the caller held when the call was made. Empty when there were none.</summary>
+        public IReadOnlyList<string> Roles { get; set; } = Array.Empty<string>();
+
+        /// <summary>How the call was authenticated: 'easyauth', 'bearer', 'vscode' or 'anonymous' (see <see cref="DfmIdentity"/>). Null for older records.</summary>
+        public string AuthMethod { get; set; }
+
         /// <summary>Human readable operation name, e.g. 'Terminate' (see AuditOperations).</summary>
         public string Operation { get; set; }
 

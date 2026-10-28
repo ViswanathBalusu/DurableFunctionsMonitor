@@ -86,6 +86,14 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string DfmUserNameContextValue = "DfmUserNameContextValue";
 
         /// <summary>
+        /// FunctionContext.Items key under which the middleware publishes the whole <see cref="DfmIdentity"/>
+        /// of the caller (display name, object id, tenant, roles, how the call was authenticated). The audit
+        /// writer records it next to the user name. Set as soon as the identity is known, so a call that is
+        /// then refused is still attributed to the one who made it.
+        /// </summary>
+        public const string DfmIdentityContextValue = "DfmIdentityContextValue";
+
+        /// <summary>
         /// FunctionContext.Items key any function may set to a short string, to be recorded as the
         /// 'message' of its audit record (the batch endpoint puts its counts here, replay the number of
         /// deleted history rows).
