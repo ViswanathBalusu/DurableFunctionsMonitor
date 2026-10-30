@@ -15,7 +15,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
     /// </summary>
     public class DfmIdentity
     {
-        /// <summary>The value of the configured user-name claim (preferred_username by default): the name allow-lists are checked against.</summary>
+        /// <summary>The value of the configured user-name claim (preferred_username by default): the name allow-lists are checked against. Falls back to the email, then the display name, for an identity that has no such claim and is not checked against a list.</summary>
         public string UserName { get; set; }
 
         /// <summary>The display name ('name' claim). Null when the identity has none.</summary>
@@ -70,7 +70,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             return new DfmIdentity
             {
-                UserName = FirstValue(principal, settings.UserNameClaimName),
+                // Only an identity that no allow-list is checked against can lack the configured claim (authentication is
+                // off), and naming it by its address or display name beats naming nobody
+                UserName = FirstValue(principal, settings.UserNameClaimName, "email", ClaimTypes.Email, "name", ClaimTypes.Name),
                 Name = FirstValue(principal, "name", ClaimTypes.Name),
                 Email = FirstValue(principal, "email", ClaimTypes.Email),
                 ObjectId = FirstValue(principal, "oid", ObjectIdClaimType),

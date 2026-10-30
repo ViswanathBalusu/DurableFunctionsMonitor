@@ -125,9 +125,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // Starting with nonce (used when running as a VsCode extension)
             if (IsNonceSetAndValid(settings, request.Headers))
             {
-                // DisableAuthentication means nobody was identified at all; a matching DFM_NONCE means the
-                // call came through the VS Code extension (or the local harness that impersonates it).
-                var nonceIdentity = settings.DisableAuthentication ? DfmIdentity.ForAnonymous() : DfmIdentity.ForVsCode();
+                // DisableAuthentication means DfMon checks nobody - but a site that is protected by Easy Auth
+                // still knows who signed in, and the audit log should say so rather than 'anonymous'. A matching
+                // DFM_NONCE means the call came through the VS Code extension (or the local harness that impersonates it).
+                var nonceIdentity = settings.DisableAuthentication
+                    ? (TryGetEasyAuthIdentity(request, settings) ?? DfmIdentity.ForAnonymous())
+                    : DfmIdentity.ForVsCode();
                 onIdentified?.Invoke(nonceIdentity);
 
                 return (settings.Mode, nonceIdentity.UserName, nonceIdentity);
@@ -385,24 +388,64 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         /// </summary>
         internal static async Task<(ClaimsPrincipal Principal, string AuthMethod)> ResolveClaimsPrincipal(HttpRequestData request, DfmSettings settings)
         {
+            var easyAuthPrincipal = ResolveEasyAuthPrincipal(request, settings);
+            if (easyAuthPrincipal != null)
+            {
+                return (easyAuthPrincipal, DfmIdentity.EasyAuth);
+            }
+
+            // Validating and parsing the access token ourselves
+            request.Headers.TryGetValues("Authorization", out var authHeaderValues);
+            return (await ValidateToken(authHeaderValues?.SingleOrDefault()), DfmIdentity.Bearer);
+        }
+
+        // The principal that Easy Auth vouched for: first the one the Functions runtime built from the request,
+        // then the x-ms-client-principal header. Null when Easy Auth did not authenticate this request.
+        private static ClaimsPrincipal ResolveEasyAuthPrincipal(HttpRequestData request, DfmSettings settings)
+        {
             // First trying the request object
             var easyAuthPrincipal = new ClaimsPrincipal(request.Identities);
 
             if (easyAuthPrincipal.Identity != null && easyAuthPrincipal.Identity.IsAuthenticated && easyAuthPrincipal.HasClaim(c => c.Type == settings.UserNameClaimName))
             {
                 // Authentication was done by EasyAuth and converted into a ClaimsPrincipal by the Functions runtime. Returning immediately.
-                return (easyAuthPrincipal, DfmIdentity.EasyAuth);
+                return easyAuthPrincipal;
             }
 
             // Then trying to parse the x-ms-client-principal header
             if (request.Headers.TryGetValues("x-ms-client-principal", out var clientPrincipalHeaderValues))
             {
-                return (ParseMsClientPrincipalHeader(clientPrincipalHeaderValues.Single(), settings), DfmIdentity.EasyAuth);
+                return ParseMsClientPrincipalHeader(clientPrincipalHeaderValues.Single(), settings);
             }
 
-            // Validating and parsing the access token ourselves
-            request.Headers.TryGetValues("Authorization", out var authHeaderValues);
-            return (await ValidateToken(authHeaderValues?.SingleOrDefault()), DfmIdentity.Bearer);
+            return null;
+        }
+
+        /// <summary>
+        /// Who Easy Auth says is calling, for a deployment that turned DfMon's own authentication off
+        /// (DFM_NONCE=i_sure_know_what_i_am_doing) because the site is protected by Easy Auth instead. Used only to
+        /// say who made a call in the audit log: it never lets a call in or keeps one out. The header is trusted only
+        /// where ParseMsClientPrincipalHeader trusts it, and anything unusable simply means 'nobody was identified'.
+        /// </summary>
+        internal static DfmIdentity TryGetEasyAuthIdentity(HttpRequestData request, DfmSettings settings)
+        {
+            try
+            {
+                var principal = ResolveEasyAuthPrincipal(request, settings);
+
+                if (principal == null)
+                {
+                    return null;
+                }
+
+                var identity = DfmIdentity.FromPrincipal(principal, settings, DfmIdentity.EasyAuth);
+
+                return string.IsNullOrEmpty(identity.UserName) ? null : identity;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         // parsing header directly as per the guidance here: https://learn.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=python-v2%2Cisolated-process%2Cnodejs-v4%2Cfunctionsv2&pivots=programming-language-csharp#working-with-client-identities

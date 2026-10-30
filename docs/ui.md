@@ -196,7 +196,9 @@ empty table.
 audit record holds about them: display name, object id, tenant id, app roles and how the call was
 authenticated (Easy Auth, a bearer token DfMon validated, or the VS Code extension). The backend reads
 all of that from the identity it validated for the call, never from what the browser says about itself.
-Records written before 6.16 hold the user name only, and so does a deployment with authentication off.
+Records written before 6.16 hold the user name only. A deployment that turns DfMon's own authentication off
+(`DFM_NONCE`) because Easy Auth protects the site still records whoever Easy Auth signed in; only where
+nobody is identified at all (a local run) is the caller `anonymous`.
 
 ### Your account — the user menu
 
@@ -320,7 +322,7 @@ Backend (app settings of the Function App, or `local.settings.json`):
 | `AzureWebJobsStorage` | the task hub's connection string |
 | `DFM_HUB_NAME` | the hub to serve, when it is not the host's own |
 | `DFM_ALTERNATIVE_CONNECTION_STRING_{connName}` | another storage account, reached as `{connName}-{hubName}` in the URL |
-| `DFM_NONCE` | `i_sure_know_what_i_am_doing` disables authentication - local use only |
+| `DFM_NONCE` | `i_sure_know_what_i_am_doing` disables DfMon's own authentication: nobody is rejected, so it belongs behind Easy Auth or on a local machine. Behind Easy Auth the signed-in user is still named in the account menu and the audit log |
 | `DFM_DANGEROUS_OPERATIONS_ENABLED` | `true` allows replay and restart-in-place (update-input-and-rewind is an ordinary write and needs no switch) |
 | `DFM_AUDIT_ENABLED` | `true` records every write and dangerous call into the `{hub}DfmAudit` table, which the Activity screen reads |
 | `DFM_STATS_CAP` | how many rows `/stats` and `/failures` scan before answering `partial` (default 50000) |

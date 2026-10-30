@@ -504,6 +504,176 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             }
         }
 
+        // A site that is protected by Easy Auth runs DfMon with its own authentication turned off
+        // (DFM_NONCE=i_sure_know_what_i_am_doing). Nobody is rejected then, but the audit log still has to say who it was.
+
+        private static async Task WithEasyAuthEnvironment(string siteName, string clientId, Func<Task> body)
+        {
+            string originalSiteName = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME);
+            string originalClientId = Environment.GetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID);
+            try
+            {
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME, siteName);
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID, clientId);
+
+                await body();
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_SITE_NAME, originalSiteName);
+                Environment.SetEnvironmentVariable(EnvVariableNames.WEBSITE_AUTH_CLIENT_ID, originalClientId);
+            }
+        }
+
+        private static FakeHttpRequestData EasyAuthRequest(params (string Type, string Value)[] claims)
+        {
+            var request = new FakeHttpRequestData(new Uri("http://localhost"));
+
+            var clientPrincipal = new
+            {
+                auth_typ = "aad",
+                claims = claims.Select(c => new { typ = c.Type, val = c.Value }).ToArray()
+            };
+
+            request.Headers.Add("x-ms-client-principal", Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(clientPrincipal))));
+
+            return request;
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_AuthenticationDisabledBehindEasyAuth_NamesTheSignedInUser()
+        {
+            await WithEasyAuthEnvironment("test-site", "test-client-id", async () =>
+            {
+                // Arrange
+                var request = EasyAuthRequest(
+                    ("preferred_username", "alice@contoso.com"),
+                    ("name", "Alice Smith"),
+                    ("http://schemas.microsoft.com/identity/claims/objectidentifier", "11111111-2222-3333-4444-555555555555"),
+                    ("roles", "Operator"));
+
+                // The allow-list does not mention Alice: with authentication off nothing is checked, so she still gets in
+                var settings = new DfmSettings { DisableAuthentication = true, AllowedUserNames = new[] { "somebody.else@contoso.com" } };
+
+                DfmIdentity reported = null;
+
+                // Act
+                var (mode, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Write, settings, known => reported = known);
+
+                // Assert
+                Assert.AreEqual(DfmMode.Normal, mode);
+                Assert.AreEqual("alice@contoso.com", userName);
+                Assert.AreEqual("Alice Smith", identity.Name);
+                Assert.AreEqual("11111111-2222-3333-4444-555555555555", identity.ObjectId);
+                Assert.AreEqual("easyauth", identity.AuthMethod);
+                CollectionAssert.AreEqual(new[] { "Operator" }, identity.Roles.ToArray());
+                Assert.AreSame(identity, reported);
+            });
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_AuthenticationDisabledWithoutEasyAuth_IgnoresAForgedHeader()
+        {
+            // Not on App Service with Easy Auth configured: nothing strips the header from the incoming request, so anybody could send it
+            await WithEasyAuthEnvironment(null, null, async () =>
+            {
+                // Arrange
+                var request = EasyAuthRequest(("preferred_username", "mallory@contoso.com"));
+                var settings = new DfmSettings { DisableAuthentication = true };
+
+                // Act
+                var (_, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Write, settings);
+
+                // Assert
+                Assert.AreEqual(Globals.AnonymousUserName, userName);
+                Assert.AreEqual("anonymous", identity.AuthMethod);
+            });
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_AuthenticationDisabledAndNobodySignedIn_IsAnonymous()
+        {
+            await WithEasyAuthEnvironment("test-site", "test-client-id", async () =>
+            {
+                // Arrange
+                var request = new FakeHttpRequestData(new Uri("http://localhost"));
+                var settings = new DfmSettings { DisableAuthentication = true };
+
+                // Act
+                var (_, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Write, settings);
+
+                // Assert
+                Assert.AreEqual(Globals.AnonymousUserName, userName);
+                Assert.AreEqual("anonymous", identity.AuthMethod);
+            });
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_AuthenticationDisabledAndHeaderIsUnusable_IsAnonymousAndStillLetsTheCallIn()
+        {
+            await WithEasyAuthEnvironment("test-site", "test-client-id", async () =>
+            {
+                // Arrange
+                var request = new FakeHttpRequestData(new Uri("http://localhost"));
+                request.Headers.Add("x-ms-client-principal", "this-is-not-base64");
+                var settings = new DfmSettings { DisableAuthentication = true };
+
+                // Act
+                var (mode, userName, _) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Write, settings);
+
+                // Assert
+                Assert.AreEqual(DfmMode.Normal, mode);
+                Assert.AreEqual(Globals.AnonymousUserName, userName);
+            });
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_AuthenticationDisabledAndUserNameClaimIsMissing_NamesTheUserByEmail()
+        {
+            await WithEasyAuthEnvironment("test-site", "test-client-id", async () =>
+            {
+                // Arrange
+                var request = EasyAuthRequest(("email", "bob@contoso.com"), ("name", "Bob Brown"));
+                var settings = new DfmSettings { DisableAuthentication = true };
+
+                // Act
+                var (_, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Write, settings);
+
+                // Assert
+                Assert.AreEqual("bob@contoso.com", userName);
+                Assert.AreEqual("Bob Brown", identity.Name);
+                Assert.AreEqual("easyauth", identity.AuthMethod);
+            });
+        }
+
+        [TestMethod]
+        public async Task ValidateIdentityAndGetUser_NonceOfTheVsCodeExtension_StaysVsCodeEvenWithAnEasyAuthHeader()
+        {
+            string originalNonce = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_NONCE);
+            try
+            {
+                await WithEasyAuthEnvironment("test-site", "test-client-id", async () =>
+                {
+                    // Arrange
+                    Environment.SetEnvironmentVariable(EnvVariableNames.DFM_NONCE, "a-real-nonce");
+
+                    var request = EasyAuthRequest(("preferred_username", "alice@contoso.com"));
+                    request.Headers.Add("x-dfm-nonce", "a-real-nonce");
+
+                    // Act
+                    var (_, userName, identity) = await Auth.ValidateIdentityAndGetUserAsync(request, OperationKind.Write, new DfmSettings());
+
+                    // Assert
+                    Assert.AreEqual(Globals.VsCodeUserName, userName);
+                    Assert.AreEqual("vscode", identity.AuthMethod);
+                });
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(EnvVariableNames.DFM_NONCE, originalNonce);
+            }
+        }
+
         // The only way to define a callback for ValidateToken() method
         delegate void ValidateTokenDelegate(string a, TokenValidationParameters p, out SecurityToken t);
 

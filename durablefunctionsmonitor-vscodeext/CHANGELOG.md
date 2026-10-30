@@ -1,5 +1,9 @@
 # Change Log
 
+# Version 6.16.1
+
+- **The audit log names the user behind Easy Auth again.** A Function App that is protected by Easy Auth and runs DfMon with its own authentication turned off (`DFM_NONCE=i_sure_know_what_i_am_doing`) recorded every change as `anonymous`, although the account menu showed who had signed in. The backend now reads the identity Easy Auth vouched for and records it like any other: user name, display name, object id, tenant id, app roles and `easyauth` as the way the call was authenticated. Nothing else changes with authentication off: nobody is rejected and the allow-lists are not applied, and the Easy Auth header is trusted only on a site that has Easy Auth configured, so a header sent to a local run still counts for nothing. An identity without the user-name claim is named by its email address, then its display name. Records written before this version keep `anonymous`.
+
 # Version 6.16.0
 
 - **The signed-in user shows up again.** The user menu named nobody for a person signed in through Easy Auth or Microsoft Entra ID: it read the name from the host's client configuration (`DFM_CLIENT_CONFIG`), not from the identity that signed in. It now shows the display name and the user name, and a new **Account details** item opens everything that is known about the account: for a browser signed in through MSAL its ID token claims, the scopes and expiry of the access token; for an Easy Auth login the claims the backend validated.
