@@ -1,7 +1,7 @@
 {
   "name": "durablefunctionsmonitor.svelte",
   "private": true,
-  "version": "6.16.1",
+  "version": "6.17.0",
   "type": "module",
   "engines": {
     "node": ">=22"

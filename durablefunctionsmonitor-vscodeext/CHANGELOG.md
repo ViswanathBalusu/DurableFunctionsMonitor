@@ -1,6 +1,6 @@
 # Change Log
 
-# Unreleased
+# Version 6.17.0
 
 - **A new look, and a new default.** Four new themes - **Iris** (indigo), **Jade** (teal), **Ember** (warm grey, with the ember kept to buttons and links) and **Mono** (black and white, with blue for focus and links) - each with a light and a dark face, and Iris is now the default. They share one modern system: calm neutral surfaces, hairline lines, rounded panels, one accent colour, status shown as a tinted pill with a dot, and Mona Sans for the interface (bundled, so it works offline and behind a strict content security policy). The Overview's six coloured tiles become one status strip. A theme you picked before keeps working: the seven earlier themes are all still in the menu.
 
