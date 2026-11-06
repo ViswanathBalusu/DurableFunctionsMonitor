@@ -200,8 +200,11 @@
   <div class="seq-in" bind:this={root} style={`min-width:${width}px`}>
     <div class="parts" style={`grid-template-columns:${GUTTER}px repeat(${participants.length}, ${LANE_WIDTH}px)`}>
       <span></span>
+      <!-- A name wider than its lane ends in an ellipsis (dfm-ext.css), and its title says it whole -->
       {#each participants as participant (participant)}
-        <div class={participant === main ? 'part n-orchestrator' : 'part'}>{participant}</div>
+        <div class={participant === main ? 'part n-orchestrator' : 'part'} title={participant}>
+          <span class="part-name">{participant}</span>
+        </div>
       {/each}
     </div>
 
@@ -213,8 +216,12 @@
       {@const arrow = arrowOf(message, participants)}
       <div class="smsg">
         <span class="t">{formatTime(message.t)}</span>
+        <!-- `self` (dfm-ext.css): a message to its own lane is a short loop on the left of the lane,
+             so its label goes to the right, where the row is free, not over the clock in the gutter -->
         <div
-          class={['arrow', arrow.back ? 'back' : '', arrow.failed ? 'failed' : ''].filter(Boolean).join(' ')}
+          class={['arrow', arrow.back ? 'back' : '', arrow.failed ? 'failed' : '', arrow.self ? 'self' : '']
+            .filter(Boolean)
+            .join(' ')}
           style={`left:${arrow.left}px;width:${arrow.width}px`}
           title={message.note}
         >

@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T12:00:00Z",
+  "title": "Design System: Durable Functions Monitor",
+  "extensions": {
+    "colorMeta": {
+      "iris-indigo": { "role": "primary", "displayName": "Iris Indigo", "canonical": "#5b5bd6", "tonalRamp": ["#070525", "#1c185a", "#342d95", "#4f4cc6", "#6d70ed", "#919afd", "#bdc5fe", "#eaedfe"] },
+      "jade-teal": { "role": "secondary", "displayName": "Jade Teal", "canonical": "#0e7f73", "tonalRamp": ["#000f0c", "#012c27", "#024d45", "#107066", "#319488", "#59b8ab", "#8ddace", "#c7fbf2"] },
+      "ember-copper": { "role": "secondary", "displayName": "Ember Copper", "canonical": "#b45309", "tonalRamp": ["#180500", "#3f1801", "#6a2e03", "#9a4502", "#c56323", "#ed864b", "#fdb792", "#ffeadf"] },
+      "mono-blue": { "role": "secondary", "displayName": "Mono Blue", "canonical": "#0068e0", "tonalRamp": ["#000a22", "#012252", "#033e89", "#025bc5", "#237df7", "#6ca6fb", "#aacbfd", "#e5efff"] },
+      "cool-ground": { "role": "neutral", "displayName": "Cool Ground", "canonical": "#f6f6f9", "tonalRamp": ["#0b0b0c", "#252526", "#424244", "#616163", "#828285", "#a5a5a7", "#c9c9cb", "#eeeef0"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#121218", "tonalRamp": ["#0b0b0d", "#252529", "#414148", "#606068", "#81818a", "#a4a4ad", "#c8c8d0", "#eeeef3"] },
+      "muted-text": { "role": "neutral", "displayName": "Muted Text", "canonical": "#5b5d6e", "tonalRamp": ["#0a0b0f", "#23242d", "#3f414f", "#5e6071", "#7f8193", "#a1a4b6", "#c6c8d8", "#eceef9"] },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "#e4e4eb", "tonalRamp": ["#0b0b0c", "#252528", "#414146", "#616066", "#828288", "#a4a4ab", "#c8c8ce", "#eeeef2"] },
+      "ground-dark": { "role": "neutral", "displayName": "Night Ground", "canonical": "#09090c", "tonalRamp": ["#0b0b0c", "#252527", "#414245", "#616165", "#828286", "#a4a4a9", "#c9c9cd", "#eeeef1"] },
+      "status-completed": { "role": "tertiary", "displayName": "Completed Green", "canonical": "#2f9e62", "tonalRamp": ["#000f05", "#012e17", "#03502b", "#017541", "#29995e", "#54be7f", "#89dfa9", "#c5ffd8"] },
+      "status-running": { "role": "tertiary", "displayName": "Running Amber", "canonical": "#e5a031", "tonalRamp": ["#130900", "#352000", "#5b3a00", "#83570a", "#ae7512", "#da9521", "#f9bd69", "#ffebd2"] },
+      "status-failed": { "role": "tertiary", "displayName": "Failed Red", "canonical": "#e5484d", "tonalRamp": ["#1f0002", "#4b030b", "#7e0918", "#b60d26", "#de4148", "#fc7573", "#feb3ae", "#ffe9e7"] },
+      "status-pending": { "role": "tertiary", "displayName": "Pending Blue", "canonical": "#3e86f5", "tonalRamp": ["#000924", "#012155", "#023c8d", "#0d5ac5", "#367eec", "#6da5fc", "#aacbfd", "#e6effe"] },
+      "status-terminated": { "role": "tertiary", "displayName": "Terminated Grey", "canonical": "#8b8d98", "tonalRamp": ["#0a0b0e", "#24252a", "#40414a", "#5f616b", "#80828c", "#a2a4b0", "#c7c8d2", "#edeef5"] },
+      "status-continued": { "role": "tertiary", "displayName": "ContinuedAsNew Violet", "canonical": "#8e62e3", "tonalRamp": ["#0f0323", "#2c1055", "#4d218e", "#6e3fbd", "#8f63e4", "#af8dfe", "#cebdfe", "#f0ebff"] },
+      "status-suspended": { "role": "tertiary", "displayName": "Suspended Orange", "canonical": "#ef7b3a", "tonalRamp": ["#190500", "#3f1802", "#6b2d05", "#9b4408", "#cd5c0f", "#f58040", "#feb693", "#feeae0"] },
+      "destructive": { "role": "tertiary", "displayName": "Destructive Red", "canonical": "#cf333a", "tonalRamp": ["#1f0001", "#4d0008", "#800014", "#b51025", "#de4246", "#fb7572", "#feb3ae", "#fee9e7"] },
+      "entity-pink": { "role": "tertiary", "displayName": "Entity Pink", "canonical": "#db5c9b", "tonalRamp": ["#1c000e", "#47022a", "#78064a", "#a4276b", "#cb4d8d", "#f372b0", "#fdaed0", "#fee7f0"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The counts in the Overview status strip." },
+      "headline": { "displayName": "Headline", "purpose": "Page titles and empty-state headings; the instance hero runs clamp(20px, 2.2vw, 26px), dialog titles 17px/650." },
+      "title": { "displayName": "Title", "purpose": "Panel and section headings." },
+      "body": { "displayName": "Body", "purpose": "All running interface text." },
+      "label": { "displayName": "Label", "purpose": "Buttons, tabs, nav items, segmented controls, field labels." },
+      "caption": { "displayName": "Caption", "purpose": "Table headers, status pills, legends and side notes." },
+      "data": { "displayName": "Data", "purpose": "Machine values: ids, timestamps, durations, numeric cells, chart axes and payloads." }
+    },
+    "shadows": [
+      { "name": "contact", "value": "0 1px 2px rgba(17, 17, 26, 0.05)", "purpose": "Resting buttons, inputs, panels, cards, the status strip, failure groups (dark: 0 1px 2px rgba(0, 0, 0, 0.5))." },
+      { "name": "hover", "value": "0 2px 6px rgba(17, 17, 26, 0.08)", "purpose": "Graph nodes (dark: 0 2px 8px rgba(0, 0, 0, 0.55))." },
+      { "name": "lifted", "value": "0 16px 40px -12px rgba(17, 17, 26, 0.22), 0 4px 12px -4px rgba(17, 17, 26, 0.08)", "purpose": "Only what floats: popovers, menus, dialogs, toasts, the bulk bar, the peek panel, the phone sheet." },
+      { "name": "lifted-dark", "value": "0 24px 56px -16px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.04)", "purpose": "The lifted shadow in dark mode." },
+      { "name": "sheen-dark", "value": "inset 0 1px 0 rgba(255, 255, 255, 0.03)", "purpose": "Top-edge highlight on panels, cards and the hero in dark mode." },
+      { "name": "focus-ring", "value": "outline: 2px solid var(--ring); outline-offset: 2px", "purpose": "Every focus-visible element; the ring is the theme's accent (lighter in dark)." },
+      { "name": "veil", "value": "rgba(10, 10, 16, 0.4)", "purpose": "Overlay behind dialogs and sheets (dark: rgba(0, 0, 0, 0.6))." }
+    ],
+    "motion": [
+      { "name": "hover-fade", "value": "120ms ease-out", "purpose": "Background and border colour on the way into a hover only; theme and mode changes apply at once." },
+      { "name": "reduced-motion", "value": "transition-duration: 0ms; animation-duration: 0ms", "purpose": "Applied to everything under prefers-reduced-motion: reduce." }
+    ],
+    "breakpoints": [
+      { "name": "topbar-650", "value": "650px (container)" },
+      { "name": "phone", "value": "768px" },
+      { "name": "topbar-780", "value": "780px (container)" },
+      { "name": "topbar-920", "value": "920px (container)" },
+      { "name": "topbar-1000", "value": "1000px (container)" },
+      { "name": "tablet", "value": "1100px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action that matters on a surface, filled with the theme's solid (Iris shown).",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>Start instance</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 1px solid #e4e4eb; border-radius: 8px; background: #ffffff; color: #121218; box-shadow: 0 1px 2px rgba(17,17,26,0.05); font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 550; cursor: pointer; } .ds-btn-primary { background: #5b5bd6; border-color: #5b5bd6; color: #ffffff; } .ds-btn-primary:hover { background: #4c4cc8; border-color: #4c4cc8; transition: background-color 120ms ease-out, border-color 120ms ease-out; } .ds-btn:focus-visible { outline: 2px solid #5b5bd6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The default button: panel white with a hairline.",
+      "html": "<button class=\"ds-btn-sec\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 12a9 9 0 1 1-3-6.7L21 8\"/><path d=\"M21 3v5h-5\"/></svg>Refresh</button>",
+      "css": ".ds-btn-sec { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border: 1px solid #e4e4eb; border-radius: 8px; background: #ffffff; color: #121218; box-shadow: 0 1px 2px rgba(17,17,26,0.05); font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 550; cursor: pointer; } .ds-btn-sec:hover { background: #f8f8fb; border-color: #d4d4dd; transition: background-color 120ms ease-out, border-color 120ms ease-out; } .ds-btn-sec:active { background: #f1f1f5; box-shadow: none; } .ds-btn-sec:focus-visible { outline: 2px solid #5b5bd6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Terminate, purge: filled red; a dangerous operation adds a 2px amber top edge.",
+      "html": "<button class=\"ds-btn-danger\">Purge all</button>",
+      "css": ".ds-btn-danger { position: relative; overflow: hidden; height: 32px; padding: 0 12px; border: 1px solid #cf333a; border-radius: 8px; background: #cf333a; color: #ffffff; box-shadow: 0 1px 2px rgba(17,17,26,0.05); font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 550; cursor: pointer; } .ds-btn-danger:hover { background: #b92d33; border-color: #b92d33; transition: background-color 120ms ease-out; } .ds-btn-danger:focus-visible { outline: 2px solid #5b5bd6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Find Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "The top bar's find field with its key hint; inputs share the 32px, 8px, hairline shape.",
+      "html": "<label class=\"ds-find\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#5b5d6e\" stroke-width=\"1.75\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg><input placeholder=\"Find instance\"><kbd>/</kbd></label>",
+      "css": ".ds-find { display: inline-flex; align-items: center; gap: 8px; width: 220px; height: 32px; padding: 0 6px 0 10px; border: 1px solid #e4e4eb; border-radius: 8px; background: #ffffff; box-shadow: 0 1px 2px rgba(17,17,26,0.05); } .ds-find:hover { border-color: #d4d4dd; transition: border-color 120ms ease-out; } .ds-find:focus-within { border-color: #5b5bd6; outline: 2px solid #5b5bd6; outline-offset: 2px; } .ds-find input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: #121218; font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, sans-serif; font-size: 13px; } .ds-find kbd { padding: 0 5px; border: 1px solid #e4e4eb; border-radius: 5px; background: #f1f1f5; color: #5b5d6e; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; }"
+    },
+    {
+      "name": "Status Pills",
+      "kind": "chip",
+      "refersTo": "status-pill-failed",
+      "description": "Status in text: a tinted pill with a solid dot in the text colour.",
+      "html": "<span class=\"ds-pill ds-failed\">Failed</span> <span class=\"ds-pill ds-running\">Running</span> <span class=\"ds-pill ds-completed\">Completed</span> <span class=\"ds-pill ds-suspended\">Suspended</span>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; border-radius: 999px; font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, sans-serif; font-size: 12px; font-weight: 550; } .ds-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; } .ds-failed { background: #fde7e9; color: #b51d2a; } .ds-running { background: #fcf0d9; color: #8a5207; } .ds-completed { background: #e3f5ea; color: #146c37; } .ds-suspended { background: #fdebe0; color: #a1400c; }"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "A text row over one hairline; the selected tab is underlined in the indicator colour.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" aria-selected=\"true\">Timeline</button><button class=\"ds-tab\">History</button><button class=\"ds-tab\">Sequence</button><button class=\"ds-tab\">Graph</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 2px; border-bottom: 1px solid #e4e4eb; } .ds-tab { height: 38px; padding: 0 12px; margin-bottom: -1px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #5b5d6e; font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, sans-serif; font-size: 13px; font-weight: 550; cursor: pointer; } .ds-tab:hover { color: #121218; } .ds-tab[aria-selected='true'] { color: #121218; border-bottom-color: #5b5bd6; } .ds-tab:focus-visible { outline: 2px solid #5b5bd6; outline-offset: 2px; }"
+    },
+    {
+      "name": "Side Rail",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "The left rail: muted items, the active one in the accent wash, the failure count as a red pill.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-item ds-active\">Overview</a><a class=\"ds-item\">Instances</a><a class=\"ds-item\">Failures<span class=\"ds-cnt\">8</span></a><a class=\"ds-item\">Entities</a></nav>",
+      "css": ".ds-rail { display: flex; flex-direction: column; gap: 2px; width: 220px; padding: 12px 10px; background: #f6f6f9; border-right: 1px solid #e4e4eb; } .ds-item { display: flex; align-items: center; height: 32px; padding: 0 10px; border-radius: 8px; color: #5b5d6e; font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, sans-serif; font-size: 14px; font-weight: 550; cursor: pointer; } .ds-item:hover:not(.ds-active) { background: #f1f1f5; color: #121218; } .ds-active { background: #e8e8f8; color: #121218; } .ds-cnt { margin-left: auto; padding: 0 6px; border-radius: 999px; background: #fde7e9; color: #b51d2a; font-size: 11px; font-weight: 600; }"
+    },
+    {
+      "name": "Status Strip",
+      "kind": "custom",
+      "refersTo": "panel",
+      "description": "The Overview's signature: count cells on one panel split by hairlines, each with a strong-hue dot and sparkline.",
+      "html": "<div class=\"ds-strip\"><div class=\"ds-cell\"><div class=\"ds-lbl\" style=\"--h:#e5a031\">Running</div><div class=\"ds-num\">2</div><svg viewBox=\"0 0 100 24\" style=\"color:#e5a031\"><polyline points=\"0,22 60,22 80,20 100,6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></div><div class=\"ds-cell\"><div class=\"ds-lbl\" style=\"--h:#e5484d\">Failed <span class=\"ds-note\">since 10:10</span></div><div class=\"ds-num\">8</div><svg viewBox=\"0 0 100 24\" style=\"color:#e5484d\"><polyline points=\"0,22 70,22 85,14 100,4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></div><div class=\"ds-cell\"><div class=\"ds-lbl\" style=\"--h:#2f9e62\">Completed</div><div class=\"ds-num\">62</div><svg viewBox=\"0 0 100 24\" style=\"color:#2f9e62\"><polyline points=\"0,22 75,22 85,6 95,22 100,22\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/></svg></div></div>",
+      "css": ".ds-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; border: 1px solid #e4e4eb; border-radius: 12px; background: #eeeef3; overflow: hidden; box-shadow: 0 1px 2px rgba(17,17,26,0.05); font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, sans-serif; } .ds-cell { min-height: 98px; padding: 12px 16px 10px; background: #ffffff; color: #121218; } .ds-cell:hover { background: #f8f8fb; transition: background-color 120ms ease-out; } .ds-lbl { display: flex; align-items: center; gap: 7px; color: #5b5d6e; font-size: 12.5px; font-weight: 550; } .ds-lbl::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--h); } .ds-note { margin-left: auto; padding: 1px 7px; border-radius: 999px; background: #fde7e9; color: #b51d2a; font-size: 11px; font-weight: 600; } .ds-num { margin-top: 6px; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; line-height: 1; } .ds-cell svg { display: block; width: 100%; height: 24px; }"
+    },
+    {
+      "name": "Panel with Table",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "A 12px hairline panel holding a table: muted headers, line-soft row dividers, a 3px status spine, mono figures.",
+      "html": "<section class=\"ds-panel\"><h3>Top orchestrators</h3><table class=\"ds-tbl\"><thead><tr><th></th><th>Name</th><th>Failed</th><th>Rate</th></tr></thead><tbody><tr><td class=\"ds-spine\" style=\"background:#e5484d\"></td><td>ProcessOrderOrchestrator</td><td class=\"ds-num ds-fail\">8</td><td class=\"ds-num ds-fail\">88.9 %</td></tr><tr><td class=\"ds-spine\" style=\"background:#2f9e62\"></td><td>PagingFillerOrchestrator</td><td class=\"ds-num\">0</td><td class=\"ds-num\">0.0 %</td></tr></tbody></table></section>",
+      "css": ".ds-panel { padding: 14px 16px; border: 1px solid #e4e4eb; border-radius: 12px; background: #ffffff; box-shadow: 0 1px 2px rgba(17,17,26,0.05); color: #121218; font-family: 'Mona Sans Variable', 'Mona Sans', ui-sans-serif, sans-serif; font-size: 14px; } .ds-panel h3 { margin: 0 0 8px; font-size: 14px; font-weight: 600; letter-spacing: -0.015em; } .ds-tbl { width: 100%; border-collapse: collapse; } .ds-tbl th { height: 36px; text-align: left; border-bottom: 1px solid #e4e4eb; color: #5b5d6e; font-size: 12px; font-weight: 550; } .ds-tbl td { height: 36px; border-bottom: 1px solid #eeeef3; } .ds-tbl tbody tr:hover td:not(.ds-spine) { background: #f8f8fb; } .ds-spine { width: 3px; padding: 0; } .ds-num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; } .ds-fail { color: #b51d2a; font-weight: 600; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Console",
+    "overview": "DfMon is a contemporary developer console held to the craft level of Linear, Vercel, Trigger.dev and Inngest. The surfaces are calm and neutral: a near-white or near-black ground, panels one step off it, structure drawn with 1px low-contrast hairlines, one confident accent per theme. Everything else is turned down so that status colour and the onset of failures are the loudest things on any screen. An operator on a bad day reads the hub's health from one strip, sees where failures began, and reaches the failing thing in a click.\n\nThe system is one family, studio, with four themes that share every shape, type and status rule and differ only in their neutrals and their accent: Iris (indigo on cool grey, the default), Jade (teal on slate), Ember (warm grey, with the ember kept to what is pressed and followed) and Mono (black, white and blue). Each has a light and a dark face. The frontmatter tokens are Iris light unless a key says otherwise; the other themes swap the same roles. It is dense in the way an Operate surface should be (32px controls, 36px rows, 14px body) without being cramped.\n\nIt refuses the looks it replaced: hard-offset brutalist shadows and thick ink outlines, frosted glass, neumorphism and rainbow KPI tiles. The seven older themes (Poster, Riso, Memphis, Blueprint and Hazard as the brutal papers; Glass; Neu) remain selectable legacy families in src/styles/families/ and the frozen base sheets, but they are not this system and new work does not draw from them.",
+    "keyCharacteristics": [
+      "One accent per theme; status hues are family-level and never borrowed as an accent.",
+      "1px hairlines everywhere; no thick outlines.",
+      "8px controls, 12px panels, pills fully round.",
+      "Status as a tinted pill with a solid dot; spines, chart series, swimlane bars and swatches in the strong hue.",
+      "Mona Sans for the interface, JetBrains Mono for machine values.",
+      "A lifted shadow only on what floats; resting surfaces carry at most a 1px contact shadow."
+    ],
+    "rules": [
+      { "name": "The Status Owns The Warm Side Rule", "body": "Status hues are family-level, identical in all four themes, and no theme's accent may read as one. Ember proves it: because Failed, Suspended and Running already hold red, orange and amber, Ember's highlights are warm greys and its copper stays on what is pressed and followed.", "section": "colors" },
+      { "name": "The One Primary Rule", "body": "`--primary` is the theme's swatch and has the same value in light and dark for every studio theme (an e2e theme matrix asserts it). What a primary button is filled with is `--solid`, which equals the accent except in Mono.", "section": "colors" },
+      { "name": "The Hue Is For Marks, The Tint Is For Words Rule", "body": "A status shown as text sits in a tinted pill with deep text; a status shown as a mark (spine, bar, series, swatch, dot in the strip) uses the strong hue.", "section": "colors" },
+      { "name": "The Machine Voice Rule", "body": "Mono only for what a machine wrote: ids, times, durations, counts in cells, payloads. Prose about the data (side notes, placeholders, the hub name, the find field, the onset label) stays in Mona Sans.", "section": "typography" },
+      { "name": "The No Shouting Rule", "body": "No uppercase tracked labels and no overline kickers; hierarchy comes from weight and size alone.", "section": "typography" },
+      { "name": "The Only What Floats Rule", "body": "A lifted shadow means \"this is above the page\". Nothing at rest gets more than the contact shadow, and no shadow is ever offset.", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** keep one accent per theme and spend it on the primary action, checked state, focus, links and the active indicator.",
+      "**Do** show status as a tinted pill with a dot in text, and as the strong hue on spines, bars, series and swatches.",
+      "**Do** draw every outline at 1px, with hairline for structure, line soft for dividers and line strong for hover and emphasis.",
+      "**Do** use 8px corners on controls and 12px on panels, fully round on pills.",
+      "**Do** keep `--primary` identical in light and dark for each theme.",
+      "**Do** give the lifted shadow only to popovers, menus, dialogs, toasts, the bulk bar, the peek and the sheet.",
+      "**Do** honour `prefers-contrast: more` (stronger lines) and `prefers-reduced-motion`; keep pill text at 4.5:1 and the ring at 3:1."
+    ],
+    "donts": [
+      "**Don't** let a theme's accent, highlight, selection or active indicator be read as a status: no red, orange or amber wash, tab line or row tint (which is why Ember's highlights are warm greys), and no accent on a dot, spine or bar.",
+      "**Don't** use hard offset shadows, thick ink outlines, frosted glass, neumorphic insets or rainbow KPI tiles; those belong to the legacy families.",
+      "**Don't** add uppercase tracked kickers or eyebrow labels above headings.",
+      "**Don't** set prose, notes or placeholders in the mono face.",
+      "**Don't** animate theme or mode changes, or lift buttons on hover."
+    ]
+  }
+}

@@ -74,7 +74,8 @@ describe('Prefs defaults', () => {
 
     const prefs = new Prefs(fakeHost(), storage);
 
-    expect(prefs.theme).toBe('poster');
+    // Iris, the first theme of THEMES (D15, contracts §8)
+    expect(prefs.theme).toBe('iris');
     expect(prefs.mode).toBe('system');
     expect(prefs.density).toBe('compact');
     expect(prefs.showTimeAs).toBe('UTC');
@@ -104,6 +105,12 @@ describe('Prefs defaults', () => {
 
   it('ignores a stored value that is no longer a theme', () => {
     const { storage } = fakeStorage({ theme: 'neon' });
+
+    expect(new Prefs(fakeHost(), storage).theme).toBe('iris');
+  });
+
+  it('keeps a stored paper: the older themes are still themes', () => {
+    const { storage } = fakeStorage({ theme: 'poster' });
 
     expect(new Prefs(fakeHost(), storage).theme).toBe('poster');
   });
@@ -169,6 +176,7 @@ describe('resolvedMode', () => {
 describe('persistence and apply()', () => {
   beforeEach(() => {
     document.documentElement.removeAttribute('data-theme');
+    document.documentElement.removeAttribute('data-family');
     document.documentElement.removeAttribute('data-density');
     document.documentElement.classList.remove('dark');
   });
@@ -181,6 +189,22 @@ describe('persistence and apply()', () => {
 
     expect(values.get('theme')).toBe('riso');
     expect(document.documentElement.dataset.theme).toBe('riso');
+  });
+
+  it("puts the theme's family beside it, never storing it (contracts §16)", () => {
+    const { storage, values } = fakeStorage();
+    const prefs = new Prefs(fakeHost(), storage);
+
+    prefs.setTheme('jade');
+    expect(document.documentElement.dataset.family).toBe('studio');
+
+    prefs.setTheme('neu');
+    expect(document.documentElement.dataset.family).toBe('neu');
+
+    prefs.setTheme('hazard');
+    expect(document.documentElement.dataset.family).toBe('brutal');
+
+    expect(values.has('family')).toBe(false);
   });
 
   it('toggles the dark class from the resolved mode', () => {

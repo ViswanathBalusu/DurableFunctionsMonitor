@@ -43,3 +43,21 @@ test('keeps the top bar, without the things that do not fit', async ({ page }) =
   await expect(page.locator('.topbar .seg')).toBeHidden();
   await expect(page.getByRole('combobox', { name: 'Find instance' })).toBeVisible();
 });
+
+test('keeps every Needs attention link at the end of its own row', async ({ page }) => {
+  await gotoHub(page);
+
+  const rows = page.locator('.attn > div');
+
+  await expect(rows.first()).toBeVisible();
+
+  // "pending older than 10 min" once pushed its link onto a line of its own under the row; the
+  // sentence gives way instead (dfm-ext.css `.attn-text`), so each link sits level with its count
+  for (const row of await rows.all()) {
+    const count = await row.locator('.n').boundingBox();
+    const link = await row.locator('.link').boundingBox();
+    const middle = (box: { y: number; height: number }) => box.y + box.height / 2;
+
+    expect(Math.abs(middle(link!) - middle(count!))).toBeLessThan(4);
+  }
+});

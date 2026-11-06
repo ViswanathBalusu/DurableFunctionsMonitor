@@ -7,7 +7,8 @@
 
 export type HostKind = 'browser' | 'vscode';
 
-export type ThemeName = 'poster' | 'riso' | 'memphis' | 'blueprint' | 'hazard' | 'glass' | 'neu';
+export type ThemeName =
+  'iris' | 'jade' | 'ember' | 'mono' | 'poster' | 'riso' | 'memphis' | 'blueprint' | 'hazard' | 'glass' | 'neu';
 
 export interface ClientConfig {
   theme?: 'light' | 'dark';

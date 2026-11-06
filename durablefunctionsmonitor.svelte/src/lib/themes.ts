@@ -4,10 +4,11 @@
 import type { ThemeName } from '$lib/host.svelte';
 
 /**
- * The family a theme belongs to (README D12). The five papers are `brutal`; a family sheet under
- * `src/styles/families/` gives the other two their look, scoped to the theme's key.
+ * The family a theme belongs to (README D12, D15). The five papers are `brutal`; a family sheet under
+ * `src/styles/families/` gives the others their look: `glass` and `neu` one theme each, `studio`
+ * four, scoped to `data-family` (which the prefs set from the theme) and to each theme's key.
  */
-export type ThemeFamily = 'brutal' | 'glass' | 'neu';
+export type ThemeFamily = 'studio' | 'brutal' | 'glass' | 'neu';
 
 /**
  * The themes, with the swatch colours the theme menu and the Settings screen show. The hex values
@@ -23,7 +24,8 @@ export interface ThemeDescriptor {
   idea: string;
   /**
    * Three numbers shown on the Settings screen; what they are depends on the family:
-   * brutal `radius · line · shadow offset`, glass `radius · line · blur`, neu `radius · line · shadow blur`.
+   * brutal `radius · line · shadow offset`, glass `radius · line · blur`, neu `radius · line · shadow blur`,
+   * studio `control radius · line · panel radius`.
    */
   metrics: string;
   paper: string;
@@ -34,6 +36,52 @@ export interface ThemeDescriptor {
 }
 
 export const THEMES: readonly ThemeDescriptor[] = [
+  // The studio family (D15), first because the first theme is the default (contracts §8). As in the
+  // soft families, `ink` is the colour of a mark, `--glyph`: the line itself is a hairline.
+  {
+    key: 'iris',
+    family: 'studio',
+    label: 'Iris',
+    idea: 'indigo on cool grey',
+    metrics: '8 px · 1 px · 12 px',
+    paper: '#F6F6F9',
+    ink: '#121218',
+    primary: '#5B5BD6',
+    dark: '#09090C',
+  },
+  {
+    key: 'jade',
+    family: 'studio',
+    label: 'Jade',
+    idea: 'teal on slate',
+    metrics: '8 px · 1 px · 12 px',
+    paper: '#F4F7F7',
+    ink: '#0F1717',
+    primary: '#0E7F73',
+    dark: '#080B0B',
+  },
+  {
+    key: 'ember',
+    family: 'studio',
+    label: 'Ember',
+    idea: 'warm grey, ember for actions',
+    metrics: '8 px · 1 px · 12 px',
+    paper: '#F8F6F4',
+    ink: '#1A1512',
+    primary: '#B45309',
+    dark: '#0C0A09',
+  },
+  {
+    key: 'mono',
+    family: 'studio',
+    label: 'Mono',
+    idea: 'black, white and blue',
+    metrics: '8 px · 1 px · 12 px',
+    paper: '#F7F7F7',
+    ink: '#111111',
+    primary: '#0068E0',
+    dark: '#050505',
+  },
   {
     key: 'poster',
     family: 'brutal',
@@ -123,3 +171,6 @@ export function theme(key: ThemeName): ThemeDescriptor {
 export function family(key: ThemeName): ThemeFamily {
   return theme(key).family;
 }
+
+/** The theme a user who never chose one gets, and the one an unknown key falls back to (contracts §8). */
+export const DEFAULT_THEME: ThemeName = THEMES[0].key;

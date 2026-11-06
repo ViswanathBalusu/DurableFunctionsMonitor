@@ -91,6 +91,26 @@ describe('the arrow geometry', () => {
     expect(loop).toEqual({ left: 170 - SELF_LOOP, width: SELF_LOOP, back: false, failed: false, self: true });
   });
 
+  it('draws a self loop with the class that moves its label past the lifeline', async () => {
+    // An external event is the orchestrator's message to itself: its label is wider than the loop,
+    // and centred on it, it ran over the clock in the gutter (dfm-ext.css, `.arrow.self span`)
+    mount();
+    await fireEvent.click(await screen.findByRole('tab', { name: 'Sequence' }));
+
+    await waitFor(() => expect(document.querySelectorAll('.seq .arrow').length).toBeGreaterThan(0));
+
+    // The fixture's EventRaised #27 PaymentApproved is one such loop
+    expect(document.querySelectorAll('.seq .arrow.self').length).toBeGreaterThan(0);
+
+    for (const arrow of document.querySelectorAll('.seq .arrow')) {
+      const left = parseFloat((arrow as HTMLElement).style.left);
+      const width = parseFloat((arrow as HTMLElement).style.width);
+      const isLoop = left === laneX(0) - SELF_LOOP && width === SELF_LOOP;
+
+      expect(arrow.classList.contains('self'), arrow.textContent ?? '').toBe(isLoop);
+    }
+  });
+
   it('marks a failure, whichever way it points', () => {
     const failure = arrowOf(
       { t: '', from: PARTICIPANTS[2], to: PARTICIPANTS[0], label: '', kind: 'failed' },

@@ -24,10 +24,17 @@
 <!-- DFM App.dc.html L74-L86. Everything here applies instantly: no transition, by design (§6). -->
 <div class="hide-m">
   <Pop bind:open align="end" ariaLabel="Theme" minWidth="270px" padding="8px">
+    <!-- The theme's swatch, with its name in the tooltip and the accessible name: spelled out, it pushed
+         the top bar onto a second row (TopBar.svelte). A family may paint the swatch (`--swatch`). -->
     {#snippet anchor({ props })}
-      <button class="btn" type="button" {...props}>
-        <span class="swq" style="background:var(--primary)" aria-hidden="true"></span>
-        {current.label} · {dark ? 'Dark' : 'Light'}
+      <button
+        class="btn tb-theme"
+        type="button"
+        aria-label={`Theme: ${current.label} · ${dark ? 'Dark' : 'Light'}`}
+        title={`Theme: ${current.label} · ${dark ? 'Dark' : 'Light'}`}
+        {...props}
+      >
+        <span class="swq" style="background:var(--swatch, var(--primary))" aria-hidden="true"></span>
       </button>
     {/snippet}
 

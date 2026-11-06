@@ -3,7 +3,7 @@
   import type { SortState } from '$lib/components/table/columns';
 
   /** What the panel header says the numbers are: whose they are, and what they were taken over. */
-  export const TOP_META = 'stats.byName · p50 and p95 over terminal instances';
+  export const TOP_META = 'p50 and p95 over terminal instances';
 
   /** The chip after the name of an orchestrator that runs inside another one. */
   export const SUB_ORCHESTRATOR = 'sub-orchestrator';
@@ -88,17 +88,33 @@
   );
 
   const columns = $derived<ColumnDef<StatsByName>[]>([
-    { id: 'name', header: 'name', sortable: true, cell: nameCell },
-    { id: 'started', header: 'started', mono: true, sortable: true, accessor: (row) => fmtInt(row.started) },
-    { id: 'completed', header: 'completed', mono: true, sortable: true, accessor: (row) => fmtInt(row.completed) },
-    { id: 'failed', header: 'failed', mono: true, sortable: true, accessor: (row) => fmtInt(row.failed) },
-    { id: 'rate', header: 'failure rate', mono: true, sortable: true, accessor: (row) => fmtPct(row.failureRate) },
-    { id: 'p50', header: 'p50', mono: true, sortable: true, accessor: (row) => fmtDuration(row.p50Ms) },
-    { id: 'p95', header: 'p95', mono: true, sortable: true, accessor: (row) => fmtDuration(row.p95Ms) },
+    // Sentence case, and every figure right-aligned so the columns compare digit by digit
+    { id: 'name', header: 'Name', sortable: true, cell: nameCell },
+    {
+      id: 'started',
+      header: 'Started',
+      mono: true,
+      align: 'right',
+      sortable: true,
+      accessor: (row) => fmtInt(row.started),
+    },
+    {
+      id: 'completed',
+      header: 'Completed',
+      mono: true,
+      align: 'right',
+      sortable: true,
+      accessor: (row) => fmtInt(row.completed),
+    },
+    { id: 'failed', header: 'Failed', mono: true, align: 'right', sortable: true, cell: failedCell },
+    { id: 'rate', header: 'Failure rate', mono: true, align: 'right', sortable: true, cell: rateCell },
+    { id: 'p50', header: 'p50', mono: true, align: 'right', sortable: true, accessor: (row) => fmtDuration(row.p50Ms) },
+    { id: 'p95', header: 'p95', mono: true, align: 'right', sortable: true, accessor: (row) => fmtDuration(row.p95Ms) },
     {
       id: 'last',
-      header: 'last failure',
+      header: 'Last failure',
       mono: true,
+      align: 'right',
       sortable: true,
       accessor: (row) => (row.lastFailedAt ? fmtTime(row.lastFailedAt, app.prefs.showTimeAs) : '—'),
     },
@@ -108,6 +124,21 @@
     app.router.navigate({ name: 'instances', hub: app.hub }, { query: { ...rangeQuery, name } });
   }
 </script>
+
+<!-- A failure count and a failure rate that are not zero say so (dfm-ext.css `.fail-num`), and the
+     rate draws its share as a bar: what failed is the loudest figure in the row -->
+{#snippet failedCell(row: StatsByName)}
+  <span class={row.failed > 0 ? 'fail-num' : ''}>{fmtInt(row.failed)}</span>
+{/snippet}
+
+{#snippet rateCell(row: StatsByName)}
+  {#if row.failed > 0}
+    <span class="rate-bar" aria-hidden="true">
+      <i style={`width:${Math.min(100, Math.max(0, row.failureRate * 100))}%`}></i>
+    </span>
+  {/if}
+  <span class={row.failed > 0 ? 'fail-num' : ''}>{fmtPct(row.failureRate)}</span>
+{/snippet}
 
 {#snippet nameCell(row: StatsByName)}
   <LinkButton onclick={() => open(row.name)}>{row.name}</LinkButton>

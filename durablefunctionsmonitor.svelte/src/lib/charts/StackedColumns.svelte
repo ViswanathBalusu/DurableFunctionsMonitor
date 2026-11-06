@@ -4,6 +4,7 @@
   import { cn } from '$lib/utils';
   import {
     binsInPixelRange,
+    gridSteps,
     layoutColumns,
     rangeOfBins,
     ticksFor,
@@ -24,6 +25,14 @@
     ariaLabel: string;
     /** A note at the end of the legend row ("brush narrows the time filter"). */
     legendMeta?: string;
+    /**
+     * Where something began: a band from this bin to the end of the range, edged with a dashed line
+     * and labelled (the Overview's "Failures since 08:30"). Drawn over the columns, never in the way of
+     * the brush. Null or absent draws nothing.
+     */
+    onset?: { index: number; label: string } | null;
+    /** Lines at round counts across the plot, with the counts in a gutter on the left. */
+    grid?: boolean;
     class?: string;
     onBrush?: (range: Range | null) => void;
   }
@@ -37,6 +46,8 @@
     formatTick = (date: Date) => date.toISOString().slice(11, 16),
     ariaLabel,
     legendMeta,
+    onset = null,
+    grid = false,
     class: className,
     onBrush,
   }: Props = $props();
@@ -46,6 +57,9 @@
 
   const layout = $derived(layoutColumns(bins, series, WIDTH, height));
   const ticks = $derived(ticksFor(bins, WIDTH, xTicks, formatTick));
+
+  /** The counts the grid draws a line at: round steps, at most four of them, up to the tallest column. */
+  const gridValues = $derived(grid ? gridSteps(layout.max) : []);
 
   let hovered = $state<number | null>(null);
   let brushGroup = $state<SVGGElement | null>(null);
@@ -149,40 +163,81 @@
 -->
 <svelte:window onkeydown={onWindowKeydown} />
 
-<div class={cn('chart', className)} role="group" aria-label={ariaLabel}>
-  <svg
-    bind:this={svg}
-    viewBox={`0 0 ${WIDTH} ${height}`}
-    preserveAspectRatio="none"
-    style="width:100%;height:{height}px"
-  >
-    <defs>
-      <pattern id="dfm-brush-hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-        <line x1="0" y1="0" x2="0" y2="8" stroke="var(--glyph)" stroke-width="2" />
-      </pattern>
-    </defs>
+<div class={cn('chart', grid ? 'gridded' : '', className)} role="group" aria-label={ariaLabel}>
+  <!-- The plot: the counts of the grid in a gutter (dfm-ext.css), then the columns and what is drawn over them -->
+  <div class="plot">
+    {#if grid}
+      <div class="ylabels" aria-hidden="true">
+        {#each gridValues as value (value)}
+          <span style={`top:${(1 - value / layout.max) * 100}%`}>{value}</span>
+        {/each}
+      </div>
+    {/if}
 
-    {#each layout.segments as segment (`${segment.binIndex}-${segment.seriesKey}`)}
-      <rect
-        x={segment.x}
-        y={segment.y}
-        width={segment.width}
-        height={segment.height}
-        fill={`var(--${segment.color})`}
-        stroke="var(--ink)"
-        stroke-width="2"
-        role="presentation"
-        onmouseenter={() => (hovered = segment.binIndex)}
-        onmouseleave={() => (hovered = null)}
-      ></rect>
-    {/each}
+    <div class="plot-area">
+      <svg
+        bind:this={svg}
+        viewBox={`0 0 ${WIDTH} ${height}`}
+        preserveAspectRatio="none"
+        style="width:100%;height:{height}px;display:block"
+      >
+        <defs>
+          <pattern
+            id="dfm-brush-hatch"
+            width="8"
+            height="8"
+            patternUnits="userSpaceOnUse"
+            patternTransform="rotate(45)"
+          >
+            <line x1="0" y1="0" x2="0" y2="8" stroke="var(--glyph)" stroke-width="2" />
+          </pattern>
+        </defs>
 
-    <line x1="0" y1={height} x2={WIDTH} y2={height} stroke="var(--muted)" stroke-width="1" />
+        {#each gridValues as value (value)}
+          <line
+            class="gridline"
+            x1="0"
+            x2={WIDTH}
+            y1={height - (value / layout.max) * height}
+            y2={height - (value / layout.max) * height}
+            vector-effect="non-scaling-stroke"
+          />
+        {/each}
 
-    <g bind:this={brushGroup} class="dfm-brush"></g>
-  </svg>
+        {#each layout.segments as segment (`${segment.binIndex}-${segment.seriesKey}`)}
+          <rect
+            x={segment.x}
+            y={segment.y}
+            width={segment.width}
+            height={segment.height}
+            fill={`var(--${segment.color})`}
+            stroke="var(--ink)"
+            stroke-width="2"
+            role="presentation"
+            onmouseenter={() => (hovered = segment.binIndex)}
+            onmouseleave={() => (hovered = null)}
+          ></rect>
+        {/each}
 
-  <div class="row" style="justify-content:space-between;font-family:var(--font-mono);font-size:11px">
+        <line x1="0" y1={height} x2={WIDTH} y2={height} stroke="var(--muted)" stroke-width="1" />
+
+        <g bind:this={brushGroup} class="dfm-brush"></g>
+      </svg>
+
+      {#if onset && bins.length > 0}
+        <!-- Over the columns and out of the brush's way (pointer-events: none in dfm-ext.css); a band that
+             starts in the first quarter keeps its label inside, any other puts it before the line -->
+        <div
+          class={cn('onset', onset.index < bins.length / 4 ? 'start' : '')}
+          style={`left:${(onset.index / bins.length) * 100}%`}
+        >
+          <span>{onset.label}</span>
+        </div>
+      {/if}
+    </div>
+  </div>
+
+  <div class="row ticks" style="justify-content:space-between;font-family:var(--font-mono);font-size:11px">
     {#each ticks as tick, index (index)}
       <span class="muted">{tick.label}</span>
     {/each}

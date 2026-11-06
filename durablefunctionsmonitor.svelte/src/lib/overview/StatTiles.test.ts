@@ -60,7 +60,7 @@ describe('Stat tiles', () => {
 
     const tiles = Array.from(document.querySelectorAll('.tiles > .stat-tile'));
 
-    expect(tiles.map((node) => node.querySelector('.lbl')?.textContent)).toEqual([
+    expect(tiles.map((node) => node.querySelector('.lbl')?.firstChild?.textContent?.trim())).toEqual([
       'Running',
       'Pending',
       'Failed',
@@ -153,5 +153,15 @@ describe('Stat tiles', () => {
     await tile('Entities').click();
 
     expect(appOf(rendered).router.current.name).toBe('entities');
+  });
+});
+
+describe('the Failed tile', () => {
+  it('says since when, as the throughput chart does', () => {
+    mount();
+
+    // The fixture's first failed bin starts at 14:00 UTC
+    expect(tile('Failed').querySelector('.tile-note')?.textContent).toBe('since 14:00');
+    expect(tile('Running').querySelector('.tile-note')).toBeNull();
   });
 });

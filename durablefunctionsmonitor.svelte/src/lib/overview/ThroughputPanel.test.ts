@@ -7,7 +7,13 @@ import { describe, expect, it } from 'vitest';
 import type { StatsResponse } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
 import ScreenHarness from '../../../tests/unit/harnesses/ScreenHarness.svelte';
-import ThroughputPanel, { axisLabels, brushedLabel, statusToken, throughputSeries } from './ThroughputPanel.svelte';
+import ThroughputPanel, {
+  axisLabels,
+  brushedLabel,
+  failureOnset,
+  statusToken,
+  throughputSeries,
+} from './ThroughputPanel.svelte';
 import { bins, stats as statsFixture } from '../../../tests/unit/fixtures/stats';
 
 /** The harness takes a screen, and this one has a prop the harness passes through. */
@@ -121,7 +127,10 @@ describe('Throughput panel', () => {
     mount();
 
     expect(screen.getByRole('heading', { name: 'Throughput', level: 2 })).toBeInTheDocument();
-    expect(document.querySelector('.panel-h .fine.muted')?.textContent).toBe('24 bins · brush sets the global range');
+    // What a column counts and what a drag does, in words rather than as a bin count
+    expect(document.querySelector('.panel-h .fine.muted')?.textContent).toBe(
+      'Instances per 1 h · drag across to set the range',
+    );
 
     expect(screen.getByRole('group', { name: 'Instances per 1 h by status' })).toBeInTheDocument();
   });
@@ -171,5 +180,34 @@ describe('Throughput panel', () => {
     mount();
 
     expect(screen.queryByRole('button', { name: 'clear' })).toBeNull();
+  });
+});
+
+describe('failure onset', () => {
+  it('is the first bin that holds a failure, as HH:MM of its start', () => {
+    const stats = statsFixture({
+      bins: [
+        { start: '2026-09-03T14:00:00Z', end: '2026-09-03T15:00:00Z', counts: { Completed: 2 } },
+        { start: '2026-09-03T15:00:00Z', end: '2026-09-03T16:00:00Z', counts: { Failed: 1 } },
+      ],
+    });
+
+    expect(failureOnset(stats)).toEqual({ index: 1, time: '15:00' });
+  });
+
+  it('is nothing when the range holds no failure', () => {
+    const stats = statsFixture({
+      bins: [{ start: '2026-09-03T14:00:00Z', end: '2026-09-03T15:00:00Z', counts: { Completed: 2 } }],
+    });
+
+    expect(failureOnset(stats)).toBeNull();
+  });
+
+  it('bands the chart from the onset, says when it was, and puts a grid behind the columns', () => {
+    mount();
+
+    // The fixture's first failed bin is the first one, 14:00 UTC
+    expect(document.querySelector('.onset')?.textContent?.trim()).toBe('Failures since 14:00');
+    expect(document.querySelectorAll('.gridline').length).toBeGreaterThan(0);
   });
 });

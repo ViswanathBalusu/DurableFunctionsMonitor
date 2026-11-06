@@ -112,7 +112,9 @@ describe('InstanceJump', () => {
 
     const field = await screen.findByRole('combobox', { name: 'Find instance' });
     expect(field).toHaveClass('mono');
-    expect(field.getAttribute('placeholder')).toBe('Find instance   /');
+    // The key hint is drawn beside the field, not typed into its placeholder (dfm-ext.css .tb-find)
+    expect(field.getAttribute('placeholder')).toBe('Find instance');
+    expect(field.closest('.anchor')?.querySelector('.tb-find-key')?.textContent).toBe('/');
     expect(field.closest('.anchor')).toHaveClass('grow');
   });
 

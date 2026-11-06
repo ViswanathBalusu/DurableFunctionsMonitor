@@ -86,6 +86,29 @@ export function layoutColumns(bins: ChartBin[], series: ChartSeries[], width: nu
   return { segments, totals, max, columnWidth };
 }
 
+/** The steps a grid may count in: whatever reads as a round number at a glance. */
+const GRID_STEPS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000];
+
+/**
+ * The counts a chart's grid draws a line at, for a tallest column of `max`: a round step that needs at
+ * most four lines to reach it, and every multiple of that step up to `max`. A chart of 6 gets 2, 4
+ * and 6; one of 62 gets 20, 40 and 60.
+ */
+export function gridSteps(max: number): number[] {
+  if (!(max > 0)) {
+    return [];
+  }
+
+  const step = GRID_STEPS.find((candidate) => max / candidate <= 4) ?? Math.ceil(max / 4);
+  const values: number[] = [];
+
+  for (let value = step; value <= max; value += step) {
+    values.push(value);
+  }
+
+  return values;
+}
+
 /**
  * The bin indexes an x range covers, as [first, last]. Both ends are inclusive, and a selection that
  * clips a bin at all includes it: the user is picking bins, not pixels.

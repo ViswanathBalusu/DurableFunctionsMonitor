@@ -114,7 +114,8 @@
   <span class="mono muted">{instance.instanceId}</span>
 </div>
 
-<header class="hero">
+<!-- `wide-acts` (dfm-ext.css): the actions take a row of their own under the id, not a narrow column -->
+<header class="hero wide-acts">
   <div class={cn('tile', statusClass(status))}>
     {status}<br /><span class="mono" style="font-weight:600">{fmtDurationClock(instance.liveDuration)}</span>
   </div>
@@ -122,10 +123,11 @@
   <div style="min-width:0">
     <h1>{instance.instanceId}</h1>
 
-    <div class="hmeta">
+    <!-- One baseline for the row; prose in the interface face, mono only for the time and the ids -->
+    <div class="hmeta" style="align-items:baseline">
       <span style="font-weight:700;color:var(--foreground)">{name}</span>
-      <span class="mono">created {fmtDateTime(details?.createdTime, showTimeAs)} {showTimeAs}</span>
-      <span class="mono">updated {fmtAgo(details?.lastUpdatedTime, new Date(app.now))}</span>
+      <span>created <span class="mono">{fmtDateTime(details?.createdTime, showTimeAs)}</span> {showTimeAs}</span>
+      <span>updated {fmtAgo(details?.lastUpdatedTime, new Date(app.now))}</span>
 
       {#if !instance.isEntity}
         <span>
@@ -139,7 +141,7 @@
               {details.parentInstanceId}
             </LinkButton>
           {:else}
-            <span class="mono">none</span>
+            <span>none</span>
           {/if}
         </span>
       {/if}
@@ -147,11 +149,11 @@
       {#if typeof childCount === 'number'}
         <span>
           children:
-          <LinkButton mono onclick={goChildren}>{childCount}</LinkButton>
+          <LinkButton onclick={goChildren}>{childCount}</LinkButton>
         </span>
       {/if}
 
-      <span class="mono">history {historyLabel}</span>
+      <span>history {historyLabel}</span>
     </div>
   </div>
 

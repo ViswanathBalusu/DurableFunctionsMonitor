@@ -51,6 +51,19 @@ describe('InstanceActions', () => {
     expect(screen.getByRole('button', { name: 'Purge' })).toHaveClass('destructive');
   });
 
+  it('sets the writes that destroy something apart, behind one gap', async () => {
+    mount();
+
+    await waitFor(() => expect(labels()).toHaveLength(7));
+
+    const gaps = document.querySelectorAll('.acts-gap');
+
+    expect(gaps).toHaveLength(1);
+    expect(gaps[0].getAttribute('aria-hidden')).toBe('true');
+    expect(gaps[0].previousElementSibling?.textContent?.trim()).toBe('Rewind');
+    expect(gaps[0].nextElementSibling?.textContent?.trim()).toBe('Terminate');
+  });
+
   it('offers Resume for a suspended instance', async () => {
     mount({ details: detailsFixture({ runtimeStatus: 'Suspended' }) });
 

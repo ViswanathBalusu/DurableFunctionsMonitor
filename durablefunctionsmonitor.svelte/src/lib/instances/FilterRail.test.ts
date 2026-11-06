@@ -34,8 +34,11 @@ describe('FilterRail', () => {
     expect(value).toHaveClass('input', 'mono');
     expect(value).toHaveAttribute('placeholder', 'order-2026-');
 
-    expect(screen.getByRole('button', { name: 'Refresh' })).toHaveClass('primary');
-    expect(screen.getByText('Density and columns in the table menu')).toHaveClass('meta');
+    // Not filled: the one filled button on the Instances screen is Start new instance
+    expect(screen.getByRole('button', { name: 'Refresh' })).not.toHaveClass('primary');
+
+    // No hint at a table menu the screen does not have (the mockup's L61 line was dropped)
+    expect(screen.queryByText(/in the table menu/)).not.toBeInTheDocument();
   });
 
   it('applies on Enter, once', async () => {

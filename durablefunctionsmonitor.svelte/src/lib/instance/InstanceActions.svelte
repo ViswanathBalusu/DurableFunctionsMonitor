@@ -88,7 +88,12 @@
   ScreenInstance.dc.html L33-L39. Every button opens a confirm and none of them acts on its own; in
   a read-only hub every one of them is dead, because it would only ever answer 403.
 -->
-{#each buttons as button (button.label)}
+{#each buttons as button, index (button.label)}
+  <!-- The writes that destroy something stand apart from the ones that do not: a write's friction
+       matches its risk, and a Terminate never sits where a Restart was a moment ago -->
+  {#if button.variant === 'destructive' && buttons[index - 1]?.variant !== 'destructive'}
+    <span class="acts-gap" aria-hidden="true"></span>
+  {/if}
   <Button
     variant={button.variant ?? 'default'}
     disabled={button.disabled}

@@ -10,10 +10,12 @@
     values: number[];
     /** The status or kind fill: `st-running`, `kind-entity`, … (contracts §11). */
     class?: string;
+    /** A short note at the end of the label row: when the Failed tile's failures began. */
+    note?: string;
     onclick?: () => void;
   }
 
-  let { label, count, values, class: className, onclick }: Props = $props();
+  let { label, count, values, class: className, note, onclick }: Props = $props();
 </script>
 
 <!--
@@ -21,7 +23,12 @@
   whole tile is the link - a number worth showing is a number worth opening the list behind.
 -->
 <button class={cn('stat-tile', className)} type="button" {onclick}>
-  <span class="lbl">{label}</span>
+  <span class="lbl">
+    {label}
+    {#if note}
+      <span class="tile-note">{note}</span>
+    {/if}
+  </span>
   <span class="num">{fmtInt(count)}</span>
   <Sparkline {values} />
 </button>

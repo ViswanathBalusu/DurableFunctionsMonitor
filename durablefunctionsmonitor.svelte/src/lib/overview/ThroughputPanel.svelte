@@ -60,6 +60,26 @@
     });
   }
 
+  /**
+   * Where the range's failures begin: the first bin holding a failed instance, and that bin's start
+   * as `HH:MM`, or null when the range has no failure. As exact as a bin is wide - the Overview says
+   * failures since the start of that bin, which is all the bins it was given can say.
+   */
+  export function failureOnset(
+    stats: StatsResponse,
+    showTimeAs: ShowTimeAs = 'UTC',
+  ): { index: number; time: string } | null {
+    const index = stats.bins.findIndex((bin) => (bin.counts.Failed ?? 0) > 0);
+
+    if (index < 0) {
+      return null;
+    }
+
+    const text = fmtDateTime(stats.bins[index].start, showTimeAs);
+
+    return text === '—' ? null : { index, time: text.slice(11, 16) };
+  }
+
   /** `Brushed Sep 4, 08:30 to 14:02` - the same rule, over the two ends of the window. */
   export function brushedLabel(from: string, to: string, showTimeAs: ShowTimeAs = 'UTC'): string {
     const [start, end] = axisLabels([from, to], showTimeAs);
@@ -97,6 +117,13 @@
   );
 
   const series = $derived(throughputSeries(stats));
+
+  /** The band over the columns from the first failure on, labelled with when that was. */
+  const onset = $derived.by(() => {
+    const found = failureOnset(stats, showTimeAs);
+
+    return found ? { index: found.index, label: `Failures since ${found.time}` } : null;
+  });
 
   /** How long one column is, which is what the chart's label says it counts per. */
   const binMs = $derived(bins.length > 0 ? bins[0].end.getTime() - bins[0].start.getTime() : 0);
@@ -159,10 +186,11 @@
 <!-- ScreenOverview.dc.html L39-L63: the range as columns, and the brush that narrows it. -->
 <Panel title="Throughput">
   {#snippet meta()}
-    <span class="fine muted">{stats.binCount} bins · brush sets the global range</span>
+    <!-- What a column counts and what a drag does, in the operator's words rather than the bin count -->
+    <span class="fine muted">Instances per {fmtDuration(binMs)} · drag across to set the range</span>
   {/snippet}
 
-  <StackedColumns {bins} {series} bind:brush {onBrush} {ariaLabel} xTicks={AXIS_TICKS} {formatTick} />
+  <StackedColumns {bins} {series} bind:brush {onBrush} {ariaLabel} {onset} grid xTicks={AXIS_TICKS} {formatTick} />
 
   {#if custom}
     <div class="row" style="justify-content:flex-end;margin-top:8px">

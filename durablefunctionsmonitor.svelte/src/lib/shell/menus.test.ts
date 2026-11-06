@@ -14,9 +14,13 @@ async function openMenu(name: RegExp | string) {
 }
 
 describe('themes.ts', () => {
-  it('has the five papers of the design system, with their swatches', () => {
+  it('has the four studio themes first, then the five papers of the design system, with their swatches', () => {
+    const studio = THEMES.filter((entry) => entry.family === 'studio');
     const papers = THEMES.filter((entry) => entry.family === 'brutal');
 
+    // The studio family comes first because the first theme is the default (D15, contracts §8)
+    expect(studio.map((entry) => entry.key)).toEqual(['iris', 'jade', 'ember', 'mono']);
+    expect(THEMES.slice(0, 4)).toEqual(studio);
     expect(papers.map((entry) => entry.key)).toEqual(['poster', 'riso', 'memphis', 'blueprint', 'hazard']);
 
     for (const entry of THEMES) {
@@ -30,12 +34,13 @@ describe('themes.ts', () => {
 
   it('falls back to the first theme for a name it does not know', () => {
     expect(theme('riso').label).toBe('Riso');
-    expect(theme('neon' as never).key).toBe('poster');
+    expect(theme('neon' as never).key).toBe('iris');
   });
 
   it('answers the family of a theme, and of an unknown name with the first theme', () => {
     expect(family('hazard')).toBe('brutal');
-    expect(family('neon' as never)).toBe('brutal');
+    expect(family('mono')).toBe('studio');
+    expect(family('neon' as never)).toBe('studio');
   });
 });
 
@@ -43,13 +48,13 @@ describe('ThemeMenu', () => {
   it('names the current theme and mode on its trigger', async () => {
     render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
 
-    expect(await screen.findByRole('button', { name: /Poster · Light/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /Iris · Light/ })).toBeInTheDocument();
   });
 
   it('offers every theme as a radio, with the current one marked', async () => {
     render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
 
-    await openMenu(/Poster · Light/);
+    await openMenu(/Iris · Light/);
 
     const tiles = screen.getAllByRole('menuitemradio');
     expect(tiles).toHaveLength(THEMES.length);
@@ -63,7 +68,7 @@ describe('ThemeMenu', () => {
   it('applies a theme to the document and remembers it', async () => {
     render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
 
-    await openMenu(/Poster · Light/);
+    await openMenu(/Iris · Light/);
     await fireEvent.click(screen.getByRole('menuitemradio', { name: /Riso/ }));
 
     expect(document.documentElement.dataset.theme).toBe('riso');
@@ -73,7 +78,7 @@ describe('ThemeMenu', () => {
   it('turns dark mode on with the switch', async () => {
     render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
 
-    await openMenu(/Poster/);
+    await openMenu(/Iris/);
     await fireEvent.click(screen.getByRole('switch', { name: /Dark mode/ }));
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
@@ -86,7 +91,7 @@ describe('ThemeMenu', () => {
   it('switches the density', async () => {
     render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
 
-    await openMenu(/Poster/);
+    await openMenu(/Iris/);
     await fireEvent.click(screen.getByRole('switch', { name: /Comfortable density/ }));
 
     expect(document.documentElement.dataset.density).toBe('comfortable');
@@ -222,5 +227,18 @@ describe('UserMenu', () => {
     await fireEvent.click(screen.getByRole('menuitem', { name: 'Command palette' }));
 
     expect(onOpenPalette).toHaveBeenCalledOnce();
+  });
+});
+
+describe('the theme button', () => {
+  it('is the swatch alone, with the theme and the mode in its name and its tooltip', async () => {
+    render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
+
+    const button = await screen.findByRole('button', { name: 'Theme: Iris · Light' });
+
+    expect(button.getAttribute('title')).toBe('Theme: Iris · Light');
+    expect(button.querySelector('.swq')).not.toBeNull();
+    // Nothing spelled out beside the swatch: that is what pushed the top bar onto two rows
+    expect(button.textContent?.trim()).toBe('');
   });
 });

@@ -181,7 +181,9 @@ describe('InstanceHeader', () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(hmeta()).toContain('children: 1');
-    expect(screen.getByRole('button', { name: '1' })).toHaveClass('link', 'mono');
+    // A count is prose, not an id: the link, without the mono face
+    expect(screen.getByRole('button', { name: '1' })).toHaveClass('link');
+    expect(screen.getByRole('button', { name: '1' })).not.toHaveClass('mono');
   });
 
   it('scrolls to the children rather than moving away from the tab that is open', async () => {

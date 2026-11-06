@@ -3,13 +3,19 @@
   the bolt in ink, and behind it its echo in the accent colour. The tile around it - the colour, the border, the
   hard shadow - is the box's own, so the mark follows every theme and mode. `public/logo.svg` is the same
   drawing with a tile of its own, for the places that cannot read the theme (the tab, the extension): the
-  view box here is the inside of that tile, so the two share their coordinates.
+  view box here is the inside of that tile, so the two share their coordinates. A theme family may repaint
+  the bolt, its echo and the echo's outline through `--logo-mark`, `--logo-echo` and `--logo-line` on the
+  box (the studio family draws one bolt on the accent tile); unset, they are the ink and the accent.
 -->
 <svg viewBox="8 8 96 96" width="100%" height="100%" aria-hidden="true" focusable="false" style="display:block">
   <polygon
     transform="translate(4 5.5)"
     points="70,14 30,62 49,62 41,94 82,46 64,46"
-    style="fill:var(--accent);stroke:var(--ink);stroke-width:3"
+    style="fill:var(--logo-echo, var(--accent));stroke:var(--logo-line, var(--ink));stroke-width:3"
   />
-  <polygon transform="translate(-3 -1.5)" points="70,14 30,62 49,62 41,94 82,46 64,46" style="fill:var(--ink)" />
+  <polygon
+    transform="translate(-3 -1.5)"
+    points="70,14 30,62 49,62 41,94 82,46 64,46"
+    style="fill:var(--logo-mark, var(--ink))"
+  />
 </svg>

@@ -5,6 +5,8 @@
   import TextInput from '$lib/components/TextInput.svelte';
   import { FILTER_OPERATORS, FILTER_OPERATOR_LABELS, type FilterOperator } from '$lib/filters/odata';
   import { FILTER_COLUMNS, type Instances } from '$lib/state/instances.svelte';
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   interface Props {
     instances: Instances;
@@ -67,9 +69,9 @@
   </Field>
 
   <Button onclick={apply}>Apply</Button>
-  <Button variant="primary" onclick={() => void instances.reload()}>Refresh</Button>
-
-  <div class="row grow" style="justify-content:flex-end;gap:8px">
-    <span class="meta">Density and columns in the table menu</span>
-  </div>
+  <!-- Not filled: on this screen the one filled button is Start new instance -->
+  <Button onclick={() => void instances.reload()}><Icon icon={RefreshCw} size={16} />Refresh</Button>
+  <!-- The mockup ends this row with "Density and columns in the table menu" (L61), but the screen has
+       no table menu: density is in the theme menu and Settings, and hidden columns come back through
+       the table's own "show all". A hint pointing at nothing was dropped in the studio revamp. -->
 </div>

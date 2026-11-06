@@ -17,6 +17,8 @@
   import ThroughputPanel from '$lib/overview/ThroughputPanel.svelte';
   import TopOrchestrators from '$lib/overview/TopOrchestrators.svelte';
   import { NO_STATS_TEXT, NO_STATS_TITLE, Overview, STATS_FAILED_TITLE } from '$lib/state/overview.svelte';
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -107,7 +109,9 @@
   <PageTitle title="Overview">
     <TimeRangeSelect />
 
-    <Button variant="ghost" style="height:32px" onclick={() => app.refresh()}>Refresh</Button>
+    <Button variant="ghost" style="height:32px" onclick={() => app.refresh()}
+      ><Icon icon={RefreshCw} size={16} />Refresh</Button
+    >
 
     {#if overview.loadedAt}
       <span class="fine muted" style="margin-left:auto">

@@ -30,6 +30,8 @@
   import { fmtDateTime } from '$lib/format/time';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { Storage } from '$lib/state/storage.svelte';
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
 
@@ -142,7 +144,9 @@
 
     <div class="row" style="margin-left:auto;gap:10px">
       <span class="fine muted">refreshed {storage.refreshedAgo}</span>
-      <Button variant="primary" onclick={() => void storage.load()} disabled={storage.loading}>Refresh</Button>
+      <Button onclick={() => void storage.load()} disabled={storage.loading}
+        ><Icon icon={RefreshCw} size={16} />Refresh</Button
+      >
     </div>
   </PageTitle>
 

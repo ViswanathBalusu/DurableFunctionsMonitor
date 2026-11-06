@@ -64,54 +64,59 @@
   }
 </script>
 
-<!-- DFM App.dc.html L40-L95, in the order the mockup lays it out. -->
+<!--
+  DFM App.dc.html L40-L95, in the order the mockup lays it out, in two clusters (dfm-ext.css): what
+  the screen is about - the hub, the jump field, the badges - shrinks, and the tools keep their size,
+  so the bar stays one row instead of wrapping half of itself under the other half. The side nav
+  carries the product's mark on a wide screen; the bar shows it only where there is no side nav.
+-->
 <header class="topbar">
-  <div class="logo" aria-hidden="true"><LogoMark /></div>
-  <span class="display hide-m" style="font-size:16px;white-space:nowrap">Durable Functions Monitor</span>
-  <span class="muted hide-m" aria-hidden="true">/</span>
+  <div class="logo show-m" aria-hidden="true"><LogoMark /></div>
 
-  <HubSwitcher bind:this={hubSwitcher} />
+  <div class="tb-main">
+    <HubSwitcher bind:this={hubSwitcher} />
 
-  <InstanceJump bind:this={jump} />
+    <InstanceJump bind:this={jump} />
 
-  {#if app.readOnly}
-    <Chip size="sm" title="/about does not list DurableFunctionsMonitor.ReadWrite" style="background:var(--muted)">
-      Read only
-    </Chip>
-  {/if}
+    {#if app.readOnly}
+      <Chip size="sm" title="/about does not list DurableFunctionsMonitor.ReadWrite" style="background:var(--muted)">
+        Read only
+      </Chip>
+    {/if}
 
-  {#if app.dangerous}
-    <DangerBadge size="sm" class="hide-m" />
-  {/if}
+    {#if app.dangerous}
+      <DangerBadge size="sm" class="hide-m" short="Dangerous ops" />
+    {/if}
+  </div>
 
-  <span class="grow hide-m"></span>
+  <div class="tb-tools">
+    <Select
+      options={refreshOptions}
+      value={refresh}
+      ariaLabel="Auto-refresh"
+      size="sm"
+      width="auto"
+      onchange={setRefresh}
+    />
 
-  <Select
-    options={refreshOptions}
-    value={refresh}
-    ariaLabel="Auto-refresh"
-    size="sm"
-    width="auto"
-    onchange={setRefresh}
-  />
+    <Segmented
+      options={timeOptions}
+      value={showTimeAs}
+      ariaLabel="Show time as"
+      size="sm"
+      onchange={setShowTimeAs}
+      class="hide-m"
+      title={timeZoneLabel()}
+    />
 
-  <Segmented
-    options={timeOptions}
-    value={showTimeAs}
-    ariaLabel="Show time as"
-    size="sm"
-    onchange={setShowTimeAs}
-    class="hide-m"
-    title={timeZoneLabel()}
-  />
+    <ThemeMenu />
 
-  <ThemeMenu />
+    {#if onOpenPalette}
+      <button class="btn flat hide-m" type="button" title="Command palette" onclick={onOpenPalette}>
+        <span class="fine">Ctrl K</span>
+      </button>
+    {/if}
 
-  {#if onOpenPalette}
-    <button class="btn flat hide-m" type="button" title="Command palette" onclick={onOpenPalette}>
-      <span class="fine">Ctrl K</span>
-    </button>
-  {/if}
-
-  <UserMenu {onOpenPalette} {onSignOut} />
+    <UserMenu {onOpenPalette} {onSignOut} />
+  </div>
 </header>

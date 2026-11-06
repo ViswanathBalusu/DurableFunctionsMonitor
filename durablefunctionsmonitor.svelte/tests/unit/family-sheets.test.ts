@@ -4,21 +4,26 @@ import { describe, expect, it } from 'vitest';
 import { THEMES } from '../../src/lib/themes';
 
 /**
- * The rules a theme family's stylesheet has to keep (E13, contracts §16): every rule scoped to its
- * own theme so that nothing leaks into the papers; every token Poster declares declared again in
- * both modes so that nothing inherits Poster's value by accident; `--glyph` in both; plain CSS the
- * preview harness can load without Tailwind.
+ * The rules a theme family's stylesheet has to keep (E13, D15, contracts §16): every rule scoped to
+ * its own themes or to its family so that nothing leaks into the papers; every token Poster declares
+ * declared again in both modes, for every theme of the family, so that nothing inherits Poster's
+ * value by accident; `--glyph` in both; plain CSS the preview harness can load without Tailwind.
  *
- * The sheets are read from `src/styles/families/<key>.css` for every entry of THEMES whose family
- * is not `brutal`. With no family in the repo yet the loop is empty, and the parser is exercised on
- * a stand-in sheet below so that the first family meets a test that already works.
+ * A family is one sheet, `src/styles/families/<family>.css`, for every family of THEMES that is not
+ * `brutal`. Glass and Neu are one theme each, named like their family; Studio is four. A family that
+ * carries several themes scopes its shared tokens and its component layer to `[data-family]`, which
+ * prefs.svelte.ts sets from the theme, and each theme's own tokens to its `[data-theme]`: what a
+ * theme is held to is the union of the two blocks of its mode.
  *
  * Paths are relative to the vitest root, the `durablefunctionsmonitor.svelte` folder.
  */
 const TOKENS_PATH = 'src/styles/dfm-tokens.css';
 const FAMILIES_DIR = 'src/styles/families';
 
-const FAMILIES = THEMES.filter((entry) => entry.family !== 'brutal');
+/** Every family that has a sheet, with the keys of its themes. */
+const FAMILIES = [...new Set(THEMES.filter((entry) => entry.family !== 'brutal').map((entry) => entry.family))].map(
+  (name) => ({ name, keys: THEMES.filter((entry) => entry.family === name).map((entry) => entry.key as string) }),
+);
 
 const MEDIA_ALLOWED = ['@media (prefers-reduced-transparency: reduce)', '@media (prefers-contrast: more)'];
 
@@ -160,15 +165,27 @@ function selectorsOf(list: string): string[] {
 }
 
 /**
- * Whether one selector starts with one of the four scopes a family sheet may use for `key`, and
- * nothing else is glued to the scope: what follows is the end, a space or a combinator.
+ * Whether one selector starts with one of the scopes a family sheet may use - `[data-theme]` of one
+ * of its themes or `[data-family]` of the family, either alone, after `html`, after `.dark` or after
+ * `html.dark` - and nothing else is glued to the scope: what follows is the end, a space or a
+ * combinator.
  */
-function scoped(selector: string, key: string): boolean {
-  return new RegExp(`^(?:html)?(?:\\.dark)?\\[data-theme="${key}"\\](?:$|\\s|[>+~])`).test(selector);
+function scoped(selector: string, keys: string[], family?: string): boolean {
+  const attributes = keys.map((key) => `\\[data-theme="${key}"\\]`);
+
+  if (family) {
+    attributes.push(`\\[data-family="${family}"\\]`);
+  }
+
+  return new RegExp(`^(?:html)?(?:\\.dark)?(?:${attributes.join('|')})(?:$|\\s|[>+~])`).test(selector);
 }
 
-/** Every rule of a sheet that is not scoped to `key`, described for a failure message. */
-export function unscoped(sheet: string, key: string): string[] {
+/**
+ * Every rule of a sheet that is not scoped to one of `keys` (a theme key, or the keys of a family's
+ * themes) or to `family`, described for a failure message.
+ */
+export function unscoped(sheet: string, keys: string | string[], family?: string): string[] {
+  const themes = Array.isArray(keys) ? keys : [keys];
   const out: string[] = [];
 
   for (const rule of rules(sheet)) {
@@ -183,7 +200,7 @@ export function unscoped(sheet: string, key: string): string[] {
     }
 
     for (const selector of selectorsOf(rule.selector)) {
-      if (!scoped(selector, key)) {
+      if (!scoped(selector, themes, family)) {
         out.push(rule.media ? `${rule.media} { ${selector} }` : selector);
       }
     }
@@ -255,6 +272,24 @@ describe('the family-sheet rules, on a stand-in sheet', () => {
     ]);
   });
 
+  it('accepts the family scope and every theme of the family, and nothing of another family', () => {
+    const family = `
+      [data-family="f"] { --radius: 8px; }
+      .dark[data-family="f"] { --ink: #222; }
+      [data-theme="a"] { --primary: #111; }
+      .dark[data-theme="b"] { --primary: #222; }
+      html[data-family="f"] body, [data-family="f"] .btn:hover { color: red; }
+      @media (prefers-contrast: more) { .dark[data-family="f"] { --ink: #fff; } }
+    `;
+
+    expect(unscoped(family, ['a', 'b'], 'f')).toEqual([]);
+    expect(unscoped('[data-family="g"] .btn { color: red; }', ['a', 'b'], 'f')).toEqual(['[data-family="g"] .btn']);
+    expect(unscoped('[data-theme="c"] { --a: 1 }', ['a', 'b'], 'f')).toEqual(['[data-theme="c"]']);
+    expect(unscoped('[data-family="f"].dark { --a: 1 }', ['a'], 'f')).toEqual(['[data-family="f"].dark']);
+    // ...and a sheet with no family name may not use the family scope at all
+    expect(unscoped('[data-family="f"] { --a: 1 }', 'a')).toEqual(['[data-family="f"]']);
+  });
+
   it('collects the tokens a block declares, strings and all', () => {
     expect([...declared(SAMPLE, '[data-theme="x"]')].sort()).toEqual(['--a', '--b', '--c']);
     expect([...declared(SAMPLE, '.dark[data-theme="x"]')].sort()).toEqual(['--a', '--c']);
@@ -284,36 +319,57 @@ describe('the family-sheet rules, on a stand-in sheet', () => {
   });
 });
 
+/** Whether a sheet sets `--ink` for `selector` under `@media (prefers-contrast: more)`. */
+function inkUnderMoreContrast(sheet: string, selector: string): boolean {
+  return rules(sheet).some(
+    (rule) =>
+      rule.media === '@media (prefers-contrast: more)' &&
+      rule.selector.replace(/\s+/g, '') === selector &&
+      /(?:^|[;\s])--ink\s*:/.test(rule.body),
+  );
+}
+
 describe('the family sheets', () => {
-  it(`covers every theme of THEMES that is not a paper (${FAMILIES.length} today)`, () => {
-    // No family sheet is in the repo yet: E14 adds glass.css, E15 neu.css, and each shows up here
-    // by its THEMES entry alone
-    expect(FAMILIES.map((entry) => entry.key)).toEqual(
-      THEMES.filter((entry) => entry.family !== 'brutal').map((entry) => entry.key),
-    );
+  it(`covers every family of THEMES that is not the papers (${FAMILIES.length} today)`, () => {
+    // Each family shows up here by its THEMES entries alone: E14 added glass.css, E15 neu.css,
+    // D15 studio.css with its four themes
+    expect(FAMILIES.map((family) => family.name).sort()).toEqual(['glass', 'neu', 'studio']);
+    expect(FAMILIES.find((family) => family.name === 'studio')?.keys).toEqual(['iris', 'jade', 'ember', 'mono']);
   });
 
-  for (const entry of FAMILIES) {
-    describe(`${entry.key}.css`, () => {
-      const sheet = read(`${FAMILIES_DIR}/${entry.key}.css`);
+  for (const family of FAMILIES) {
+    describe(`${family.name}.css`, () => {
+      const sheet = read(`${FAMILIES_DIR}/${family.name}.css`);
       const tokens = read(TOKENS_PATH);
+      // A family of one theme is named like it and scopes to its [data-theme] alone (E14, E15)
+      const shared = family.keys.length > 1 ? family.name : undefined;
 
-      it('scopes every rule to its own theme', () => {
-        expect(unscoped(sheet, entry.key)).toEqual([]);
+      const lightOf = (key: string) =>
+        new Set([
+          ...declared(sheet, `[data-theme="${key}"]`),
+          ...(shared ? declared(sheet, `[data-family="${shared}"]`) : []),
+        ]);
+      const darkOf = (key: string) =>
+        new Set([
+          ...declared(sheet, `.dark[data-theme="${key}"]`),
+          ...(shared ? declared(sheet, `.dark[data-family="${shared}"]`) : []),
+        ]);
+
+      it('scopes every rule to its own themes or its family', () => {
+        expect(unscoped(sheet, family.keys, shared)).toEqual([]);
       });
 
-      it('declares every token Poster declares, in the light block and in the dark block', () => {
-        const light = declared(sheet, `[data-theme="${entry.key}"]`);
-        const dark = declared(sheet, `.dark[data-theme="${entry.key}"]`);
+      for (const key of family.keys) {
+        it(`declares every token Poster declares for ${key}, in the light block and in the dark block`, () => {
+          expect(missing(declared(tokens, POSTER_LIGHT), lightOf(key)), 'light').toEqual([]);
+          expect(missing(declared(tokens, POSTER_DARK), darkOf(key)), 'dark').toEqual([]);
+        });
 
-        expect(missing(declared(tokens, POSTER_LIGHT), light), 'light').toEqual([]);
-        expect(missing(declared(tokens, POSTER_DARK), dark), 'dark').toEqual([]);
-      });
-
-      it('declares --glyph in both blocks', () => {
-        expect(declared(sheet, `[data-theme="${entry.key}"]`).has('--glyph')).toBe(true);
-        expect(declared(sheet, `.dark[data-theme="${entry.key}"]`).has('--glyph')).toBe(true);
-      });
+        it(`declares --glyph for ${key} in both modes`, () => {
+          expect(lightOf(key).has('--glyph')).toBe(true);
+          expect(darkOf(key).has('--glyph')).toBe(true);
+        });
+      }
 
       it('is plain CSS, with nothing for Tailwind to process', () => {
         const css = sheet.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -323,19 +379,31 @@ describe('the family sheets', () => {
         }
       });
 
-      if (entry.family === 'neu') {
+      if (family.name === 'neu') {
         it('answers prefers-contrast: more with a line, in both modes', () => {
           // Playwright cannot emulate the media feature, so the block is held to here (E15-S2-T2):
           // a family with no visible line has to give every surface an edge when asked
-          const more = rules(sheet).filter((rule) => rule.media === '@media (prefers-contrast: more)');
-          const inkIn = (selector: string) =>
-            more.some(
-              (rule) => rule.selector.replace(/\s+/g, '') === selector && /(?:^|[;\s])--ink\s*:/.test(rule.body),
-            );
+          expect(inkUnderMoreContrast(sheet, '[data-theme="neu"]'), '--ink in the light block').toBe(true);
+          expect(inkUnderMoreContrast(sheet, '.dark[data-theme="neu"]'), '--ink in the dark block').toBe(true);
+        });
+      }
 
-          expect(more.length, 'rules under prefers-contrast: more').toBeGreaterThan(0);
-          expect(inkIn(`[data-theme="${entry.key}"]`), '--ink in the light block').toBe(true);
-          expect(inkIn(`.dark[data-theme="${entry.key}"]`), '--ink in the dark block').toBe(true);
+      if (family.name === 'studio') {
+        it('answers prefers-contrast: more with stronger lines, in both modes', () => {
+          // Studio's lines are hairlines on purpose; a reader who asks for more contrast gets them darker
+          // (lighter at night) for every theme, which is why the block sits on the family scope
+          expect(inkUnderMoreContrast(sheet, '[data-family="studio"]'), '--ink in the light block').toBe(true);
+          expect(inkUnderMoreContrast(sheet, '.dark[data-family="studio"]'), '--ink in the dark block').toBe(true);
+        });
+
+        it('gives every theme a button colour of its own in both modes', () => {
+          // `--solid` is what a primary button is filled with: the accent, or Mono's inverse of the page
+          for (const key of family.keys) {
+            for (const name of ['--solid', '--solid-foreground', '--link', '--line-soft', '--line-strong']) {
+              expect(lightOf(key).has(name), `${key} light ${name}`).toBe(true);
+              expect(darkOf(key).has(name), `${key} dark ${name}`).toBe(true);
+            }
+          }
         });
       }
     });

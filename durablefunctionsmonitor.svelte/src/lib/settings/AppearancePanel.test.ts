@@ -58,8 +58,10 @@ describe('Appearance panel', () => {
       [THEMES[0].paper, THEMES[0].ink, THEMES[0].primary, THEMES[0].dark].map(rgb),
     );
 
-    expect(tiles[0].textContent).toContain('Poster');
-    expect(tiles[0].textContent).toContain('0 px · 2 px · 4 px');
+    // Iris, the default, leads (D15); the papers follow with their own metrics
+    expect(tiles[0].textContent).toContain('Iris');
+    expect(tiles[0].textContent).toContain('8 px · 1 px · 12 px');
+    expect(tile('Poster').textContent).toContain('0 px · 2 px · 4 px');
   });
 
   it('applies the theme that is picked', async () => {
@@ -72,7 +74,7 @@ describe('Appearance panel', () => {
     expect(app.prefs.theme).toBe('memphis');
     expect(tile('Memphis')).toHaveClass('active');
     expect(tile('Memphis')).toHaveAttribute('aria-checked', 'true');
-    expect(tile('Poster')).toHaveAttribute('aria-checked', 'false');
+    expect(tile('Iris')).toHaveAttribute('aria-checked', 'false');
   });
 
   it('switches the mode and the density, and says what each does', async () => {

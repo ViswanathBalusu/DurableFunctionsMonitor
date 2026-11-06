@@ -1,0 +1,2272 @@
+/* Studio (contracts §16, README D15): the contemporary developer-console family, held to the craft
+   level of Linear, Vercel, Trigger.dev and Inngest (PRODUCT.md, brand commitments). One system,
+   four themes - Iris (the default), Jade, Ember, Mono - each with a light and a dark face.
+
+   Calm neutral grounds, panels one step off the ground, 1px low-contrast lines, 12px panel corners
+   and 8px controls, a soft shadow only on what floats; one accent per theme; status as a tinted pill
+   with a solid dot, while the row spine, the chart series and the swimlane bars keep the strong hue.
+   Mona Sans for the interface, JetBrains Mono for ids, times and payloads.
+
+   How the sheet is put together:
+   - the family's shared tokens and its component layer are scoped under `[data-family="studio"]`,
+     which prefs.svelte.ts sets on <html> from the theme (a family is never a preference of its own);
+   - each theme declares its neutrals and its accent under `[data-theme="<key>"]`, in a light block
+     and a `.dark` block, after the family blocks so that it wins where both speak;
+   - between the family block and the theme block of a mode, every token Poster declares is declared
+     again, so nothing inherits Poster's value (tests/unit/family-sheets.test.ts);
+   - `--ink`, the line of every outline in dfm-ui.css, is the hairline here; `--glyph` carries the
+     marks (contracts §16);
+   - `--primary` is the theme's accent and the same in both modes (the swatch). What a primary
+     button is filled with is `--solid`, which equals the accent except in Mono, whose buttons are
+     the inverse of the page (black on light, white on dark) while blue stays for focus and links. */
+
+/* ===== (1) Family tokens, light ===== */
+[data-family="studio"] {
+  --radius: 8px;
+  --border-width: 1px;
+  --shadow-offset: 0px;
+  --shadow-offset-lg: 0px;
+  --pattern: none;
+  --radius-lg: 12px;
+  --control-h: 32px;
+  --control-h-lg: 36px;
+  --row-h: 36px;
+  --topbar-h: 52px;
+  --tab-h: 38px;
+  --spine-w: 3px;
+  --font-sans: "Mona Sans Variable", "Mona Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --destructive: #cf333a;
+  --destructive-foreground: #ffffff;
+  --shadow-ink: rgba(17, 17, 26, 0.12);
+  --on-poster: #121218;
+  --poster-1: #dcdcfb;
+  --poster-2: #fbdce9;
+  --poster-3: #d4eefa;
+  --poster-4: #d8f2e2;
+  --poster-5: #e8ddfb;
+  --poster-6: #fde3d3;
+  --chart-2: #14a394;
+  --chart-3: #e8a23a;
+  --chart-4: #db5c9b;
+  --chart-5: #3e86f5;
+
+  /* The strong hue of every status: the dot, the row spine, the chart series, the swimlane bar */
+  --status-completed: #2f9e62;
+  --status-completed-foreground: #0d1f15;
+  --status-running: #e5a031;
+  --status-running-foreground: #241703;
+  --status-failed: #e5484d;
+  --status-failed-foreground: #ffffff;
+  --status-pending: #3e86f5;
+  --status-pending-foreground: #ffffff;
+  --status-terminated: #8b8d98;
+  --status-terminated-foreground: #ffffff;
+  --status-canceled: #b2b4be;
+  --status-canceled-foreground: #1a1b22;
+  --status-continued: #8e62e3;
+  --status-continued-foreground: #ffffff;
+  --status-suspended: #ef7b3a;
+  --status-suspended-foreground: #2a1204;
+
+  /* ...and its pill: a tint of the hue with text in the hue, 4.5:1 or better */
+  --st-completed-bg: #e3f5ea;
+  --st-completed-fg: #146c37;
+  --st-running-bg: #fcf0d9;
+  --st-running-fg: #8a5207;
+  --st-failed-bg: #fde7e9;
+  --st-failed-fg: #b51d2a;
+  --st-pending-bg: #e6effe;
+  --st-pending-fg: #1c56c4;
+  --st-terminated-bg: #eeeef2;
+  --st-terminated-fg: #4a4c58;
+  --st-canceled-bg: #f1f1f4;
+  --st-canceled-fg: #575966;
+  --st-continued-bg: #efe9fd;
+  --st-continued-fg: #6431c9;
+  --st-suspended-bg: #fdebe0;
+  --st-suspended-fg: #a1400c;
+
+  --kind-orchestration: #f1f1f5;
+  --kind-orchestration-foreground: #121218;
+  --kind-entity: #db5c9b;
+  --kind-entity-foreground: #ffffff;
+  --kind-entity-bg: #fce8f1;
+  --kind-entity-fg: #a02563;
+
+  --node-activity: #14a3b8;
+  --node-entity: #db5c9b;
+  --node-suborchestrator: #8e62e3;
+  --node-http: #2f9e62;
+  --node-timer: #ef7b3a;
+  --node-queue: #8b8d98;
+  --node-other: #c5c7d0;
+  --node-foreground: #121218;
+
+  --json-key: #2b2d42;
+  --json-string: #146c37;
+  --json-number: #1c56c4;
+  --json-boolean: #a1400c;
+  --json-null: #686a78;
+  --json-punctuation: #686a78;
+
+  --shadow-brutal: 0 1px 2px rgba(17, 17, 26, 0.05);
+  --shadow-brutal-sm: 0 1px 1px rgba(17, 17, 26, 0.04);
+  --shadow-brutal-hover: 0 2px 6px rgba(17, 17, 26, 0.08);
+  --shadow-brutal-lg: 0 16px 40px -12px rgba(17, 17, 26, 0.22), 0 4px 12px -4px rgba(17, 17, 26, 0.08);
+  --stripe: repeating-linear-gradient(-45deg, var(--status-running) 0 6px, transparent 6px 12px);
+  --veil: rgba(10, 10, 16, 0.4);
+  --sheen: rgba(255, 255, 255, 0);
+  --onset-wash: rgba(229, 72, 77, 0.07);
+  --swatch: var(--solid);
+}
+
+/* ===== (2) Family tokens, dark ===== */
+.dark[data-family="studio"] {
+  --destructive: #cf333a;
+  --destructive-foreground: #ffffff;
+  --shadow-ink: rgba(0, 0, 0, 0.6);
+  --on-poster: #121218;
+  --poster-1: #2e2e66;
+  --poster-2: #4a1d33;
+  --poster-3: #13324a;
+  --poster-4: #133322;
+  --poster-5: #2d2047;
+  --poster-6: #4a2414;
+  --chart-2: #2dc5b3;
+  --chart-3: #f0b23d;
+  --chart-4: #ec74ae;
+  --chart-5: #5b9dff;
+
+  --status-completed: #3cc47f;
+  --status-completed-foreground: #04170d;
+  --status-running: #f0b23d;
+  --status-running-foreground: #251803;
+  --status-failed: #f2555a;
+  --status-failed-foreground: #1f0406;
+  --status-pending: #5b9dff;
+  --status-pending-foreground: #061633;
+  --status-terminated: #8e909c;
+  --status-terminated-foreground: #0d0d12;
+  --status-canceled: #6f717d;
+  --status-canceled-foreground: #f2f2f6;
+  --status-continued: #a884f3;
+  --status-continued-foreground: #170b33;
+  --status-suspended: #f79052;
+  --status-suspended-foreground: #2a1204;
+
+  --st-completed-bg: #0f2a1c;
+  --st-completed-fg: #5fe0a1;
+  --st-running-bg: #2b2110;
+  --st-running-fg: #f7c15c;
+  --st-failed-bg: #35161a;
+  --st-failed-fg: #ff8d91;
+  --st-pending-bg: #13213d;
+  --st-pending-fg: #8fbcff;
+  --st-terminated-bg: #1f1f26;
+  --st-terminated-fg: #b7b9c5;
+  --st-canceled-bg: #1c1c22;
+  --st-canceled-fg: #a2a4b0;
+  --st-continued-bg: #241b3d;
+  --st-continued-fg: #c9aeff;
+  --st-suspended-bg: #331b0f;
+  --st-suspended-fg: #ffab7b;
+
+  --kind-orchestration: #1b1b23;
+  --kind-orchestration-foreground: #ececf1;
+  --kind-entity: #ec74ae;
+  --kind-entity-foreground: #2a0718;
+  --kind-entity-bg: #33162a;
+  --kind-entity-fg: #f6a0cb;
+
+  --node-activity: #2bbed2;
+  --node-entity: #ec74ae;
+  --node-suborchestrator: #a884f3;
+  --node-http: #3cc47f;
+  --node-timer: #f79052;
+  --node-queue: #8e909c;
+  --node-other: #3a3b45;
+  --node-foreground: #0d0d12;
+
+  --json-key: #d6d7e2;
+  --json-string: #6fdba4;
+  --json-number: #8fbcff;
+  --json-boolean: #ffab7b;
+  --json-null: #9496a4;
+  --json-punctuation: #9496a4;
+
+  --shadow-brutal: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow-brutal-sm: 0 1px 1px rgba(0, 0, 0, 0.4);
+  --shadow-brutal-hover: 0 2px 8px rgba(0, 0, 0, 0.55);
+  --shadow-brutal-lg: 0 24px 56px -16px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --veil: rgba(0, 0, 0, 0.6);
+  --sheen: rgba(255, 255, 255, 0.03);
+  --onset-wash: rgba(242, 85, 90, 0.1);
+}
+
+/* ===== (3) Iris: indigo on cool neutrals (the default theme) ===== */
+[data-theme="iris"] {
+  --background: #f6f6f9;
+  --foreground: #121218;
+  --card: #ffffff;
+  --card-foreground: #121218;
+  --popover: #ffffff;
+  --popover-foreground: #121218;
+  --primary: #5b5bd6;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #121218;
+  --accent: #ececfc;
+  --accent-foreground: #121218;
+  --muted: #f1f1f5;
+  --muted-foreground: #5b5d6e;
+  --border: #e4e4eb;
+  --input: #ffffff;
+  --ring: #5b5bd6;
+  --ink: #e4e4eb;
+  --paper: #f6f6f9;
+  --sidebar: #f6f6f9;
+  --sidebar-foreground: #121218;
+  --sidebar-primary: #5b5bd6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e8e8f8;
+  --sidebar-accent-foreground: #121218;
+  --sidebar-border: #e4e4eb;
+  --sidebar-ring: #5b5bd6;
+  --chart-1: #6466f1;
+  --node-orchestrator: #6466f1;
+  --glyph: #121218;
+  --solid: #5b5bd6;
+  --solid-foreground: #ffffff;
+  --solid-hover: #4c4cc8;
+  --link: #4747bf;
+  --line-soft: #eeeef3;
+  --line-strong: #d4d4dd;
+  --selection: #dcdcfb;
+  --row-hover: #f8f8fb;
+  --indicator: var(--ring);
+}
+
+.dark[data-theme="iris"] {
+  --background: #09090c;
+  --foreground: #ececf1;
+  --card: #111116;
+  --card-foreground: #ececf1;
+  --popover: #17171e;
+  --popover-foreground: #ececf1;
+  --primary: #5b5bd6;
+  --primary-foreground: #ffffff;
+  --secondary: #17171e;
+  --secondary-foreground: #ececf1;
+  --accent: #1d1d38;
+  --accent-foreground: #ececf1;
+  --muted: #1b1b23;
+  --muted-foreground: #9c9dae;
+  --border: #24242d;
+  --input: #0e0e13;
+  --ring: #8b8dfa;
+  --ink: #24242d;
+  --paper: #09090c;
+  --sidebar: #0c0c10;
+  --sidebar-foreground: #ececf1;
+  --sidebar-primary: #5b5bd6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1a1a2a;
+  --sidebar-accent-foreground: #ececf1;
+  --sidebar-border: #1c1c24;
+  --sidebar-ring: #8b8dfa;
+  --chart-1: #8486f6;
+  --node-orchestrator: #8486f6;
+  --glyph: #ececf1;
+  --solid: #5b5bd6;
+  --solid-foreground: #ffffff;
+  --solid-hover: #6a6ae2;
+  --link: #a7a9fb;
+  --line-soft: #1a1a21;
+  --line-strong: #30303b;
+  --selection: #2e2e66;
+  --row-hover: #15151b;
+  --indicator: var(--ring);
+}
+
+/* ===== (4) Jade: teal on slate ===== */
+[data-theme="jade"] {
+  --background: #f4f7f7;
+  --foreground: #0f1717;
+  --card: #ffffff;
+  --card-foreground: #0f1717;
+  --popover: #ffffff;
+  --popover-foreground: #0f1717;
+  --primary: #0e7f73;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #0f1717;
+  --accent: #e0f2ef;
+  --accent-foreground: #0f1717;
+  --muted: #eef3f3;
+  --muted-foreground: #4e5f5e;
+  --border: #dfe7e7;
+  --input: #ffffff;
+  --ring: #0e7f73;
+  --ink: #dfe7e7;
+  --paper: #f4f7f7;
+  --sidebar: #f4f7f7;
+  --sidebar-foreground: #0f1717;
+  --sidebar-primary: #0e7f73;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e1f0ee;
+  --sidebar-accent-foreground: #0f1717;
+  --sidebar-border: #dfe7e7;
+  --sidebar-ring: #0e7f73;
+  --chart-1: #14a394;
+  --node-orchestrator: #14a394;
+  --glyph: #0f1717;
+  --solid: #0e7f73;
+  --solid-foreground: #ffffff;
+  --solid-hover: #0b7066;
+  --link: #0b6b61;
+  --line-soft: #eaf0f0;
+  --line-strong: #cfdbdb;
+  --selection: #c6ebe5;
+  --row-hover: #f6f9f9;
+  --indicator: var(--ring);
+}
+
+.dark[data-theme="jade"] {
+  --background: #080b0b;
+  --foreground: #e8f0ef;
+  --card: #0f1515;
+  --card-foreground: #e8f0ef;
+  --popover: #141b1b;
+  --popover-foreground: #e8f0ef;
+  --primary: #0e7f73;
+  --primary-foreground: #ffffff;
+  --secondary: #141b1b;
+  --secondary-foreground: #e8f0ef;
+  --accent: #0f2a27;
+  --accent-foreground: #e8f0ef;
+  --muted: #182121;
+  --muted-foreground: #93a8a5;
+  --border: #1e2929;
+  --input: #0b1010;
+  --ring: #2dd4bf;
+  --ink: #1e2929;
+  --paper: #080b0b;
+  --sidebar: #0a0e0e;
+  --sidebar-foreground: #e8f0ef;
+  --sidebar-primary: #0e7f73;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #112624;
+  --sidebar-accent-foreground: #e8f0ef;
+  --sidebar-border: #172020;
+  --sidebar-ring: #2dd4bf;
+  --chart-1: #2dd4bf;
+  --node-orchestrator: #2dd4bf;
+  --glyph: #e8f0ef;
+  --solid: #0e7f73;
+  --solid-foreground: #ffffff;
+  --solid-hover: #129385;
+  --link: #5ee0cc;
+  --line-soft: #162020;
+  --line-strong: #2a3838;
+  --selection: #134640;
+  --row-hover: #121a1a;
+  --indicator: var(--ring);
+}
+
+/* ===== (5) Ember: warm grey, with the ember kept to what is pressed and followed =====
+   The status hues already hold the warm side of the wheel - Failed red, Suspended orange, Running
+   amber - so no warm accent reads apart from them: an amber tab line or row wash looked like Running,
+   and the old links were the Suspended pill's own text colour. Ember's selection, highlight and chart
+   neutral are warm greys and its active tab line and nav icon take the ink (as Mono's do), and the
+   ember itself is on the filled button, the checked box, the logo, the focus ring and the links,
+   which are a browner copper than any pill's text. */
+[data-theme="ember"] {
+  --background: #f8f6f4;
+  --foreground: #1a1512;
+  --card: #ffffff;
+  --card-foreground: #1a1512;
+  --popover: #ffffff;
+  --popover-foreground: #1a1512;
+  --primary: #b45309;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #1a1512;
+  --accent: #f1ebe5;
+  --accent-foreground: #1a1512;
+  --muted: #f3efeb;
+  --muted-foreground: #62574f;
+  --border: #e9e3dd;
+  --input: #ffffff;
+  --ring: #b45309;
+  --ink: #e9e3dd;
+  --paper: #f8f6f4;
+  --sidebar: #f8f6f4;
+  --sidebar-foreground: #1a1512;
+  --sidebar-primary: #b45309;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebe4dd;
+  --sidebar-accent-foreground: #1a1512;
+  --sidebar-border: #e9e3dd;
+  --sidebar-ring: #b45309;
+  --chart-1: #85766a;
+  --node-orchestrator: #85766a;
+  --glyph: #1a1512;
+  --solid: #b45309;
+  --solid-foreground: #ffffff;
+  --solid-hover: #9a4708;
+  --link: #8a4b21;
+  --line-soft: #f1ece7;
+  --line-strong: #dcd3cb;
+  --selection: #e8dfd5;
+  --row-hover: #faf8f6;
+  --indicator: var(--foreground);
+}
+
+.dark[data-theme="ember"] {
+  --background: #0c0a09;
+  --foreground: #f2ede9;
+  --card: #15120f;
+  --card-foreground: #f2ede9;
+  --popover: #1b1714;
+  --popover-foreground: #f2ede9;
+  --primary: #b45309;
+  --primary-foreground: #ffffff;
+  --secondary: #1b1714;
+  --secondary-foreground: #f2ede9;
+  --accent: #28211b;
+  --accent-foreground: #f2ede9;
+  --muted: #211c18;
+  --muted-foreground: #ada096;
+  --border: #2a2420;
+  --input: #110e0c;
+  --ring: #e2a274;
+  --ink: #2a2420;
+  --paper: #0c0a09;
+  --sidebar: #0f0d0b;
+  --sidebar-foreground: #f2ede9;
+  --sidebar-primary: #b45309;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #252019;
+  --sidebar-accent-foreground: #f2ede9;
+  --sidebar-border: #221d19;
+  --sidebar-ring: #e2a274;
+  --chart-1: #a99d93;
+  --node-orchestrator: #a99d93;
+  --glyph: #f2ede9;
+  --solid: #b45309;
+  --solid-foreground: #ffffff;
+  --solid-hover: #c45f0d;
+  --link: #e2b48f;
+  --line-soft: #1f1a17;
+  --line-strong: #3a322c;
+  --selection: #3d342c;
+  --row-hover: #19150f;
+  --indicator: var(--foreground);
+}
+
+/* ===== (6) Mono: black and white, blue for focus, links and selection ===== */
+[data-theme="mono"] {
+  --background: #f7f7f7;
+  --foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #111111;
+  --primary: #0068e0;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #111111;
+  --accent: #e9f2fe;
+  --accent-foreground: #111111;
+  --muted: #f0f0f0;
+  --muted-foreground: #595959;
+  --border: #e5e5e5;
+  --input: #ffffff;
+  --ring: #0068e0;
+  --ink: #e5e5e5;
+  --paper: #f7f7f7;
+  --sidebar: #f7f7f7;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #111111;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ebebeb;
+  --sidebar-accent-foreground: #111111;
+  --sidebar-border: #e5e5e5;
+  --sidebar-ring: #0068e0;
+  --chart-1: #6b6b6b;
+  --node-orchestrator: #6b6b6b;
+  --glyph: #111111;
+  --solid: #111111;
+  --solid-foreground: #ffffff;
+  --solid-hover: #2b2b2b;
+  --link: #0059c2;
+  --line-soft: #efefef;
+  --line-strong: #d6d6d6;
+  --selection: #cfe3fd;
+  --row-hover: #f8f8f8;
+  --indicator: var(--foreground);
+}
+
+.dark[data-theme="mono"] {
+  --background: #050505;
+  --foreground: #ededed;
+  --card: #0e0e0e;
+  --card-foreground: #ededed;
+  --popover: #141414;
+  --popover-foreground: #ededed;
+  --primary: #0068e0;
+  --primary-foreground: #ffffff;
+  --secondary: #141414;
+  --secondary-foreground: #ededed;
+  --accent: #0f1e33;
+  --accent-foreground: #ededed;
+  --muted: #1a1a1a;
+  --muted-foreground: #a1a1a1;
+  --border: #262626;
+  --input: #0a0a0a;
+  --ring: #3b9bff;
+  --ink: #262626;
+  --paper: #050505;
+  --sidebar: #080808;
+  --sidebar-foreground: #ededed;
+  --sidebar-primary: #ededed;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #1c1c1c;
+  --sidebar-accent-foreground: #ededed;
+  --sidebar-border: #1a1a1a;
+  --sidebar-ring: #3b9bff;
+  --chart-1: #a1a1a1;
+  --node-orchestrator: #a1a1a1;
+  --glyph: #ededed;
+  --solid: #ededed;
+  --solid-foreground: #0a0a0a;
+  --solid-hover: #ffffff;
+  --link: #66b0ff;
+  --line-soft: #171717;
+  --line-strong: #333333;
+  --selection: #13305a;
+  --row-hover: #121212;
+  --indicator: var(--foreground);
+}
+
+/* ===== (7) The page, the browser's own surfaces, type ===== */
+html[data-family="studio"] {
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+html[data-family="studio"] body {
+  background: var(--background);
+  background-image: none;
+  font-size: 14px;
+  letter-spacing: -0.003em;
+  font-feature-settings: "cv11", "ss01";
+}
+
+[data-family="studio"] ::selection {
+  background: var(--selection);
+  color: var(--foreground);
+}
+
+[data-family="studio"] :focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+[data-family="studio"] :is(h1, h2, h3) {
+  letter-spacing: -0.015em;
+}
+
+[data-family="studio"] .display {
+  font-weight: 650;
+  font-variation-settings: normal;
+  letter-spacing: -0.02em;
+}
+
+[data-family="studio"] .condensed {
+  font-variation-settings: normal;
+}
+
+[data-family="studio"] :is(.data, .mono) {
+  font-size: 12.5px;
+}
+
+[data-family="studio"] .meta {
+  font-weight: 500;
+}
+
+/* A panel's or a page's side note is prose about the data, not data: the interface face, not mono */
+[data-family="studio"] .fine.muted {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* The hub picker names a hub in the interface face here; the papers keep it in mono */
+[data-family="studio"] .btn.tb-hub {
+  font-family: var(--font-sans);
+}
+
+[data-family="studio"] a:hover {
+  text-decoration-thickness: 1px;
+}
+
+[data-family="studio"] svg.ico {
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+[data-family="studio"] .vsep {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+}
+
+[data-family="studio"] .sep {
+  height: 1px;
+  background: var(--line-soft);
+}
+
+/* ===== (8) Status and kind: a tinted pill with a solid dot. The shapes come first and the colours
+   after them, so that a status class wins over the shape it sits on at the same specificity ===== */
+[data-family="studio"] .chip {
+  height: 22px;
+  padding: 0 8px;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 12px;
+  font-weight: 550;
+}
+
+[data-family="studio"]
+  .chip:is(
+    .st-completed,
+    .st-running,
+    .st-failed,
+    .st-pending,
+    .st-terminated,
+    .st-canceled,
+    .st-continued,
+    .st-continuedasnew,
+    .st-suspended,
+    .kind-orchestration,
+    .kind-entity
+  ) {
+  border-color: transparent;
+}
+
+[data-family="studio"]
+  .chip:not(.cnt):is(
+    .st-completed,
+    .st-running,
+    .st-failed,
+    .st-pending,
+    .st-terminated,
+    .st-canceled,
+    .st-continued,
+    .st-continuedasnew,
+    .st-suspended
+  )::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+[data-family="studio"] .chip.sm {
+  height: 18px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+[data-family="studio"] .mini {
+  height: 18px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--muted);
+}
+
+[data-family="studio"] .tag {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-weight: 550;
+  line-height: 16px;
+}
+
+[data-family="studio"] .tag:hover {
+  color: var(--foreground);
+  border-color: var(--line-strong);
+}
+
+[data-family="studio"] .dbadge {
+  height: 26px;
+  gap: 6px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--st-running-bg);
+  color: var(--st-running-fg);
+  font-weight: 600;
+}
+
+[data-family="studio"] .dbadge.sm {
+  height: 24px;
+  font-size: 12px;
+}
+
+[data-family="studio"] .dbadge::before {
+  position: static;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  background-image: none;
+}
+
+[data-family="studio"] .st-completed {
+  background: var(--st-completed-bg);
+  color: var(--st-completed-fg);
+}
+
+[data-family="studio"] .st-running {
+  background: var(--st-running-bg);
+  color: var(--st-running-fg);
+}
+
+[data-family="studio"] .st-failed {
+  background: var(--st-failed-bg);
+  color: var(--st-failed-fg);
+}
+
+[data-family="studio"] .st-pending {
+  background: var(--st-pending-bg);
+  color: var(--st-pending-fg);
+}
+
+[data-family="studio"] .st-terminated {
+  background: var(--st-terminated-bg);
+  color: var(--st-terminated-fg);
+}
+
+[data-family="studio"] .st-canceled {
+  background: var(--st-canceled-bg);
+  color: var(--st-canceled-fg);
+}
+
+[data-family="studio"] :is(.st-continued, .st-continuedasnew) {
+  background: var(--st-continued-bg);
+  color: var(--st-continued-fg);
+}
+
+[data-family="studio"] .st-suspended {
+  background: var(--st-suspended-bg);
+  color: var(--st-suspended-fg);
+}
+
+/* A swatch or a chart segment marked with a status class is the status's strong hue, not its pill:
+   the legend squares, the "Where the time went" bar and its key */
+[data-family="studio"] .swq.st-completed,
+[data-family="studio"] .wbar i.st-completed,
+[data-family="studio"] .legend i.st-completed {
+  background: var(--status-completed);
+}
+
+[data-family="studio"] .swq.st-running,
+[data-family="studio"] .wbar i.st-running,
+[data-family="studio"] .legend i.st-running {
+  background: var(--status-running);
+}
+
+[data-family="studio"] .swq.st-failed,
+[data-family="studio"] .wbar i.st-failed,
+[data-family="studio"] .legend i.st-failed {
+  background: var(--status-failed);
+}
+
+[data-family="studio"] .swq.st-pending,
+[data-family="studio"] .wbar i.st-pending,
+[data-family="studio"] .legend i.st-pending {
+  background: var(--status-pending);
+}
+
+[data-family="studio"] .swq.st-suspended,
+[data-family="studio"] .wbar i.st-suspended,
+[data-family="studio"] .legend i.st-suspended {
+  background: var(--status-suspended);
+}
+
+[data-family="studio"] .swq.st-continued,
+[data-family="studio"] .wbar i.st-continued,
+[data-family="studio"] .legend i.st-continued,
+[data-family="studio"] .swq.st-continuedasnew,
+[data-family="studio"] .wbar i.st-continuedasnew,
+[data-family="studio"] .legend i.st-continuedasnew {
+  background: var(--status-continued);
+}
+
+[data-family="studio"] .swq.st-terminated,
+[data-family="studio"] .wbar i.st-terminated,
+[data-family="studio"] .legend i.st-terminated,
+[data-family="studio"] .swq.st-canceled,
+[data-family="studio"] .wbar i.st-canceled,
+[data-family="studio"] .legend i.st-canceled {
+  background: var(--status-terminated);
+}
+
+[data-family="studio"] .kind-orchestration {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+[data-family="studio"] .kind-entity {
+  background: var(--kind-entity-bg);
+  color: var(--kind-entity-fg);
+}
+
+/* ===== (9) Buttons and controls ===== */
+[data-family="studio"] .btn {
+  height: var(--control-h);
+  padding: 0 12px;
+  gap: 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: var(--shadow-brutal);
+  font-size: 13px;
+  font-weight: 550;
+  transition: none;
+}
+
+/* The fade is declared on the hover state alone, so it runs on the way into a hover and nowhere else:
+   a theme or a mode applies at once, as it does in every family (ThemeMenu.svelte) */
+[data-family="studio"] .btn:hover {
+  transform: none;
+  background: var(--row-hover);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-brutal);
+  transition:
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
+}
+
+[data-family="studio"] .btn:active {
+  transform: none;
+  background: var(--muted);
+  box-shadow: none;
+}
+
+[data-family="studio"] .btn.primary {
+  background: var(--solid);
+  border-color: var(--solid);
+  color: var(--solid-foreground);
+}
+
+[data-family="studio"] .btn.primary:hover {
+  background: var(--solid-hover);
+  border-color: var(--solid-hover);
+}
+
+[data-family="studio"] .btn.secondary {
+  background: var(--card);
+  color: var(--foreground);
+}
+
+[data-family="studio"] :is(.btn.destructive, .btn.danger) {
+  background: var(--destructive);
+  border-color: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+[data-family="studio"] :is(.btn.destructive, .btn.danger):hover {
+  background: #b92d33;
+  border-color: #b92d33;
+}
+
+/* A dangerous operation (replay, restart in place) keeps a mark of its own: a thin amber edge
+   along its top, where the papers draw the hazard stripe */
+[data-family="studio"] .btn.danger::before {
+  height: 2px;
+  background: var(--status-running);
+  background-image: none;
+}
+
+[data-family="studio"] .btn.ghost {
+  background: transparent;
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+
+[data-family="studio"] .btn.ghost:hover {
+  background: var(--muted);
+  border-color: var(--line-strong);
+}
+
+[data-family="studio"] .btn.sm {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12.5px;
+  box-shadow: var(--shadow-brutal);
+}
+
+[data-family="studio"] .btn.flat {
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+
+/* An icon in a button (a lucide icon drawn at 2.5 px for the papers) at the weight of the type */
+[data-family="studio"] .btn svg {
+  stroke-width: 2.6;
+}
+
+[data-family="studio"] .btn.flat:hover {
+  background: var(--muted);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+[data-family="studio"] :is(.btn:disabled, .btn[aria-disabled="true"]) {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+[data-family="studio"] .link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--line-strong);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+[data-family="studio"] .link:hover {
+  background: none;
+  color: var(--link);
+  text-decoration-color: currentColor;
+}
+
+[data-family="studio"] .seg {
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+[data-family="studio"] .seg button {
+  height: calc(var(--control-h) - 6px);
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-weight: 550;
+}
+
+[data-family="studio"] .seg button:hover {
+  color: var(--foreground);
+}
+
+[data-family="studio"] .seg button[aria-pressed="true"] {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px var(--shadow-ink);
+}
+
+[data-family="studio"] .seg.sm button {
+  height: 24px;
+  font-size: 12.5px;
+}
+
+/* The disclosure triangle, which dfm-ui.css L112 draws with borders: a smaller solid triangle in the
+   mark colour, so it rotates the same way (`.tri.down`) */
+[data-family="studio"] .tri {
+  width: 6px;
+  height: 8px;
+  border: 0;
+  background: var(--glyph);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  opacity: 0.7;
+}
+
+[data-family="studio"] .swq {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+}
+
+[data-family="studio"] .avatar {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--link);
+  font-family: var(--font-sans);
+  font-weight: 650;
+}
+
+/* ===== (10) Inputs ===== */
+[data-family="studio"] .input {
+  height: var(--control-h);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input);
+  box-shadow: var(--shadow-brutal);
+}
+
+[data-family="studio"] .input:hover {
+  border-color: var(--line-strong);
+  transition: border-color 120ms ease-out;
+}
+
+[data-family="studio"] .input:focus {
+  border-color: var(--ring);
+}
+
+[data-family="studio"] .sel::after {
+  right: 12px;
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-right: 1.5px solid var(--muted-foreground);
+  border-bottom: 1.5px solid var(--muted-foreground);
+  transform: translateY(-70%) rotate(45deg);
+}
+
+[data-family="studio"] .field > label {
+  font-weight: 550;
+}
+
+[data-family="studio"] .box {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--input);
+}
+
+[data-family="studio"] .box.on {
+  background: var(--solid);
+  border-color: var(--solid);
+}
+
+[data-family="studio"] .box.on::after {
+  width: 4px;
+  height: 8px;
+  background: transparent;
+  border-right: 2px solid var(--solid-foreground);
+  border-bottom: 2px solid var(--solid-foreground);
+  transform: translateY(-1px) rotate(45deg);
+}
+
+[data-family="studio"] .switch {
+  width: 34px;
+  height: 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--line-strong);
+}
+
+[data-family="studio"] .switch::after {
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+[data-family="studio"] .switch.on {
+  background: var(--solid);
+}
+
+[data-family="studio"] .switch.on::after {
+  left: 16px;
+  background: var(--solid-foreground);
+}
+
+[data-family="studio"] .ed {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input);
+}
+
+[data-family="studio"] .ed .foot {
+  border-top: 1px solid var(--line-soft);
+}
+
+[data-family="studio"] .ed.ro {
+  background: var(--muted);
+}
+
+[data-family="studio"] .meter i {
+  height: 6px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+[data-family="studio"] .meter i::after {
+  border-radius: 3px;
+}
+
+/* ===== (11) Tabs: a text row over one hairline, the selected one underlined in the accent ===== */
+[data-family="studio"] .tabs {
+  gap: 2px;
+  border-bottom: 1px solid var(--border);
+}
+
+[data-family="studio"] .tab {
+  height: var(--tab-h);
+  padding: 0 12px;
+  margin: 0 0 -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-weight: 550;
+}
+
+[data-family="studio"] .tab:hover:not([aria-selected="true"]) {
+  background: transparent;
+  color: var(--foreground);
+}
+
+[data-family="studio"] .tab[aria-selected="true"] {
+  background: transparent;
+  color: var(--foreground);
+  border-bottom-color: var(--indicator);
+}
+
+/* ===== (12) Tables ===== */
+[data-family="studio"] .tbl-wrap {
+  border-radius: var(--radius-lg);
+}
+
+[data-family="studio"] .tbl-wrap.flat {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+[data-family="studio"] .tbl th {
+  height: var(--row-h);
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 550;
+  font-variation-settings: normal;
+}
+
+[data-family="studio"] .tbl th.spine {
+  background: var(--card);
+}
+
+/* A sortable header is a button that looks like the header: no underline until it is pointed at */
+[data-family="studio"] .tbl th .link {
+  text-decoration: none;
+  color: inherit;
+}
+
+[data-family="studio"] .tbl th .link:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+
+[data-family="studio"] .tbl th.sort {
+  color: var(--foreground);
+}
+
+[data-family="studio"] .tbl td {
+  border-bottom: 1px solid var(--line-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-family="studio"] .tbl tbody tr:hover td:not(.spine) {
+  background: var(--row-hover);
+}
+
+[data-family="studio"] .tbl tbody tr:is([aria-selected="true"], .hl) td:not(.spine) {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+[data-family="studio"] .tbl th.sort::after {
+  border-bottom-color: var(--glyph);
+}
+
+[data-family="studio"] .tbl th.sort.desc::after {
+  border-top-color: var(--glyph);
+}
+
+[data-family="studio"] .tfoot {
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+
+/* ===== (13) Page, panels, cards, the status strip ===== */
+[data-family="studio"] .page {
+  gap: 20px;
+}
+
+[data-family="studio"] .ptitle h1 {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+[data-family="studio"] .section-h {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+[data-family="studio"] .banner {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--muted);
+  font-weight: 500;
+}
+
+[data-family="studio"] .panel {
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow:
+    var(--shadow-brutal),
+    inset 0 1px 0 var(--sheen);
+}
+
+[data-family="studio"] .panel-h :is(h2, h3) {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+[data-family="studio"] .card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    var(--shadow-brutal),
+    inset 0 1px 0 var(--sheen);
+}
+
+/* The six tiles become one strip: cells on a shared panel, split by hairlines (the 1px gap shows the
+   line colour through), a dot in the status hue before the label and the sparkline in it too. No
+   breakpoint is needed: the grid's own columns change at 1100 and 768 px and the lines follow. */
+[data-family="studio"] .tiles {
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--line-soft);
+  box-shadow: var(--shadow-brutal);
+  overflow: hidden;
+}
+
+[data-family="studio"] .tiles > .stat-tile {
+  height: auto;
+  min-height: 98px;
+  padding: 12px 16px 10px;
+  border: 0;
+  border-radius: 0;
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: none;
+  transition: none;
+}
+
+[data-family="studio"] .tiles > .stat-tile:hover {
+  transform: none;
+  background: var(--row-hover);
+  transition: background-color 120ms ease-out;
+  box-shadow: none;
+}
+
+[data-family="studio"] .tiles > .stat-tile:active {
+  transform: none;
+  box-shadow: none;
+}
+
+[data-family="studio"] .stat-tile .lbl {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+[data-family="studio"] .stat-tile .lbl::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted-foreground);
+  flex: none;
+}
+
+[data-family="studio"] .stat-tile .num {
+  margin-top: 6px;
+  font-family: var(--font-sans);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+[data-family="studio"] .stat-tile svg {
+  height: 24px;
+  color: var(--muted-foreground);
+}
+
+[data-family="studio"] .stat-tile polyline {
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+[data-family="studio"] .stat-tile.st-completed .lbl::before {
+  background: var(--status-completed);
+}
+
+[data-family="studio"] .stat-tile.st-completed svg {
+  color: var(--status-completed);
+}
+
+[data-family="studio"] .stat-tile.st-running .lbl::before {
+  background: var(--status-running);
+}
+
+[data-family="studio"] .stat-tile.st-running svg {
+  color: var(--status-running);
+}
+
+[data-family="studio"] .stat-tile.st-failed .lbl::before {
+  background: var(--status-failed);
+}
+
+[data-family="studio"] .stat-tile.st-failed svg {
+  color: var(--status-failed);
+}
+
+[data-family="studio"] .stat-tile.st-pending .lbl::before {
+  background: var(--status-pending);
+}
+
+[data-family="studio"] .stat-tile.st-pending svg {
+  color: var(--status-pending);
+}
+
+[data-family="studio"] .stat-tile.st-suspended .lbl::before {
+  background: var(--status-suspended);
+}
+
+[data-family="studio"] .stat-tile.st-suspended svg {
+  color: var(--status-suspended);
+}
+
+[data-family="studio"] .stat-tile:is(.st-continued, .st-continuedasnew) .lbl::before {
+  background: var(--status-continued);
+}
+
+[data-family="studio"] .stat-tile:is(.st-continued, .st-continuedasnew) svg {
+  color: var(--status-continued);
+}
+
+[data-family="studio"] .stat-tile:is(.st-terminated, .st-canceled) .lbl::before {
+  background: var(--status-terminated);
+}
+
+[data-family="studio"] .stat-tile.kind-entity .lbl::before {
+  background: var(--kind-entity);
+}
+
+[data-family="studio"] .stat-tile.kind-entity svg {
+  color: var(--kind-entity);
+}
+
+[data-family="studio"] .attn {
+  gap: 0;
+}
+
+[data-family="studio"] .attn > div {
+  padding: 10px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+[data-family="studio"] .attn > div:last-child {
+  border-bottom: 0;
+}
+
+[data-family="studio"] .attn .n {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 650;
+  min-width: 32px;
+}
+
+[data-family="studio"] .attn .link {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--link);
+  text-decoration: none;
+}
+
+[data-family="studio"] .kv dt {
+  font-weight: 500;
+}
+
+[data-family="studio"] .empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: none;
+}
+
+[data-family="studio"] .empty h2 {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+[data-family="studio"] .fchip {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  box-shadow: none;
+  font-size: 12.5px;
+  font-weight: 550;
+}
+
+[data-family="studio"] .fchip .x {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+[data-family="studio"] .fchip .x:hover {
+  background: var(--st-failed-bg);
+  color: var(--st-failed-fg);
+}
+
+[data-family="studio"] .fchip.add {
+  border-style: dashed;
+  border-color: var(--line-strong);
+  background: transparent;
+}
+
+[data-family="studio"] .fchip.add:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+/* ===== (14) Shell ===== */
+[data-family="studio"] .snav {
+  gap: 2px;
+  padding: 12px 10px;
+  border-right: 1px solid var(--sidebar-border);
+  background: var(--sidebar);
+}
+
+[data-family="studio"] .snav .brand {
+  gap: 10px;
+  padding: 4px 6px 16px;
+  font-size: 15px;
+  font-weight: 650;
+  font-variation-settings: normal;
+  letter-spacing: -0.01em;
+}
+
+[data-family="studio"] .snav .item {
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
+  font-weight: 550;
+}
+
+[data-family="studio"] .snav .item:hover:not(.active) {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+[data-family="studio"] .snav .item.active {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+  box-shadow: none;
+}
+
+[data-family="studio"] .snav .item.active svg {
+  color: var(--indicator);
+}
+
+[data-family="studio"] .snav .item svg {
+  width: 17px;
+  height: 17px;
+}
+
+[data-family="studio"] .collapsed .snav {
+  padding: 12px 8px;
+}
+
+[data-family="studio"] .collapsed .snav .item {
+  padding: 0;
+}
+
+[data-family="studio"] .topbar {
+  min-height: var(--topbar-h);
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* The mark: one bolt in the button colour's foreground on a tile of the button colour
+   (LogoMark.svelte reads the three tokens below, and falls back to the papers' ink and accent) */
+[data-family="studio"] .logo {
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--solid);
+  box-shadow: none;
+  --logo-mark: var(--solid-foreground);
+  --logo-echo: transparent;
+  --logo-line: transparent;
+}
+
+[data-family="studio"] .pop {
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--popover);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+[data-family="studio"] .mi {
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+[data-family="studio"] .mi:hover {
+  background: var(--muted);
+}
+
+[data-family="studio"] .mi.destructive {
+  color: var(--st-failed-fg);
+}
+
+[data-family="studio"] .mi.active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+[data-family="studio"] .ttile {
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-weight: 550;
+}
+
+[data-family="studio"] .ttile:hover {
+  background: var(--muted);
+}
+
+[data-family="studio"] .ttile.active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: var(--indicator);
+  box-shadow: none;
+}
+
+[data-family="studio"] .ttile .sw i {
+  width: 12px;
+  height: 12px;
+  margin-right: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+}
+
+[data-family="studio"] .progress {
+  height: 3px;
+  border: 0;
+  border-radius: 2px;
+  background-image: repeating-linear-gradient(90deg, var(--ring) 0 17px, var(--accent) 17px 34px);
+}
+
+[data-family="studio"] .bottom-nav {
+  border-top: 1px solid var(--border);
+  background: var(--card);
+}
+
+[data-family="studio"] .bottom-nav button {
+  border-right: 0;
+  color: var(--muted-foreground);
+  font-weight: 550;
+}
+
+[data-family="studio"] .bottom-nav button.active {
+  background: transparent;
+  color: var(--link);
+}
+
+[data-family="studio"] .bottom-nav .bcnt {
+  border: 0;
+  border-radius: 8px;
+  background: var(--status-failed);
+  color: var(--status-failed-foreground);
+}
+
+/* ===== (15) Overlays: the veil, dialogs, toasts, the bulk bar, the peek, the palette, the sheet ===== */
+[data-family="studio"] .overlay:not(.clear) {
+  background: var(--veil);
+}
+
+[data-family="studio"] .dialog {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--popover);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+[data-family="studio"] .dialog .warn {
+  height: 3px;
+  border: 0;
+  background: var(--destructive);
+  background-image: none;
+}
+
+[data-family="studio"] .dialog .body {
+  padding: 20px 22px;
+}
+
+[data-family="studio"] .dialog h3 {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+[data-family="studio"] .dialog .foot {
+  padding: 4px 22px 20px;
+}
+
+[data-family="studio"] .toast {
+  border: 1px solid var(--st-failed-bg);
+  border-radius: 10px;
+  background: var(--popover);
+  color: var(--st-failed-fg);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+[data-family="studio"] .toast.ok {
+  border-color: var(--st-completed-bg);
+  background: var(--popover);
+  color: var(--st-completed-fg);
+}
+
+[data-family="studio"] .toast .btn {
+  height: 28px;
+  box-shadow: none;
+}
+
+[data-family="studio"] .bulk {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--popover);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+[data-family="studio"] .bulk .cnt {
+  font-family: var(--font-sans);
+  border-right: 1px solid var(--border);
+}
+
+[data-family="studio"] .bulk .btn {
+  height: 30px;
+  box-shadow: none;
+}
+
+[data-family="studio"] .peek {
+  border-left: 1px solid var(--border);
+  background: var(--popover);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+[data-family="studio"] .peek .phead {
+  border-bottom: 1px solid var(--border);
+}
+
+[data-family="studio"] .tile {
+  border: 0;
+  border-radius: var(--radius-lg);
+  font-weight: 650;
+}
+
+[data-family="studio"] .palette {
+  background: var(--popover);
+}
+
+[data-family="studio"] .palette > input {
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+
+[data-family="studio"] .prow {
+  height: 34px;
+  border: 0;
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+
+[data-family="studio"] .prow.sel {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  box-shadow: none;
+}
+
+[data-family="studio"] .prow .kbd {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted-foreground);
+}
+
+[data-family="studio"] .pfoot {
+  border-top: 1px solid var(--line-soft);
+}
+
+[data-family="studio"] .sheet {
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  background: var(--popover);
+  box-shadow: var(--shadow-brutal-lg);
+}
+
+[data-family="studio"] .sheet .item {
+  border: 0;
+  border-radius: var(--radius);
+}
+
+[data-family="studio"] .sheet .item.active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* ===== (16) The instance workspace ===== */
+[data-family="studio"] .hero {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow:
+    var(--shadow-brutal),
+    inset 0 1px 0 var(--sheen);
+}
+
+[data-family="studio"] .hero h1 {
+  font-size: clamp(20px, 2.2vw, 26px);
+  letter-spacing: -0.02em;
+}
+
+[data-family="studio"] .wbar {
+  height: 10px;
+  border: 0;
+  border-radius: 5px;
+  background: var(--muted);
+}
+
+[data-family="studio"] .wbar i {
+  border-right: 2px solid var(--card);
+}
+
+/* The orchestrator's own time is overhead, usually most of the bar: a mid grey, so the activities,
+   timers and sub-orchestrations are what the eye finds */
+[data-family="studio"] .wbar i.orch,
+[data-family="studio"] .swq.orch {
+  background: var(--muted-foreground);
+}
+
+[data-family="studio"] .wbar i.wait {
+  background-image: repeating-linear-gradient(45deg, var(--glyph) 0 1px, transparent 1px 5px);
+}
+
+[data-family="studio"] .swim {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+[data-family="studio"] .swim-in {
+  padding: 12px 16px 14px;
+}
+
+[data-family="studio"] .lane {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+[data-family="studio"] .lane.hl {
+  background: var(--accent);
+}
+
+[data-family="studio"] .track {
+  background-image: linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+}
+
+[data-family="studio"] .bar {
+  top: 3px;
+  height: 18px;
+  border: 0;
+  border-radius: 4px;
+  line-height: 18px;
+  background: var(--line-strong);
+  color: var(--foreground);
+}
+
+[data-family="studio"] .bar.st-completed {
+  background: var(--status-completed);
+  color: var(--status-completed-foreground);
+}
+
+[data-family="studio"] .bar.st-running {
+  background: var(--status-running);
+  color: var(--status-running-foreground);
+}
+
+[data-family="studio"] .bar.st-failed {
+  background: var(--status-failed);
+  color: var(--status-failed-foreground);
+}
+
+[data-family="studio"] .bar.st-pending {
+  background: var(--status-pending);
+  color: var(--status-pending-foreground);
+}
+
+[data-family="studio"] .bar.st-suspended {
+  background: var(--status-suspended);
+  color: var(--status-suspended-foreground);
+}
+
+[data-family="studio"] .bar:is(.st-continued, .st-continuedasnew) {
+  background: var(--status-continued);
+  color: var(--status-continued-foreground);
+}
+
+[data-family="studio"] .bar:is(.st-terminated, .st-canceled) {
+  background: var(--status-terminated);
+  color: var(--status-terminated-foreground);
+}
+
+[data-family="studio"] .bar.wait {
+  border: 1px dashed var(--line-strong);
+  background: transparent;
+  color: var(--muted-foreground);
+}
+
+[data-family="studio"] .bar.orch {
+  top: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--glyph);
+}
+
+[data-family="studio"] .bar.hl {
+  outline: 2px solid var(--ring);
+}
+
+[data-family="studio"] .now {
+  border-left: 1.5px dashed var(--glyph);
+}
+
+[data-family="studio"] .icard .head {
+  border-bottom: 1px solid var(--border);
+}
+
+[data-family="studio"] .note {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--muted);
+  font-weight: 500;
+}
+
+/* The JSON viewer and editor: their menu bar on the muted surface, their outline the hairline */
+[data-family="studio"] .jse-bar {
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+[data-family="studio"] .jse-bar span {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+[data-family="studio"] .jse-bar span.on {
+  background: var(--card);
+  color: var(--foreground);
+}
+
+[data-family="studio"] .jse-theme-dfm {
+  --jse-theme-color: var(--muted);
+  --jse-theme-color-highlight: var(--line-strong);
+  --jse-menu-color: var(--foreground);
+  --jse-main-border: 1px solid var(--border);
+  --jse-panel-border: 1px solid var(--border);
+  --jse-edit-outline: 2px solid var(--ring);
+  --jse-selection-background-color: var(--selection);
+  --jse-hover-background-color: var(--row-hover);
+  --jse-font-family: var(--font-sans);
+  --jse-font-size: 13px;
+  --jse-font-size-mono: 12.5px;
+}
+
+/* The sequence diagram */
+[data-family="studio"] .seq {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+[data-family="studio"] .seq .part {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+
+[data-family="studio"] .seq .life {
+  border-left: 1px dashed var(--line-strong);
+}
+
+[data-family="studio"] .arrow {
+  border-top: 1.5px solid var(--glyph);
+}
+
+[data-family="studio"] .arrow::after {
+  top: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--glyph);
+}
+
+[data-family="studio"] .arrow.failed {
+  border-top-color: var(--status-failed);
+}
+
+[data-family="studio"] .arrow.failed::after {
+  background: var(--status-failed);
+}
+
+[data-family="studio"] .arrow span {
+  color: var(--muted-foreground);
+}
+
+[data-family="studio"] .arrow.failed span {
+  border: 0;
+  border-radius: 4px;
+  background: var(--st-failed-bg);
+  color: var(--st-failed-fg);
+}
+
+/* The function graph (Svelte Flow) */
+[data-family="studio"] .svelte-flow {
+  --xy-edge-stroke: var(--line-strong);
+  --xy-edge-stroke-width: 1.5;
+}
+
+[data-family="studio"] .node {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: var(--shadow-brutal-hover);
+}
+
+[data-family="studio"] .node.sel {
+  outline: 2px solid var(--ring);
+}
+
+[data-family="studio"] .node .band {
+  height: 4px;
+  border-bottom: 0;
+}
+
+[data-family="studio"] .graph {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+[data-family="studio"] .gcanvas {
+  background-image: radial-gradient(var(--line-strong) 1px, transparent 1.2px);
+}
+
+[data-family="studio"] .gctl {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-brutal);
+}
+
+[data-family="studio"] .gctl button,
+[data-family="studio"] .svelte-flow__controls.gctl button {
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--foreground);
+  fill: var(--foreground);
+}
+
+[data-family="studio"] .minimap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+[data-family="studio"] .minimap i {
+  border: 1px solid var(--line-strong);
+}
+
+/* Charts: the stacked columns draw their segments with a 2px ink stroke; here a segment is
+   separated from the next by the panel colour instead, so a stack reads as rounded blocks */
+[data-family="studio"] .chart rect[role="presentation"] {
+  stroke: var(--card);
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+
+/* The brushed range on the throughput chart: an accent wash with the ring as its edge, where the
+   papers draw a hatch (StackedColumns.svelte) */
+[data-family="studio"] .dfm-brush .selection {
+  fill: var(--selection);
+  fill-opacity: 0.55;
+  stroke: var(--ring);
+  stroke-width: 1;
+}
+
+[data-family="studio"] .dfm-brush .handle {
+  fill: var(--ring);
+}
+
+[data-family="studio"] .hist {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+[data-family="studio"] .seg-b {
+  border: 0;
+  margin-top: 1px;
+  border-radius: 2px;
+}
+
+[data-family="studio"] .brush {
+  border: 1px solid var(--ring);
+  background-image: none;
+  background: var(--accent);
+}
+
+[data-family="studio"] .legend {
+  gap: 14px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+[data-family="studio"] .legend i {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  border-radius: 3px;
+}
+
+[data-family="studio"] .legend i.wait {
+  border: 1.5px dotted var(--muted-foreground);
+  background: transparent;
+}
+
+/* ===== (17) Failures, login, calendar ===== */
+[data-family="studio"] .group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-brutal);
+}
+
+[data-family="studio"] .group .ghead {
+  min-height: 48px;
+  padding: 8px 16px;
+  font-weight: 600;
+}
+
+[data-family="studio"] .group .ghead:hover {
+  background: var(--row-hover);
+}
+
+[data-family="studio"] .frow {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+[data-family="studio"] .frow:hover {
+  background: var(--row-hover);
+}
+
+[data-family="studio"] .gfoot {
+  border-top: 1px solid var(--line-soft);
+  background: var(--card);
+}
+
+[data-family="studio"] .hubrow {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+[data-family="studio"] .hubrow:hover {
+  background: var(--row-hover);
+}
+
+[data-family="studio"] .cal {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+[data-family="studio"] .cal-day {
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+[data-family="studio"] .cal-day[data-today] {
+  border-color: var(--line-strong);
+}
+
+[data-family="studio"] .cal-day:is([data-selection-start], [data-selection-end]) {
+  border-color: transparent;
+  background: var(--solid);
+  color: var(--solid-foreground);
+  box-shadow: none;
+}
+
+/* ===== (18) A reader who asked for more contrast gets stronger lines and secondary text ===== */
+@media (prefers-contrast: more) {
+  [data-family="studio"] {
+    --ink: #8a8c99;
+    --border: #8a8c99;
+    --line-soft: #b7b9c4;
+    --line-strong: #6f7180;
+  }
+
+  .dark[data-family="studio"] {
+    --ink: #6f7180;
+    --border: #6f7180;
+    --line-soft: #4a4c58;
+    --line-strong: #8a8c99;
+  }
+}
+
+/* ===== (19) The finish review's batch: the Overview's annotations and the rest ===== */
+
+/* The onset of failures on the throughput chart: a faint wash of the failure colour, a dashed edge,
+   and its label in the failure text colour (StackedColumns.svelte, dfm-ext.css) */
+[data-family="studio"] .onset {
+  border-left: 1.5px dashed var(--status-failed);
+  background-color: var(--onset-wash);
+  background-image: none;
+}
+
+[data-family="studio"] .onset > span {
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--st-failed-fg);
+}
+
+[data-family="studio"] .chart .gridline {
+  stroke: var(--line-soft);
+}
+
+[data-family="studio"] .chart .ylabels span {
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+
+/* "since 08:30" beside the Failed tile's label: a small pill in the failure tint */
+[data-family="studio"] .stat-tile .lbl .tile-note {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--st-failed-bg);
+  color: var(--st-failed-fg);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Failures in a table: the count and the rate in the failure text colour, the rate's bar rounded */
+[data-family="studio"] .tbl .fail-num {
+  color: var(--st-failed-fg);
+  font-weight: 600;
+}
+
+[data-family="studio"] .rate-bar {
+  width: 48px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--line-soft);
+}
+
+[data-family="studio"] .rate-bar > i {
+  border-radius: 3px;
+}
+
+/* A link in a table cell is the cell's text until it is pointed at */
+[data-family="studio"] .tbl td .link {
+  text-decoration-color: transparent;
+}
+
+[data-family="studio"] .tbl td .link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Needs attention: the icon a tinted square, the count at the weight of a figure */
+[data-family="studio"] .attn-ico {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--radius);
+}
+
+[data-family="studio"] .attn .link {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The find field: the placeholder in the interface face, the key hint a small keycap */
+[data-family="studio"] .tb-find .input::placeholder {
+  font-family: var(--font-sans);
+}
+
+[data-family="studio"] .tb-find-key {
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--muted);
+}
+
+[data-family="studio"] .tb-find-ico {
+  stroke-width: 1.75;
+}
+
+/* Failures: a row's destructive writes are outlines; the group's own Purge all stays filled */
+[data-family="studio"] .frow .btn:is(.destructive, .danger) {
+  background: transparent;
+  border-color: var(--status-failed);
+  color: var(--st-failed-fg);
+}
+
+[data-family="studio"] .frow .btn:is(.destructive, .danger):hover {
+  background: var(--st-failed-bg);
+  border-color: var(--status-failed);
+}

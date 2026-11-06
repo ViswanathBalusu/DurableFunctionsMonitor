@@ -26,6 +26,8 @@
   import Tabs, { type TabDefinition } from '$lib/components/Tabs.svelte';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import { customTabName, type InstanceState } from '$lib/state/instance.svelte';
+  import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+  import Icon from '$lib/components/icons/Icon.svelte';
 
   interface Props {
     instance: InstanceState;
@@ -81,6 +83,7 @@
     </div>
 
     <Button variant="ghost" size="sm" style="align-self:center;margin:0 0 4px 6px" onclick={() => app.refresh()}>
+      <Icon icon={RefreshCw} size={16} />
       Refresh
     </Button>
   {/snippet}

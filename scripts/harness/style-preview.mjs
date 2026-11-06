@@ -75,9 +75,27 @@ export function themeEntries(source) {
 }
 
 /**
- * The preview page with the stylesheets linked before `</head>`, in the order given, and the
- * `const THEMES = {...};` switcher line extended with the entries that are not in it yet. Every
- * other byte of the page stays as it was.
+ * The one-line script that keeps `data-family` in step with `data-theme`, as prefs.svelte.ts does in
+ * the app (contracts §16): a family sheet scopes its component layer to the family, and the preview
+ * page's own switcher only knows the theme.
+ * @param {ThemeEntry[]} entries the themes whose family the page has to know
+ * @returns {string}
+ */
+export function familySync(entries) {
+  const families = Object.fromEntries(entries.map((entry) => [entry.key, entry.family]));
+
+  return (
+    `<script data-style-preview="family">(() => { const FAMILY = ${JSON.stringify(families)}; ` +
+    'const root = document.documentElement; const sync = () => { const family = FAMILY[root.dataset.theme]; ' +
+    'if (family) { root.dataset.family = family; } else { delete root.dataset.family; } }; ' +
+    "new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] }); sync(); })();</script>\n"
+  );
+}
+
+/**
+ * The preview page with the stylesheets linked before `</head>`, in the order given, the family of
+ * each added theme mirrored onto `data-family` (familySync), and the `const THEMES = {...};` switcher
+ * line extended with the entries that are not in it yet. Every other byte of the page stays as it was.
  * @param {string} html the frozen page
  * @param {{ sheets: string[], entries: ThemeEntry[] }} options hrefs to link, in order; entries to add
  * @returns {string}
@@ -90,7 +108,7 @@ export function patchPreview(html, { sheets, entries }) {
   }
 
   const links = sheets.map((href) => `<link rel="stylesheet" href="${href}">\n`).join('');
-  const linked = `${html.slice(0, head)}${links}${html.slice(head)}`;
+  const linked = `${html.slice(0, head)}${links}${familySync(entries)}${html.slice(head)}`;
 
   const line = /^const THEMES = (\{.*\});$/m.exec(linked);
 

@@ -44,14 +44,11 @@
 <!-- DFM App.dc.html L44-L55. No instance counts beside the hubs: the backend does not report them. -->
 <Pop bind:open ariaLabel="Task hubs" minWidth="320px">
   {#snippet anchor({ props })}
-    <button
-      class="btn flat"
-      type="button"
-      style="font-family:var(--font-mono);font-weight:600;gap:10px;padding:0 10px"
-      {...props}
-    >
-      <span>{app.hub}</span>
-      <span class="meta hide-m sans">{app.about?.accountName ?? ''}</span>
+    <!-- `tb-hub` (dfm-ext.css): the hub in mono, and in a narrow top bar the account name gives way
+         first, then the hub name -->
+    <button class="btn flat tb-hub" type="button" {...props}>
+      <span class="tb-hub-name">{app.hub}</span>
+      <span class="meta hide-m sans tb-hub-account">{app.about?.accountName ?? ''}</span>
       <span class="tri down" aria-hidden="true"></span>
     </button>
   {/snippet}

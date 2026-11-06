@@ -4,7 +4,7 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import StackedColumns from './StackedColumns.svelte';
-import { binsInPixelRange, layoutColumns, rangeOfBins, ticksFor, type ChartBin } from './stacked-columns';
+import { binsInPixelRange, gridSteps, layoutColumns, rangeOfBins, ticksFor, type ChartBin } from './stacked-columns';
 
 const series = [
   { key: 'Completed', label: 'Completed', color: 'status-completed' },
@@ -179,5 +179,59 @@ describe('StackedColumns', () => {
     render(StackedColumns, { props: { bins: bins(3), series, ariaLabel: 'Throughput' } });
 
     expect(screen.getByRole('group', { name: 'Throughput' })).toBeInTheDocument();
+  });
+});
+
+describe('gridSteps', () => {
+  it('counts in a round step that reaches the tallest column in four lines or fewer', () => {
+    expect(gridSteps(6)).toEqual([2, 4, 6]);
+    expect(gridSteps(62)).toEqual([20, 40, 60]);
+    expect(gridSteps(1)).toEqual([1]);
+    expect(gridSteps(0)).toEqual([]);
+  });
+});
+
+describe('StackedColumns annotations', () => {
+  const chartBins: ChartBin[] = Array.from({ length: 8 }, (_, index) => ({
+    start: new Date(Date.UTC(2026, 8, 4, index)),
+    end: new Date(Date.UTC(2026, 8, 4, index + 1)),
+    values: { a: index === 7 ? 6 : 1 },
+  }));
+  const chartSeries = [{ key: 'a', label: 'A', color: 'chart-1' }];
+
+  it('draws a line and a label at each round count when asked for a grid', () => {
+    render(StackedColumns, { props: { bins: chartBins, series: chartSeries, ariaLabel: 'Chart', grid: true } });
+
+    expect(document.querySelectorAll('.gridline')).toHaveLength(3);
+    expect(Array.from(document.querySelectorAll('.ylabels span')).map((span) => span.textContent)).toEqual([
+      '2',
+      '4',
+      '6',
+    ]);
+  });
+
+  it('draws no grid unless asked', () => {
+    render(StackedColumns, { props: { bins: chartBins, series: chartSeries, ariaLabel: 'Chart' } });
+
+    expect(document.querySelectorAll('.gridline')).toHaveLength(0);
+    expect(document.querySelector('.ylabels')).toBeNull();
+  });
+
+  it('bands the columns from the onset to the end of the range, with its label', () => {
+    render(StackedColumns, {
+      props: {
+        bins: chartBins,
+        series: chartSeries,
+        ariaLabel: 'Chart',
+        onset: { index: 6, label: 'Failures since 06:00' },
+      },
+    });
+
+    const band = document.querySelector('.onset') as HTMLElement;
+
+    expect(band.style.left).toBe('75%');
+    expect(band.textContent?.trim()).toBe('Failures since 06:00');
+    // Late in the range the label goes before the line; early, inside the band
+    expect(band).not.toHaveClass('start');
   });
 });

@@ -50,12 +50,15 @@ test('reads /about: the version and the account are in the document title', asyn
 test('switches the theme from the top bar', async ({ page }) => {
   await gotoHub(page);
 
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'poster');
+  // Iris is the default (D15, contracts §8), and its family is on the element beside it (§16)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'iris');
+  await expect(page.locator('html')).toHaveAttribute('data-family', 'studio');
 
   await page.locator('.topbar button.btn', { has: page.locator('.swq') }).click();
   await page.getByRole('menuitemradio', { name: /Riso/ }).click();
 
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'riso');
+  await expect(page.locator('html')).toHaveAttribute('data-family', 'brutal');
 
   // And it survives a reload: the preference is stored (contracts §8)
   await page.reload();

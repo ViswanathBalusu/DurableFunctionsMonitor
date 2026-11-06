@@ -1,5 +1,5 @@
 <script lang="ts" generics="Row">
-  import type { Snippet } from 'svelte';
+  import { untrack, type Snippet } from 'svelte';
   import { createVirtualizer } from '@tanstack/svelte-virtual';
   import { spineAttr } from '$lib/format/status';
   import { cn } from '$lib/utils';
@@ -139,6 +139,67 @@
     };
   });
 
+  /**
+   * Which edges of the frame have more table past them, for `data-more` (dfm-ext.css): the frame
+   * scrolls sideways when the columns are wider than it is, and a column cut off at the frame's edge,
+   * mid-letter, with nothing to say there is more, reads as a broken cell. The stylesheet fades the
+   * edge that has more behind it, and keeps the footer in view.
+   */
+  let more = $state('');
+
+  /** The frame's own width, which the footer of a table wider than it is held to. */
+  let frameWidth = $state(0);
+
+  $effect(() => {
+    const frame = scrollElement;
+
+    if (!frame) {
+      return;
+    }
+
+    const update = (): void => {
+      // A frame that does not scroll - the mobile cards - has no edge to fade
+      const scrolls = /auto|scroll/.test(getComputedStyle(frame).overflowX);
+      const hidden = frame.scrollWidth - frame.clientWidth;
+      const next = scrolls
+        ? [frame.scrollLeft > 1 ? 'start' : '', hidden - frame.scrollLeft > 1 ? 'end' : ''].filter(Boolean).join(' ')
+        : '';
+
+      if (next !== untrack(() => more)) {
+        more = next;
+      }
+
+      if (frame.clientWidth !== untrack(() => frameWidth)) {
+        frameWidth = frame.clientWidth;
+      }
+    };
+
+    update();
+    frame.addEventListener('scroll', update, { passive: true });
+
+    // Columns shown or hidden, rows loaded, a window resized: anything that changes either width
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    const table = frame.querySelector('table');
+
+    observer?.observe(frame);
+
+    if (table) {
+      observer?.observe(table);
+    }
+
+    return () => {
+      frame.removeEventListener('scroll', update);
+      observer?.disconnect();
+    };
+  });
+
+  /** The frame's inline style: the virtualised height, the width the footer keeps, the caller's own. */
+  const frameStyle = $derived(
+    [virtualized ? 'max-height:70vh;overflow:auto' : '', more ? `--dfm-frame-w:${frameWidth}px` : '', style ?? '']
+      .filter(Boolean)
+      .join(';') || undefined,
+  );
+
   const shown = $derived(visibleColumns(columns, hiddenColumns));
 
   const keys = $derived(rows.map(rowKey));
@@ -185,7 +246,8 @@
 <div
   bind:this={scrollElement}
   class={cn('tbl-wrap', keep ? 'keep' : '', flat ? 'flat' : '', className)}
-  style={virtualized ? `max-height:70vh;overflow:auto;${style ?? ''}` : style}
+  style={frameStyle}
+  data-more={more || undefined}
 >
   <table class="tbl" aria-label={ariaLabel}>
     {#if !hideHeader}

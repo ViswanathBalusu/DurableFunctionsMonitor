@@ -63,6 +63,7 @@ async function tokens(page: Page): Promise<Record<string, string>> {
       pattern: read('--pattern'),
       glassBlur: read('--glass-blur'),
       ring: read('--ring'),
+      radiusLg: read('--radius-lg'),
     };
   });
 }
@@ -107,6 +108,9 @@ function metrics(family: ThemeFamily, read: Record<string, string>): string {
   const line = parseInt(read.borderWidth, 10);
 
   switch (family) {
+    case 'studio':
+      // The control radius, the line and the radius of a panel (D15)
+      return `${radius} px · ${line} px · ${parseInt(read.radiusLg, 10)} px`;
     case 'glass':
       return `${radius} px · ${line} px · blur ${parseInt(read.glassBlur, 10)}`;
     case 'neu': {
@@ -296,6 +300,33 @@ for (const entry of THEMES) {
         expect(contrast(read.ring, read.background), 'focus ring on the paper').toBeGreaterThan(3);
       }
 
+      if (entry.family === 'studio') {
+        // Studio (D15) draws status as a tinted pill with its text in the hue: the pill a reader meets
+        // first, on the first row of the table, has to read at 4.5:1 against its own tint
+        const pill = await sampled(page, '.tbl tbody tr .chip', '.tbl tbody tr .chip');
+
+        expect(contrast(pill.color, pill.background), 'status pill text on its tint').toBeGreaterThan(4.5);
+
+        // ...the primary button's label on the button colour, which is the accent, or Mono's inverse
+        const primary = await sampled(page, '.btn.primary', '.btn.primary');
+
+        expect(contrast(primary.color, primary.background), 'primary button label').toBeGreaterThan(4.5);
+
+        // ...nothing is frosted: the family is calm surfaces, not glass
+        const frame = await surfaces(page, ['.tbl-wrap', '.topbar']);
+
+        for (const [selector, style] of Object.entries(frame)) {
+          expect(style?.backdropFilter, `${selector} backdrop`).toBe('none');
+        }
+
+        // ...and the focus ring is a colour, 2px at least and 3:1 on the paper (D14)
+        const ring = await focusRingOnButton(page);
+
+        expect(ring.style, 'focus outline style').toBe('solid');
+        expect(parseInt(ring.width, 10), 'focus outline width').toBeGreaterThanOrEqual(2);
+        expect(contrast(rgbToHex(ring.color), read.background), 'focus ring on the paper').toBeGreaterThan(3);
+      }
+
       if (entry.family === 'neu') {
         // Neu has no line: what says "surface" is a pair of shadows, one of shade and one of light,
         // and axe measures neither. A button and the table frame have to carry both components in
@@ -379,24 +410,159 @@ for (const entry of THEMES) {
 }
 
 test('the layouts hold at 1024 and at 390', async ({ page }) => {
-  // Poster is the theme the mockups are drawn in, so it is the one the narrow layouts are read in
+  // Poster is the theme the mockups are drawn in, and Iris the one most people see (D15): the
+  // narrow layouts are read in both
   await gotoHub(page, 'instances');
 
-  for (const mode of MODES) {
+  for (const name of ['Poster', 'Iris']) {
+    for (const mode of MODES) {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await gotoHub(page, 'instances');
+      await theme(page, name, mode === 'dark');
+
+      for (const width of [1024, 390]) {
+        await page.setViewportSize({ width, height: 900 });
+
+        await page.goto(hubPath('instances'));
+        await expect(page.locator('.tbl, .cards').first()).toBeVisible();
+        await shoot(page, `${name.toLowerCase()}-${mode}-instances-${width}`);
+
+        await gotoInstance(page, RUNNING_INSTANCE_ID);
+        await expect(page.locator('.hero')).toBeVisible();
+        await shoot(page, `${name.toLowerCase()}-${mode}-workspace-${width}`);
+      }
+    }
+  }
+});
+
+test('the top bar stays on one row at 1440 and at 1280', async ({ page }) => {
+  // The bar used to wrap its tools onto a second row (TopBar.svelte, dfm-ext.css): every item has to
+  // sit on the same line as the hub picker, in the default theme and in the papers
+  for (const name of ['Iris', 'Poster']) {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await gotoHub(page, 'instances');
-    await theme(page, 'Poster', mode === 'dark');
+    await gotoHub(page);
+    await theme(page, name);
 
-    for (const width of [1024, 390]) {
+    for (const width of [1440, 1280]) {
       await page.setViewportSize({ width, height: 900 });
+      await page.goto(hubPath());
+      await expect(page.locator('.topbar')).toBeVisible();
 
-      await page.goto(hubPath('instances'));
-      await expect(page.locator('.tbl, .cards').first()).toBeVisible();
-      await shoot(page, `poster-${mode}-instances-${width}`);
+      // One row: a horizontal line through the middle of the hub picker crosses every visible item
+      const off = await page.evaluate(() => {
+        const bar = document.querySelector('.topbar') as HTMLElement;
+        const hub = (bar.querySelector('.tb-hub') as HTMLElement).getBoundingClientRect();
+        const middle = hub.top + hub.height / 2;
 
-      await gotoInstance(page, RUNNING_INSTANCE_ID);
-      await expect(page.locator('.hero')).toBeVisible();
-      await shoot(page, `poster-${mode}-workspace-${width}`);
+        return [...bar.querySelectorAll('.tb-main > *, .tb-tools > *')]
+          .filter((el) => (el as HTMLElement).offsetParent !== null)
+          .filter((el) => {
+            const rect = el.getBoundingClientRect();
+
+            return rect.top > middle || rect.bottom < middle;
+          })
+          .map((el) => (el as HTMLElement).className || el.tagName);
+      });
+
+      expect(off, `${name} at ${width}: items off the hub picker's row`).toEqual([]);
+    }
+  }
+});
+
+test('the top bar steps down on a narrower window instead of crushing the hub picker', async ({ page }) => {
+  // At 1024 beside the side nav the bar once squeezed the hub picker to an empty box under the jump
+  // field and cut the danger badge to "Dangerous operat" (dfm-ext.css, the `.topbar` container steps):
+  // nothing in the bar may sit on anything else, run past it, or be cut
+  for (const name of ['Iris', 'Poster']) {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await gotoHub(page);
+    await theme(page, name);
+
+    for (const width of [1180, 1100, 1024, 900]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(hubPath());
+      await expect(page.locator('.topbar .tb-hub')).toBeVisible();
+
+      const problems = await page.evaluate(() => {
+        const bar = document.querySelector('.topbar') as HTMLElement;
+        const edge = bar.getBoundingClientRect().right;
+        const items = [...bar.querySelectorAll<HTMLElement>('.tb-main > *, .tb-tools > *')].filter(
+          (el) => el.offsetParent !== null,
+        );
+        const found: string[] = [];
+        const picker = (bar.querySelector('.tb-main > :first-child') as HTMLElement).getBoundingClientRect();
+
+        if (picker.width < 111.5) {
+          found.push(`hub picker ${Math.round(picker.width)} px wide`);
+        }
+
+        // The badge's words inside the badge (not its scroll width: the papers draw the badge's hazard
+        // stripe a border's width past either side of it, on purpose)
+        const badge = bar.querySelector<HTMLElement>('.dbadge');
+        const words = badge
+          ? [...badge.querySelectorAll<HTMLElement>('span')].find((span) => getComputedStyle(span).display !== 'none')
+          : null;
+
+        if (badge && words) {
+          const box = badge.getBoundingClientRect();
+          const text = words.getBoundingClientRect();
+
+          if (text.left < box.left - 0.5 || text.right > box.right + 0.5) {
+            found.push('danger badge cut');
+          }
+        }
+
+        // ...and the jump field's whole placeholder, in the placeholder's own font, inside the field's
+        // drawn box and inside the box around it. Both measured from the rendered rectangles: Chrome
+        // reports neither a `font` shorthand for this field nor a `clientWidth` that includes padding
+        const input = bar.querySelector<HTMLInputElement>('.tb-find input');
+
+        if (input) {
+          const style = getComputedStyle(input);
+          const words = getComputedStyle(input, '::placeholder');
+          const context = document.createElement('canvas').getContext('2d') as CanvasRenderingContext2D;
+
+          context.font = `${words.fontStyle} ${words.fontWeight} ${words.fontSize} ${words.fontFamily}`;
+
+          const field = input.getBoundingClientRect();
+          const around = (input.closest('.tb-find') as HTMLElement).getBoundingClientRect();
+          const room =
+            field.width -
+            ['borderLeftWidth', 'borderRightWidth', 'paddingLeft', 'paddingRight']
+              .map((side) => parseFloat(style[side as 'paddingLeft']))
+              .reduce((sum, value) => sum + value, 0);
+
+          if (context.measureText(input.placeholder).width > room + 1) {
+            found.push('jump field placeholder cut');
+          }
+
+          if (field.right > around.right + 0.5) {
+            found.push('jump field wider than its box');
+          }
+        }
+
+        items.forEach((item, index) => {
+          const a = item.getBoundingClientRect();
+
+          if (a.right > edge + 0.5) {
+            found.push(`${item.className} past the bar`);
+          }
+
+          for (const other of items.slice(index + 1)) {
+            const b = other.getBoundingClientRect();
+            const across = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+            const down = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+
+            if (across > 0.5 && down > 0.5) {
+              found.push(`${item.className} on ${other.className}`);
+            }
+          }
+        });
+
+        return found;
+      });
+
+      expect(problems, `${name} at ${width}`).toEqual([]);
     }
   }
 });

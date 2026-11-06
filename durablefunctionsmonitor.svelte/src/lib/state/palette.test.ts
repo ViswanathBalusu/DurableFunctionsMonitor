@@ -211,7 +211,9 @@ describe('Palette', () => {
       'Show time as local',
     ]);
 
-    expect(find(palette, 'Theme: Poster').kbd).toBe('current');
+    // Iris is the default theme (D15, contracts §8); the papers are still offered, unmarked
+    expect(find(palette, 'Theme: Iris').kbd).toBe('current');
+    expect(find(palette, 'Theme: Poster').kbd).toBeUndefined();
     expect(find(palette, 'Theme: Riso').kbd).toBeUndefined();
     expect(find(palette, 'Time range: Last 7 days').kbd).toBe('current');
   });

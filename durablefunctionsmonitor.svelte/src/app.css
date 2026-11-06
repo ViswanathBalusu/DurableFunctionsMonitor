@@ -10,6 +10,11 @@
    `wdth.css` is the two-axis file: the display and condensed utilities set `wdth` themselves. */
 @import '@fontsource-variable/archivo/wdth.css';
 @import '@fontsource-variable/jetbrains-mono/index.css';
+/* The studio family's face (families/studio.css), bundled for the same reasons. The weight axis only:
+   studio sets no width anywhere (it resets the four frozen `wdth` rules to `normal`), and the two-axis
+   file is two and a half times the size - 98 KB against 40 KB for Latin - for every first visit, since
+   studio is the default. A browser fetches a face only once text uses it. */
+@import '@fontsource-variable/mona-sans/index.css';
 @import './styles/dfm-tokens.css';
 @import '@xyflow/svelte/dist/style.css';
 @import './styles/dfm-ui.css';
@@ -19,3 +24,4 @@
 @import './styles/families/base.css';
 @import './styles/families/glass.css';
 @import './styles/families/neu.css';
+@import './styles/families/studio.css';

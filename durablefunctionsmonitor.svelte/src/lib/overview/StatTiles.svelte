@@ -29,6 +29,7 @@
   import { toQuery } from '$lib/filters/time-range';
   import { APP_CONTEXT_KEY, type AppState } from '$lib/state/app.svelte';
   import StatTile from './StatTile.svelte';
+  import { failureOnset } from './ThroughputPanel.svelte';
 
   interface Props {
     stats: StatsResponse;
@@ -37,6 +38,13 @@
   let { stats }: Props = $props();
 
   const app = getContext<AppState>(APP_CONTEXT_KEY);
+
+  /** When the range's failures began, as the throughput chart marks it: the Failed tile says it too. */
+  const failedSince = $derived.by(() => {
+    const onset = failureOnset(stats, app.prefs.showTimeAs);
+
+    return onset ? `since ${onset.time}` : undefined;
+  });
 
   /** Every tile opens its list over the range that is on screen, so the numbers agree. */
   const rangeQuery = $derived(
@@ -69,6 +77,7 @@
       count={stats.totals[tile.status] ?? 0}
       values={binCounts(stats, tile.status)}
       class={tile.fill}
+      note={tile.status === 'Failed' ? failedSince : undefined}
       onclick={() => (tile.status === 'Failed' ? goFailed() : goInstances(tile.status))}
     />
   {/each}

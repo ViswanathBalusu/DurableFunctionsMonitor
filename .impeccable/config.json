@@ -1,0 +1,118 @@
+{
+  "hook": {
+    "enabled": true,
+    "limits": {
+      "maxFindings": 5,
+      "maxChars": 8000
+    }
+  },
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-11-06T11:54:33.364Z",
+        "reason": "agent decision: throwaway decision-round sketch under .impeccable/mocks, never shipped; segmented controls and ruled table rows sit flush by design"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-06T11:54:33.723Z",
+        "reason": "agent decision: throwaway decision-round sketch under .impeccable/mocks, never shipped; segmented controls and ruled table rows sit flush by design"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-console.html"
+        ],
+        "createdAt": "2026-11-06T11:54:34.069Z",
+        "reason": "agent decision: throwaway decision-round sketch under .impeccable/mocks, never shipped; segmented controls and ruled table rows sit flush by design"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-manual.html"
+        ],
+        "createdAt": "2026-11-06T11:54:34.421Z",
+        "reason": "agent decision: throwaway decision-round sketch under .impeccable/mocks, never shipped; segmented controls and ruled table rows sit flush by design"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-06T11:54:34.780Z",
+        "reason": "agent decision: throwaway decision-round sketch under .impeccable/mocks, never shipped; segmented controls and ruled table rows sit flush by design"
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-11-06T11:54:35.137Z",
+        "reason": "agent decision: the canon card depicts the category standard, whose face is Inter; decision sketch, never shipped"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "files": [
+          ".impeccable/mocks/decision/challenger-console.html"
+        ],
+        "createdAt": "2026-11-06T11:54:35.505Z",
+        "reason": "agent decision: the console card depicts the dark developer-console world, whose face is Geist; decision sketch, never shipped"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist mono",
+        "files": [
+          ".impeccable/mocks/decision/challenger-console.html"
+        ],
+        "createdAt": "2026-11-06T11:54:35.871Z",
+        "reason": "agent decision: the console card depicts the dark developer-console world, whose face is Geist; decision sketch, never shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html",
+          ".impeccable/mocks/decision/canon.html",
+          ".impeccable/mocks/decision/challenger-console.html",
+          ".impeccable/mocks/decision/challenger-manual.html",
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-11-06T13:52:19.138Z",
+        "reason": "agent decision: decision-round sketches of rejected directions, each drawn in its own world's typeface; DESIGN.md records the shipped studio type system, never these"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/studio.html"
+        ],
+        "createdAt": "2026-11-06T13:52:19.503Z",
+        "reason": "agent decision: throwaway decision-round sketch under .impeccable/mocks, never shipped; the shipped component layer is studio.css"
+      },
+      {
+        "rule": "overused-font",
+        "value": "mona sans",
+        "files": [
+          ".impeccable/mocks/decision/studio.html"
+        ],
+        "createdAt": "2026-11-06T13:52:19.919Z",
+        "reason": "user approved the studio direction drawn in this sketch, Mona Sans included; DESIGN.md records it as the interface face"
+      }
+    ]
+  }
+}

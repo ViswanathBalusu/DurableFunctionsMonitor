@@ -37,13 +37,24 @@
 </script>
 
 <!-- DFM App.dc.html L57-L67: the find-instance field, its suggestions coming from /id-suggestions. -->
-<div class="anchor grow" style="max-width:340px;min-width:140px">
+<!--
+  The narrowest the field gets in a crowded top bar is its whole placeholder, measured in the input's
+  own font (dfm-ext.css `.tb-find .input`): a fixed 156 px held "Find instance" in the studio face and
+  cut it to "Find instanc" in the papers' monospace. The magnifier and the `/` key hint are drawn
+  beside the text rather than written into the placeholder, so a phone can drop the hint without
+  clipping it.
+-->
+<div class="anchor grow tb-find" style="max-width:340px">
+  <svg class="tb-find-ico" viewBox="0 0 24 24" aria-hidden="true"
+    ><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg
+  >
+  <kbd class="tb-find-key hide-m" aria-hidden="true">/</kbd>
   <Combobox
     bind:value
     bind:ref={input}
     items={suggestions.items}
     minChars={MIN_PREFIX}
-    placeholder="Find instance   /"
+    placeholder="Find instance"
     ariaLabel="Find instance"
     emptyText="No instance id starts with that."
     oninput={(next) => suggestions.query(next)}

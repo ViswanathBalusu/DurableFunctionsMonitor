@@ -57,7 +57,9 @@ export async function expectOkToast(page: Page, text: string | RegExp): Promise<
  */
 export async function theme(page: Page, name: string, dark = false): Promise<void> {
   await page.locator('.topbar button.btn', { has: page.locator('.swq') }).click();
-  await page.getByRole('menuitemradio', { name: new RegExp(name, 'i') }).click();
+  // Anchored: a tile's name is its label and then its idea, and an idea may contain another theme's
+  // name ("warm neutrals" has Neu in it)
+  await page.getByRole('menuitemradio', { name: new RegExp(`^\\s*${name}\\b`, 'i') }).click();
 
   const isDark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
 

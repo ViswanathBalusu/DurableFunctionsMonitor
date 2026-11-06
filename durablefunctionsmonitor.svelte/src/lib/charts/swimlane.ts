@@ -65,6 +65,42 @@ export function isNarrow(width: number): boolean {
   return width < NARROW_BAR_PERCENT;
 }
 
+/** How far a label drawn beside a bar sits from it, in pixels (the `+ 6px` of `.blbl`'s position). */
+export const SPILL_GAP_PX = 6;
+
+/** Where a bar's text is drawn: in the bar, or beside it on one side. */
+export type SpillSide = 'inside' | 'right' | 'left';
+
+/**
+ * Where the text of a bar wide enough to be given some goes. `isNarrow` decides on percentages, before
+ * anything is drawn, so a bar can pass it and still be narrower than its words: "Timeout 4 s" was cut
+ * to "Timeo" inside a failed retry. Measured after layout, then: inside when it fits; beside the bar
+ * on the right when there is room before the next bar of the lane (or the end of the track); on the
+ * left when there is room after the previous one; and, with room on neither side, inside after all,
+ * where the bar cuts it with an ellipsis rather than mid-letter.
+ *
+ * Everything in pixels: `textPx` the text's own width, `innerPx` the room inside the bar, `beforePx`
+ * and `afterPx` the free track on either side of it.
+ */
+export function spillSide(textPx: number, innerPx: number, beforePx: number, afterPx: number): SpillSide {
+  if (textPx <= innerPx + 0.5) {
+    return 'inside';
+  }
+
+  // The gap from this bar, and as much again before whatever comes next
+  const needed = textPx + SPILL_GAP_PX * 2;
+
+  if (afterPx >= needed) {
+    return 'right';
+  }
+
+  if (beforePx >= needed) {
+    return 'left';
+  }
+
+  return 'inside';
+}
+
 /** Evenly spaced tick times across the domain, including both ends. */
 export function domainTicks(domain: TimeDomain, count: number): Date[] {
   if (count < 2) {

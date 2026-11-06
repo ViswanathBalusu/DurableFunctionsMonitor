@@ -66,6 +66,23 @@ test('opens on the timeline, and draws the run the provider recorded', async ({ 
   await expect(retry.locator('.bar')).toHaveClass(/st-failed/);
   await expect(retry).toContainText('Timeout 4 s');
   await expect(retry.locator('.bar')).toHaveAttribute('title', /TimeoutException: payment gateway did not answer/);
+
+  // ...and never cut. A bar wide enough to be given its words can still be narrower than they are
+  // ("Timeout 4 s" was once "Timeo"): those are drawn beside it (Swimlane.svelte `spilt`), so a bar
+  // that still holds its own text holds all of it
+  const cut = await page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.swim .bar:not(.spilt) > .bar-text')]
+      .filter((text) => {
+        const bar = text.parentElement as HTMLElement;
+        const style = getComputedStyle(bar);
+        const inner = bar.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+
+        return text.offsetWidth > inner + 1;
+      })
+      .map((text) => text.textContent),
+  );
+
+  expect(cut).toEqual([]);
 });
 
 test('names what the fills mean, and what hovering one is for', async ({ page }) => {

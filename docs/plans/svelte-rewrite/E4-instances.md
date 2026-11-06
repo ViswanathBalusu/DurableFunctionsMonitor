@@ -71,7 +71,7 @@ Test: as above.
 Files: `src/lib/instances/FilterRail.svelte`, tests
 Depends: E4-S1-T2, E1-S3-T1
 Do:
-1. `<div class="row" style="align-items:flex-end">`: `Field "Filtered column"` `Select` (width 180; options in the order of L55 plus `parentInstanceId`), `Field "Filter operator"` `Select` (width 160), `Field "Filter value"` `TextInput mono` (grow, max-width 280, placeholder `order-2026-`, Enter applies), `Apply` default button, `Refresh` primary button (calls `reload()`), right-aligned meta "Density and columns in the table menu" (L54–L63).
+1. `<div class="row" style="align-items:flex-end">`: `Field "Filtered column"` `Select` (width 180; options in the order of L55 plus `parentInstanceId`), `Field "Filter operator"` `Select` (width 160), `Field "Filter value"` `TextInput mono` (grow, max-width 280, placeholder `order-2026-`, Enter applies), `Apply` default button, `Refresh` primary button (calls `reload()`), right-aligned meta "Density and columns in the table menu" (L54–L63). *(Dropped in the studio revamp, 2026-11-06: the screen has no table menu - density is in the theme menu and Settings, hidden columns come back through the footer's "show all" - so the hint pointed at nothing.)*
 2. Apply sets `applied = value` (state reloads). Changing the operator or column while a value is applied reloads (React parity).
 Accept:
 - [ ] Enter in the value field applies and reloads once.

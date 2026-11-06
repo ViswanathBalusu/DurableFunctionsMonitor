@@ -60,10 +60,13 @@ describe('Hubs', () => {
 });
 
 describe('TopBar', () => {
-  it('renders the product name, the hub and the controls', async () => {
-    render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
+  it('renders the hub and the controls, and leaves the product mark to the side nav', async () => {
+    const { container } = render(ShellHarness, { props: { path: '/DurableFunctionsHub' } });
 
-    expect(screen.getByText('Durable Functions Monitor')).toHaveClass('display');
+    // The side nav carries the mark on a wide screen; the bar repeats it only where there is no side
+    // nav, and the product name is not spelled out twice (it used to push the bar onto two rows)
+    expect(container.querySelector('.topbar .logo')).toHaveClass('show-m');
+    expect(screen.queryByText('Durable Functions Monitor')).toBeNull();
     expect(await screen.findByRole('button', { name: /DurableFunctionsHub/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Auto-refresh/ })).toBeInTheDocument();
     expect(screen.getByRole('group', { name: 'Show time as' })).toBeInTheDocument();
@@ -89,7 +92,18 @@ describe('TopBar', () => {
     off.unmount();
 
     render(ShellHarness, { props: { path: '/DurableFunctionsHub', dangerous: true } });
-    expect(screen.getByText('Dangerous operations on')).toHaveClass('dbadge');
+    expect(screen.getByText('Dangerous operations on').closest('.dbadge')).not.toBeNull();
+  });
+
+  it('gives the danger badge a short wording for a crowded bar, and the account name a class to drop', () => {
+    render(ShellHarness, { props: { path: '/DurableFunctionsHub', dangerous: true } });
+
+    // dfm-ext.css swaps the two wordings on a narrow bar; only one of them is ever displayed
+    const badge = screen.getByText('Dangerous operations on').closest('.dbadge') as HTMLElement;
+
+    expect(badge.querySelector('.dbadge-long')?.textContent).toBe('Dangerous operations on');
+    expect(badge.querySelector('.dbadge-short')?.textContent).toBe('Dangerous ops');
+    expect(document.querySelector('.topbar .tb-user-name')).not.toBeNull();
   });
 
   it('binds the time toggle to the preference', async () => {

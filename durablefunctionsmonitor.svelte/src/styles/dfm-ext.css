@@ -127,6 +127,439 @@
   color: var(--card-foreground);
 }
 
+/* The top bar's two clusters (TopBar.svelte). dfm-ui.css L223 lets the bar wrap, and at 1440 px it
+   did: the theme, the palette button and the account went to a second row under the rest. The bar
+   is now what the screen is about (`.tb-main`: the hub, the jump field, the badges), which gives way
+   when the room runs out - the account name first, then the hub name, the jump field down to its
+   minimum - and the tools (`.tb-tools`), which keep their size. On a phone the clusters dissolve
+   and the items wrap as they always did. */
+.tb-main {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tb-tools {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The hub picker (its popover anchor) keeps a floor of 112 px, the start of the hub's name: below it the
+   bar wraps rather than squeeze the picker to an empty box (the steps further down) */
+.tb-main > .anchor:first-child {
+  flex: 0 1 auto;
+  min-width: 112px;
+}
+
+/* The find field's magnifier and `/` hint (InstanceJump.svelte), drawn over the field's own padding
+   rather than written into its placeholder; the hint leaves with the rest of the desktop chrome on a
+   phone (`hide-m`). The theme button is its swatch alone (ThemeMenu.svelte). */
+/* Its floor is "Find instance" (13 characters) in its own font, beside the icon and the key hint:
+   the field, and with it the bar's steps, give way to everything but the placeholder */
+.tb-find .input {
+  min-width: calc(13ch + 58px + 2 * var(--border-width));
+  padding-left: 30px;
+  padding-right: 28px;
+}
+
+.tb-find-ico {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  transform: translateY(-50%);
+  fill: none;
+  stroke: var(--muted-foreground);
+  stroke-width: 2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.tb-find-key {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0 5px;
+  border: 1px solid var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.btn.tb-theme {
+  padding: 0 10px;
+}
+
+/* The jump field gives way before the hub name does: it starts from 156 px, not from its content,
+   grows into whatever room is left, and shrinks no further than its placeholder (`.tb-find .input`) */
+.tb-main > .anchor.grow {
+  flex: 1 1 156px;
+  /* `.grow` lets a box shrink to nothing (dfm-ui.css); this one stops at the field inside it */
+  min-width: min-content;
+}
+
+.btn.tb-hub {
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
+  gap: 10px;
+  padding: 0 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.tb-hub > .tb-hub-name,
+.tb-hub > .tb-hub-account {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-hub > .tb-hub-account {
+  flex-shrink: 100;
+}
+
+@media (max-width: 768px) {
+  .tb-main,
+  .tb-tools {
+    display: contents;
+  }
+}
+
+/* The bar steps down before anything in it is crushed. At 1024 px beside the side nav it had about
+   300 px for the hub, the jump field and the danger badge, which took the hub picker down to an empty
+   box and cut the badge to "Dangerous operat". The steps follow the bar's own width, not the
+   window's, because the side nav open (240 px) or collapsed (64 px) is 176 px of difference: first the account
+   keeps its avatar and drops its name, then the badge takes its short wording (DangerBadge `short`),
+   and on the narrowest bar the tools take a row of their own under the hub and the jump field. */
+.topbar {
+  container-type: inline-size;
+}
+
+.dbadge-short {
+  display: none;
+}
+
+@container (max-width: 1000px) {
+  .tb-user-name {
+    display: none;
+  }
+}
+
+@container (max-width: 920px) {
+  .topbar .dbadge-long {
+    display: none;
+  }
+
+  .topbar .dbadge-short {
+    display: inline;
+  }
+}
+
+/* The tools' own row: sooner when a badge (danger, read only) shares the first row with the hub and
+   the jump field, which is what they need the room for */
+@container (max-width: 780px) {
+  .tb-main:has(> .dbadge, > .chip) {
+    flex-basis: 100%;
+  }
+
+  .tb-main:has(> .dbadge, > .chip) + .tb-tools {
+    margin-left: auto;
+  }
+}
+
+@container (max-width: 650px) {
+  .tb-main {
+    flex-basis: 100%;
+  }
+
+  .tb-main + .tb-tools {
+    margin-left: auto;
+  }
+}
+
+/* The workspace hero's actions (InstanceHeader.svelte, InstanceActions.svelte). dfm-ui.css L281
+   gives them the hero's third column, 440 px at most, which seven buttons filled in two ragged rows.
+   They now run in one row under the id and its facts, with the status tile beside both, and the
+   writes that destroy something sit at the far end behind a gap of their own. Below 1100 px
+   dfm-ui.css already moves them under everything else; the gap does its job there too. */
+@media (min-width: 1101px) {
+  .hero.wide-acts {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 14px;
+  }
+
+  .hero.wide-acts > .tile {
+    grid-row: 1 / span 2;
+  }
+
+  .hero.wide-acts > .actions {
+    grid-column: 2;
+    justify-content: flex-start;
+    max-width: none;
+  }
+}
+
+.actions > .acts-gap {
+  flex: 1 1 24px;
+  min-width: 24px;
+}
+
+/* The stacked columns' plot (StackedColumns.svelte): the counts of the grid in a 28 px gutter, and
+   what is drawn over the columns. dfm-ui.css L367-L374 has no y-scale and no annotation layer; the
+   grid is a muted line at each round count, and the onset of failures is a band from the first bin
+   that holds one, edged with a dashed line in the failure colour and hatched like the papers' other
+   marks - it lets the brush through. */
+.chart .plot {
+  position: relative;
+}
+
+.chart.gridded .plot {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+
+.chart .plot-area {
+  position: relative;
+  min-width: 0;
+}
+
+.chart .ylabels {
+  position: relative;
+}
+
+.chart .ylabels span {
+  position: absolute;
+  right: 6px;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1;
+  color: var(--muted-foreground);
+}
+
+.chart .gridline {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.chart.gridded > .ticks {
+  padding-left: 28px;
+}
+
+/* A tick label is one line; on a phone every other one is left out, which is what fits beside the gutter */
+.chart > .ticks > span {
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .chart > .ticks > span:nth-child(even) {
+    display: none;
+  }
+}
+
+.onset {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border-left: 2px dashed var(--status-failed);
+  background-image: repeating-linear-gradient(45deg, var(--status-failed) 0 1px, transparent 1px 9px);
+  pointer-events: none;
+}
+
+.onset > span {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 6px);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+.onset.start > span {
+  right: auto;
+  left: 8px;
+}
+
+/* The icon a Needs attention row leads with, and the arrow its link ends in (NeedsAttention.svelte):
+   the icon filled like the status it is about, both drawn in the text colour */
+.attn-ico {
+  width: 26px;
+  height: 26px;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border: var(--border-width) solid var(--ink);
+  border-radius: var(--radius);
+}
+
+.attn-ico svg,
+.attn-arrow {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.attn-arrow {
+  margin-left: 4px;
+  vertical-align: -2px;
+}
+
+/* A Needs attention row keeps its link at the end of the row (NeedsAttention.svelte `.attn-text`).
+   dfm-ui.css L191 lets the row wrap, and on a phone "pending older than 10 min" pushed the link to a
+   line of its own under the row. The text gives way instead, wrapping inside its own box. */
+.attn > div {
+  flex-wrap: nowrap;
+}
+
+.attn-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.attn .link {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* A table wider than its frame (DataTable.svelte `data-more`: "start", "end" or both). The frame
+   scrolls sideways, and the Instances table at 1440 px cut its customStatus cells off mid-letter at
+   the edge with nothing to say there was more. The edge with more behind it now fades into the card.
+
+   The fades are the frame's own pseudo-elements, laid in the table's grid cell: a grid cell is as wide
+   as the table, so a `position: sticky` box in it can follow the visible edge all the way across, where
+   a block in the frame could only travel the frame's own width. The footer is held to the frame's width
+   and to its left edge, so "Load more" stays in view however far the table is scrolled. */
+.tbl-wrap[data-more] {
+  display: grid;
+}
+
+.tbl-wrap[data-more] > .tbl {
+  grid-area: 1 / 1;
+}
+
+.tbl-wrap[data-more] > .tfoot {
+  grid-row: 2;
+  position: sticky;
+  left: 0;
+  width: var(--dfm-frame-w, 100%);
+}
+
+.tbl-wrap[data-more]::before,
+.tbl-wrap[data-more]::after {
+  content: '';
+  grid-area: 1 / 1;
+  position: sticky;
+  z-index: 2;
+  width: 40px;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.tbl-wrap[data-more]::before {
+  justify-self: start;
+  left: 0;
+  background: linear-gradient(to right, var(--card), transparent);
+}
+
+.tbl-wrap[data-more]::after {
+  justify-self: end;
+  right: 0;
+  background: linear-gradient(to left, var(--card), transparent);
+}
+
+.tbl-wrap[data-more~='start']::before,
+.tbl-wrap[data-more~='end']::after {
+  opacity: 1;
+}
+
+/* A note beside a stat tile's label (StatTile.svelte): "since 08:30" on the Failed tile */
+.stat-tile .lbl .tile-note {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* A failure count or rate in a table that is not zero (TopOrchestrators.svelte), and the rate's bar */
+.tbl .fail-num {
+  font-weight: 700;
+}
+
+.rate-bar {
+  display: inline-block;
+  width: 44px;
+  height: 6px;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: var(--muted);
+  overflow: hidden;
+}
+
+.rate-bar > i {
+  display: block;
+  height: 100%;
+  background: var(--status-failed);
+}
+
+/* A swimlane bar with no text of its own (Swimlane.svelte gives it `bare`). dfm-ui.css L299 pads
+   every bar 6 px a side, so a retry that took a second was still painted 16 px wide, and the label the
+   lane writes beside it - placed just past where the bar's time ends - was drawn on top of it. */
+.bar.bare {
+  padding: 0;
+  min-width: 4px;
+}
+
+/* A bar narrower than its own text (Swimlane.svelte `spilt`, `spillSide`): the text is drawn beside the
+   bar as a `.blbl`, and the bar keeps its copy hidden, to be measured again on the next resize. A bar
+   with room on neither side keeps the text inside, where it ends in an ellipsis instead of mid-letter. */
+.swim .bar {
+  text-overflow: ellipsis;
+}
+
+.bar.spilt {
+  text-overflow: clip;
+}
+
+.bar.spilt > .bar-text {
+  visibility: hidden;
+}
+
+/* A sequence participant's name (SequenceDiagram.svelte): `.part` is a grid, which a text overflow
+   does not ellipsize, so the name is a block of its own that does */
+.seq .part > .part-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A sequence message to its own lane (SequenceDiagram.svelte gives it `self`): an external event the
+   orchestrator received, drawn as a short loop on the left of its lane. dfm-ui.css L333 centres a
+   label on its arrow, and a label wider than the loop ran over the clock in the gutter; it starts
+   past the lifeline instead, level with the line, where the row has nothing else. */
+.arrow.self span {
+  left: calc(100% + 10px);
+  bottom: auto;
+  top: -9px;
+  transform: none;
+}
+
 /* The `.sel` listbox trigger. dfm-ui.css leaves room for the `.sel::after` arrow with `select.input`
    and `select.fchip`, and the bits-ui trigger is a `button`, so neither rule reached it: a label as
    wide as its box ran underneath the arrow ("Last 24 hours", a custom range's own dates). Same room

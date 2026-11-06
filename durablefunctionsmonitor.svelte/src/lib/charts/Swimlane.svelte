@@ -1,7 +1,8 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import LinkButton from '$lib/components/LinkButton.svelte';
   import { cn } from '$lib/utils';
-  import { domainTicks, type Swimlane, type TimeDomain } from './swimlane';
+  import { domainTicks, spillSide, type Swimlane, type TimeDomain } from './swimlane';
 
   interface Props {
     lanes: Swimlane[];
@@ -120,6 +121,91 @@
   function isLaneHighlighted(lane: Swimlane): boolean {
     return highlightKey !== null && (lane.key === highlightKey || lane.bars.some((bar) => bar.key === highlightKey));
   }
+
+  /**
+   * The bars whose text is drawn beside them, and on which side (`spillSide`). Whether words fit is a
+   * question about pixels - the font, the width the strip got - so it is answered by measuring the
+   * drawn lanes, again whenever they change or the strip is resized. A spilt bar keeps its copy of the
+   * text, hidden (dfm-ext.css `.bar.spilt`): it is what the next measurement measures.
+   */
+  let spill = $state<Readonly<Record<string, 'right' | 'left'>>>({});
+
+  /** A computed length in pixels; nothing where there is no stylesheet to compute it from. */
+  function pixels(value: string): number {
+    return Number.parseFloat(value) || 0;
+  }
+
+  function measure(): void {
+    if (!root) {
+      return;
+    }
+
+    const next: Record<string, 'right' | 'left'> = {};
+
+    for (const track of root.querySelectorAll<HTMLElement>('.track')) {
+      const bars = Array.from(track.querySelectorAll<HTMLElement>(':scope > .bar'))
+        .map((element) => ({ element, left: element.offsetLeft, right: element.offsetLeft + element.offsetWidth }))
+        .sort((a, b) => a.left - b.left);
+
+      bars.forEach((bar, index) => {
+        const text = bar.element.querySelector<HTMLElement>(':scope > .bar-text');
+
+        if (!text) {
+          return;
+        }
+
+        const style = getComputedStyle(bar.element);
+        const inner = bar.element.clientWidth - pixels(style.paddingLeft) - pixels(style.paddingRight);
+        const before = bar.left - (index > 0 ? bars[index - 1].right : 0);
+        const after = (index < bars.length - 1 ? bars[index + 1].left : track.clientWidth) - bar.right;
+        const side = spillSide(text.offsetWidth, inner, before, after);
+
+        if (side !== 'inside' && bar.element.dataset.bar) {
+          next[bar.element.dataset.bar] = side;
+        }
+      });
+    }
+
+    const current = untrack(() => spill);
+    const keys = Object.keys(next);
+    const same = keys.length === Object.keys(current).length && keys.every((key) => current[key] === next[key]);
+
+    if (!same) {
+      spill = next;
+    }
+  }
+
+  $effect(() => {
+    // Measured again whenever the lanes are redrawn...
+    void lanes;
+
+    const frame = root;
+
+    if (!frame) {
+      return;
+    }
+
+    measure();
+
+    // ...when the web font arrives and changes how wide the words are...
+    void document.fonts?.ready.then(() => measure());
+
+    // ...and when the strip is given another width
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => measure());
+
+    observer.observe(frame);
+
+    return () => observer.disconnect();
+  });
+
+  /** Where a spilt bar's text sits: just past its right end, or just before its left one. */
+  function spillStyle(bar: { left: number; width: number }, side: 'right' | 'left'): string {
+    return side === 'right' ? `left:calc(${bar.left + bar.width}% + 6px)` : `right:calc(${100 - bar.left}% + 6px)`;
+  }
 </script>
 
 <!--
@@ -163,8 +249,17 @@
           {#each lane.bars as bar (bar.key)}
             <!-- A bar that does something is a button: focusable, named by what its tooltip says, and
                  pressed with Enter or Space. A bar that does nothing stays a shape. -->
+            <!-- `bare`: a bar with no text of its own is drawn without the padding that would make it
+                 wider than its time, so the label beside it (`.blbl`) does not land on top of it.
+                 `spilt`: a bar narrower than its own text, which is drawn beside it instead -->
             <div
-              class={cn('bar', bar.cls ?? '', highlightKey === bar.key ? 'hl' : '')}
+              class={cn(
+                'bar',
+                bar.cls ?? '',
+                bar.text ? '' : 'bare',
+                spill[bar.key] ? 'spilt' : '',
+                highlightKey === bar.key ? 'hl' : '',
+              )}
               data-bar={bar.key}
               style={`left:${bar.left}%;width:${bar.width}%`}
               title={bar.title}
@@ -179,12 +274,17 @@
                 }
               }}
             >
-              {bar.text ?? ''}
+              {#if bar.text}<span class="bar-text">{bar.text}</span>{/if}
             </div>
+
+            {#if bar.text && spill[bar.key]}
+              <span class="blbl" style={spillStyle(bar, spill[bar.key])}>{bar.text}</span>
+            {/if}
           {/each}
 
           {#if lane.lbl}
-            <span class="blbl" style={`left:${lane.lblLeft ?? 0}%`}>{lane.lbl}</span>
+            <!-- Past the bar's own edge: a bar is never drawn narrower than its 4 px frame -->
+            <span class="blbl" style={`left:calc(${lane.lblLeft ?? 0}% + 6px)`}>{lane.lbl}</span>
           {/if}
 
           {#if lane.now !== undefined}

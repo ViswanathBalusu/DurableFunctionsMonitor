@@ -76,11 +76,12 @@ describe('CommandPalette', () => {
 
     expect(instances?.querySelector('.kbd')?.textContent).toBe('g i');
 
-    const poster = Array.from(document.querySelectorAll('.prow')).find((row) =>
-      row.textContent?.startsWith('Theme: Poster'),
+    // Iris is the default theme (D15, contracts §8), so it is the one marked current
+    const iris = Array.from(document.querySelectorAll('.prow')).find((row) =>
+      row.textContent?.startsWith('Theme: Iris'),
     );
 
-    expect(poster?.querySelector('.kbd')?.textContent).toBe('current');
+    expect(iris?.querySelector('.kbd')?.textContent).toBe('current');
   });
 
   it('filters as the user types, and one row is left for a theme name', async () => {

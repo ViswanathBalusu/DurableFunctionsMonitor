@@ -101,16 +101,19 @@ itself - tables, the large-message container, the queues and which worker holds 
 partition; and, with `DFM_AUDIT_ENABLED`, every write anyone made through the monitor: who, what,
 which instance, how it went.
 
-### Five themes, and one keyboard
+### Eleven themes, and one keyboard
 
 ![Command palette](readme/screenshots/dfm-command-palette.png)
 
+The default look is Iris, one of four modern themes (Iris, Jade, Ember, Mono) that share calm
+surfaces, hairline lines and one accent colour; the seven earlier themes are still in the menu.
 `Ctrl`/`Cmd` `K` reaches every screen, every theme, the actions of the screen you are on, and any
 instance id. Light, dark or whatever the system says. Every screen works without a mouse, CI runs axe
 over the app in both modes, and every JSON value anywhere is pretty-printed and fully expanded.
 
 | | |
 |---|---|
+| ![Iris theme, dark](readme/screenshots/dfm-theme-iris.png) | ![Iris theme, light](readme/screenshots/dfm-theme-iris-light.png) |
 | ![Riso theme](readme/screenshots/dfm-theme-riso.png) | ![Blueprint theme, dark](readme/screenshots/dfm-theme-blueprint.png) |
 
 And it folds down to a phone, where the navigation moves to the bottom:

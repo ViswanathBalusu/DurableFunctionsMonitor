@@ -47,7 +47,7 @@
   {#snippet anchor({ props })}
     <button class="btn flat" type="button" style="padding:0 8px" {...props}>
       <span class="avatar" aria-hidden="true">{initial}</span>
-      <span class="hide-m">{shortName}</span>
+      <span class="hide-m tb-user-name">{shortName}</span>
     </button>
   {/snippet}
 

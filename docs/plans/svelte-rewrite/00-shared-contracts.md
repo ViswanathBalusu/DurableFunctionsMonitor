@@ -411,7 +411,7 @@ Two storages, both behind `ITypedLocalStorage<T>` (`setItem`, `setItems`, `getIt
 - `PrefsStorage`: localStorage in the browser (`dfm.theme`, `dfm.mode`, `dfm.density`, `dfm.showTimeAs`, `dfm.nav`, `dfm.thresholds`, `dfm.savedViews`, `dfm.autoRefresh.instances`, `dfm.autoRefresh.instance`), `PersistState` with key `prefs` in VS Code. Never written to the URL.
 - `ViewStateStorage`: URL query first, then localStorage `dfm.view.<screen>::<field>` (browser) or `PersistState` key `view.<screen>` (VS Code). Used for filters, tab, ordering, hidden columns so links are shareable and the state survives reload.
 
-Precedence for mode: user choice → `clientConfig.theme` → `prefers-color-scheme`. For theme: user choice → `clientConfig.dfmTheme` → `poster`; a value counts when it is one of the keys of `THEMES` (`src/lib/themes.ts`), which is the one list of themes in the app - the tests and the docs derive theirs from it (§16). Density: `compact` unless chosen. Time display: user choice → `clientConfig.showTimeAs` → `UTC`.
+Precedence for mode: user choice → `clientConfig.theme` → `prefers-color-scheme`. For theme: user choice → `clientConfig.dfmTheme` → the first theme of `THEMES`, `iris` (`DEFAULT_THEME`, D15; it was `poster` until 2026-11); a value counts when it is one of the keys of `THEMES` (`src/lib/themes.ts`), which is the one list of themes in the app - the tests and the docs derive theirs from it (§16). Density: `compact` unless chosen. Time display: user choice → `clientConfig.showTimeAs` → `UTC`.
 
 Applying: `document.documentElement.dataset.theme = theme`, `classList.toggle('dark', mode === 'dark')`, `dataset.density = density`. Use `mode-watcher` for the dark class and system preference; set the attribute yourself.
 
@@ -544,18 +544,18 @@ Local host environment for development and e2e (`local.settings.json`, gitignore
 
 `DFM_NONCE=i_sure_know_what_i_am_doing` disables authentication; `easyauth-config` then returns no `clientId` and the UI skips MSAL.
 
-## §16 Theme families (E13; README D12–D14)
+## §16 Theme families (E13; README D12–D15)
 
-A theme has a `family` (`ThemeDescriptor.family` in `src/lib/themes.ts`): `brutal` for the papers, `glass` and `neu` for the two soft families. The family is a property of the theme and never a second preference: `dfm.theme`, `dfmTheme`, the menu, the Settings tiles and the palette list themes, and nothing in the app branches on the family except the tests and the metrics label.
+A theme has a `family` (`ThemeDescriptor.family` in `src/lib/themes.ts`): `studio` for the four default themes (D15), `brutal` for the papers, `glass` and `neu` for the two soft families. The family is a property of the theme and never a second preference: `dfm.theme`, `dfmTheme`, the menu, the Settings tiles and the palette list themes, and nothing in the app branches on the family except the tests, the metrics label and `Prefs.apply()`, which writes it on `<html>` as `data-family` beside `data-theme` (and `index.html` carries the default pair, so the first paint is already the default look).
 
-A family is one plain-CSS sheet, `src/styles/families/<key>.css`, imported from `app.css` after `families/base.css`, which comes after `dfm-ext.css`:
+A family is one plain-CSS sheet, `src/styles/families/<family>.css`, imported from `app.css` after `families/base.css`, which comes after `dfm-ext.css`. Glass and Neu are one theme each, named like their family; Studio carries four:
 
-- every rule is scoped under `[data-theme="<key>"]`, `.dark[data-theme="<key>"]`, `html[data-theme="<key>"]` or `html.dark[data-theme="<key>"]`, or sits inside `@media (prefers-reduced-transparency: reduce)` / `@media (prefers-contrast: more)` with the same scoping, so nothing of it reaches the papers;
-- it declares every token `[data-theme="poster"]` declares in its light block, every token `.dark[data-theme="poster"]` declares in its dark block, and `--glyph` in both - a token left out would silently inherit Poster's value;
+- every rule is scoped under `[data-theme="<key>"]` of one of the family's themes or `[data-family="<family>"]` (a family of one theme uses its `[data-theme]` alone), plain or after `.dark`, `html` or `html.dark`, or sits inside `@media (prefers-reduced-transparency: reduce)` / `@media (prefers-contrast: more)` with the same scoping, so nothing of it reaches the papers;
+- for every theme of the family, the light blocks of its `[data-theme]` and its `[data-family]` together declare every token `[data-theme="poster"]` declares, the dark blocks every token `.dark[data-theme="poster"]` declares, and `--glyph` is in both modes - a token left out would silently inherit Poster's value. A family of several themes puts what they share (statuses, shadows, the component layer) on the family scope and each theme's neutrals and accent on its `[data-theme]`, after the family blocks;
 - it is plain CSS the browser loads without Tailwind (no `@utility`, `@theme`, `@custom-variant`, `@apply`, no Tailwind classes), which is how `node scripts/harness/style-preview.mjs` loads it;
 - a family sheet may override a `dfm-ui.css` rule for its own theme; nothing else may. `base.css` holds only what every family shares (today one rule, `:root { --glyph: var(--ink); }`), `dfm-ext.css` holds nothing family-related, and `dfm-tokens.css` and `dfm-ui.css` stay verbatim.
 
-`tests/unit/family-sheets.test.ts` enforces the first three for every non-brutal entry of `THEMES`; `tests/e2e/themes.spec.ts` asserts each theme by its family and photographs the seven-screen matrix for all of them; `tests/e2e/a11y.spec.ts` runs one theme per family.
+`tests/unit/family-sheets.test.ts` enforces the first three for every family of `THEMES` that is not `brutal`, theme by theme; `tests/e2e/themes.spec.ts` asserts each theme by its family and photographs the seven-screen matrix for all of them; `tests/e2e/a11y.spec.ts` runs one theme per family over every screen, and the other studio themes over the screens with the most colour.
 
 `--glyph` is the colour of a small solid mark: the checkbox tick, the switch knob, the select caret, the sort triangle, an arrowhead, the "now" line, the orchestration bar, a hatch. In the papers it is `--ink`; a soft family sets it to a strong colour while its `--ink` goes soft, so a line can fade without the marks drawn in it disappearing. Components that draw marks themselves read it (`glyphColor()` in `chart-tokens.ts`, `var(--glyph)` in `dfm-ext.css` and the histogram brush); outlines - segment strokes, node frames, participant boxes - stay `--ink`.
 
@@ -576,4 +576,4 @@ Brutalist only (`family === 'brutal'`; the "papers are flat and hard" test in `t
 - no alpha, no gradients, no backdrop filter;
 - the paper patterns.
 
-What a soft family looks like is its own epic's business: E14 for Glass (one blur per surface, never on rows, chips or buttons; a strong glyph; the backdrop only on the page), E15 for Neu (one material, raised surfaces, inset inputs and pressed states, no visible line).
+What a soft family looks like is its own epic's business: E14 for Glass (one blur per surface, never on rows, chips or buttons; a strong glyph; the backdrop only on the page), E15 for Neu (one material, raised surfaces, inset inputs and pressed states, no visible line). Studio is D15's: calm grounds, panels one step off them, hairline lines (`--ink` is the hairline, as in Neu), one accent per theme, a soft shadow only on what floats; status as a tinted pill with a solid dot, where the row spine, the chart series, the swatches and the swimlane bars keep the strong hue (`--status-*`); a primary button filled with `--solid`, which is the accent except in Mono (the inverse of the page, with blue kept for focus and links), so that `--primary` stays one colour across modes; Mona Sans for the interface, bundled like the other faces, and JetBrains Mono for ids, times and payloads.

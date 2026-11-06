@@ -8,7 +8,7 @@ import { setMode, systemPrefersMode } from 'mode-watcher';
 import { host as defaultHost, type ClientConfig, type Host, type ThemeName } from '../host.svelte';
 import { PrefsStorage, type PrefsFields } from '../storage/prefs-storage';
 import type { ITypedLocalStorage } from '../storage/typed-local-storage';
-import { THEMES } from '../themes';
+import { DEFAULT_THEME, THEMES, family } from '../themes';
 
 /** The keys of the themes, in menu order. The list exists once, in `themes.ts`. */
 export const themeNames: ThemeName[] = THEMES.map((entry) => entry.key);
@@ -89,8 +89,8 @@ function readNumber(storage: ITypedLocalStorage<PrefsFields>, field: keyof Prefs
  * default. `apply()` is the only place that touches the document element.
  */
 export class Prefs {
-  /** Which paper. */
-  theme = $state<ThemeName>('poster');
+  /** Which theme; the first of THEMES until the user or the host says otherwise. */
+  theme = $state<ThemeName>(DEFAULT_THEME);
 
   /** What the user asked for; `resolvedMode` is what is actually rendered. */
   mode = $state<ModePreference>('system');
@@ -186,10 +186,11 @@ export class Prefs {
   }
 
   /**
-   * Writes the three attributes the stylesheet reads. `data-theme` and `data-density` are ours;
-   * the `dark` class is mode-watcher's, so `setMode` keeps its state in step with ours - but the class
-   * is toggled here as well, because mode-watcher only applies it from its own component's effect and
-   * the shell does not mount that until E2.
+   * Writes the attributes the stylesheet reads. `data-theme`, `data-family` and `data-density` are
+   * ours; the `dark` class is mode-watcher's, so `setMode` keeps its state in step with ours - but the
+   * class is toggled here as well, because mode-watcher only applies it from its own component's effect
+   * and the shell does not mount that until E2. `data-family` follows the theme and is never chosen on
+   * its own (contracts §16): a family sheet scopes its component layer to it.
    */
   apply(): void {
     const root = globalThis.document?.documentElement;
@@ -200,6 +201,7 @@ export class Prefs {
     const resolved = this.resolvedMode;
 
     root.dataset.theme = this.theme;
+    root.dataset.family = family(this.theme);
     root.dataset.density = this.density;
     root.classList.toggle('dark', resolved === 'dark');
     root.style.colorScheme = resolved;
@@ -214,7 +216,7 @@ export class Prefs {
       this.#storage,
       'theme',
       themeNames,
-      themeNames.includes(config.dfmTheme as ThemeName) ? (config.dfmTheme as ThemeName) : 'poster',
+      themeNames.includes(config.dfmTheme as ThemeName) ? (config.dfmTheme as ThemeName) : DEFAULT_THEME,
     );
 
     this.mode = readOneOf<ModePreference>(this.#storage, 'mode', ['light', 'dark', 'system'], 'system');

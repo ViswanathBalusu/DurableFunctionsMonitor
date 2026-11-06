@@ -295,6 +295,27 @@ test('opens a cell value in the JSON viewer', async ({ page }) => {
   await expect(dialog).toBeHidden();
 });
 
+test('fades the edge the table runs past, and keeps its footer in view', async ({ page }) => {
+  await gotoInstances(page);
+
+  // At this width the columns are wider than the frame, which used to cut customStatus off mid-letter
+  // at the frame's edge with nothing to say there was more (DataTable.svelte `data-more`)
+  const frame = page.getByRole('table', { name: 'Instances' }).locator('xpath=..');
+
+  await expect(frame).toHaveAttribute('data-more', 'end');
+
+  await frame.evaluate((element) => element.scrollTo({ left: element.scrollWidth }));
+
+  await expect(frame).toHaveAttribute('data-more', 'start');
+
+  // Scrolled all the way across, the footer is still under the frame rather than gone with the columns
+  const box = await frame.boundingBox();
+  const footer = await frame.locator('.tfoot').boundingBox();
+
+  expect(footer!.x).toBeGreaterThanOrEqual(box!.x - 1);
+  expect(footer!.x + footer!.width).toBeLessThanOrEqual(box!.x + box!.width + 1);
+});
+
 test('keeps the filters in the URL, so the view is a link', async ({ page }) => {
   await gotoInstances(page, '?status=Failed&entities=1');
 

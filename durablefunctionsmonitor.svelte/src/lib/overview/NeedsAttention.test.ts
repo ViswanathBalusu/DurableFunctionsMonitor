@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 import type { Capabilities, StatsResponse, StorageResponse } from '$lib/api/types';
 import type { AppState } from '$lib/state/app.svelte';
 import ScreenHarness from '../../../tests/unit/harnesses/ScreenHarness.svelte';
-import NeedsAttention, { THRESHOLDS_META, workItemsQueued } from './NeedsAttention.svelte';
+import NeedsAttention, { ATTENTION_FILL, THRESHOLDS_META, workItemsQueued } from './NeedsAttention.svelte';
 import { stats as statsFixture } from '../../../tests/unit/fixtures/stats';
 import { queue, storage as storageFixture } from '../../../tests/unit/fixtures/storage';
 
@@ -49,7 +49,7 @@ function appOf(rendered: { component: unknown }): AppState {
 function rows(): string[][] {
   return Array.from(document.querySelectorAll('.attn > div')).map((row) => [
     row.querySelector('.n')?.textContent ?? '',
-    row.querySelector('span:not(.n)')?.textContent ?? '',
+    row.querySelector('.attn-text')?.textContent ?? '',
     row.querySelector('.link')?.textContent ?? '',
   ]);
 }
@@ -165,5 +165,25 @@ describe('Needs attention', () => {
     await screen.getByRole('button', { name: 'Storage' }).click();
 
     expect(appOf(rendered).router.current.name).toBe('storage');
+  });
+});
+
+describe('the rows as a way somewhere', () => {
+  it('lead with an icon filled like the status they are about, and end their link in an arrow', async () => {
+    await mount();
+
+    for (const row of document.querySelectorAll('.attn > div')) {
+      const icon = row.querySelector('.attn-ico');
+
+      expect(icon?.getAttribute('aria-hidden')).toBe('true');
+      expect(icon?.className).toMatch(/\b(st-[a-z]+|kind-orchestration)\b/);
+      expect(row.querySelector('.link .attn-arrow')).not.toBeNull();
+
+      // The sentence is the part that gives way on a phone (dfm-ext.css `.attn-text`): the link stays
+      // at the end of its row rather than dropping to a line of its own
+      expect(row.querySelector('.attn-text + .link')).not.toBeNull();
+    }
+
+    expect(ATTENTION_FILL.failed).toBe('st-failed');
   });
 });

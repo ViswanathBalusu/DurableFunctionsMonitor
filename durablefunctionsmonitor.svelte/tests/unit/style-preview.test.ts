@@ -81,12 +81,28 @@ describe('patchPreview', () => {
     expect(switcher(out)).toEqual({ poster: { label: 'Poster', concept: 'Bone paper, black line.' } });
   });
 
+  it('mirrors the family of every added theme onto data-family, as the app does (contracts §16)', () => {
+    const iris = { key: 'iris', family: 'studio', label: 'Iris', idea: 'indigo, cool neutrals' };
+    const out = patchPreview(PAGE, { sheets: ['studio.css'], entries: [GLASS, iris] });
+    const script = out.split('\n').find((line) => line.startsWith('<script data-style-preview="family">'));
+
+    expect(script).toContain('{"glass":"glass","iris":"studio"}');
+    expect(script).toContain("attributeFilter: ['data-theme']");
+    // ...before </head>, so the first paint already has the family
+    expect(out.indexOf('data-style-preview="family"')).toBeLessThan(out.indexOf('</head>'));
+  });
+
   it('changes nothing else about the page', () => {
     const out = patchPreview(PAGE, { sheets: ['base.css'], entries: [GLASS] });
     const strip = (html: string) =>
       html
         .split('\n')
-        .filter((line) => !line.startsWith('<link rel="stylesheet"') && !line.startsWith('const THEMES = '))
+        .filter(
+          (line) =>
+            !line.startsWith('<link rel="stylesheet"') &&
+            !line.startsWith('const THEMES = ') &&
+            !line.startsWith('<script data-style-preview="family">'),
+        )
         .join('\n');
 
     expect(strip(out)).toBe(strip(PAGE));

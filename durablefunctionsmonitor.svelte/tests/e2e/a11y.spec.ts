@@ -18,12 +18,19 @@ import { ENTITY_INSTANCE_ID, RUNNING_INSTANCE_ID } from './seed/fixtures.mjs';
 /**
  * One theme per family, in both modes (E13-S1-T3): the axe loop over every screen is the expensive
  * part of this file, and what it measures - contrast, names, roles - is decided by the family's
- * sheet, not by which paper is on. The first theme of each family stands for it: Poster for the
- * papers, Glass (E14-S2-T2) and Neu (E15-S2-T2) for their own.
+ * sheet, not by which paper is on. The first theme of each family stands for it: Iris for the studio
+ * family (D15), Poster for the papers, Glass (E14-S2-T2) and Neu (E15-S2-T2) for their own.
  */
 const FAMILY_SAMPLES = THEMES.filter(
   (entry, index) => THEMES.findIndex((other) => other.family === entry.family) === index,
 );
+
+/**
+ * The studio themes the family sample leaves out. They share the family's sheet but not its colours -
+ * each brings its own neutrals and accent, and the accent writes links and marks the selection - so
+ * each is held to axe on the screens that carry the most colour, in both modes (D15).
+ */
+const STUDIO_OTHERS = THEMES.filter((entry) => entry.family === 'studio' && !FAMILY_SAMPLES.includes(entry));
 
 /** Every screen of the app, by the path under the hub segment that opens it. */
 const SCREENS: { name: string; path: string; ready: string }[] = [
@@ -93,6 +100,27 @@ for (const sample of FAMILY_SAMPLES) {
       // ...and the palette, which is the keyboard's own way around the app
       await palette(page, 'over');
       expect(await serious(page), 'command palette').toEqual([]);
+    });
+  }
+}
+
+for (const entry of STUDIO_OTHERS) {
+  for (const mode of ['light', 'dark'] as const) {
+    test(`the colourful screens pass axe in ${entry.label} ${mode}`, async ({ page }) => {
+      await gotoHub(page, 'instances');
+      await theme(page, entry.label, mode === 'dark');
+
+      for (const screen of SCREENS.filter((s) => ['Overview', 'Instances', 'Failures', 'Settings'].includes(s.name))) {
+        await page.goto(hubPath(screen.path));
+        await expect(page.locator(screen.ready).first()).toBeVisible();
+
+        expect(await serious(page), `${screen.name} (${entry.label} ${mode})`).toEqual([]);
+      }
+
+      await gotoInstance(page, RUNNING_INSTANCE_ID);
+      await expect(page.locator('.hero')).toBeVisible();
+
+      expect(await serious(page), `Instance workspace (${entry.label} ${mode})`).toEqual([]);
     });
   }
 }

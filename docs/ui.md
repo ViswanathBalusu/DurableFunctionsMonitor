@@ -226,10 +226,12 @@ An operation this backend does not implement is a row that is there and disabled
 
 ## Themes, and the small screen
 
-The themes in the menu come in families, and every theme has a light and a dark face. The papers -
-Poster, Riso, Memphis, Blueprint, Hazard - share the neo-brutalist look: an ink line, a hard offset
-shadow, flat colour. A theme of another family changes the paper, the line and the shadow, and the
-status colours keep their meaning in every one of them. The top bar's swatch switches theme and mode,
+The themes in the menu come in families, and every theme has a light and a dark face. The default is
+Iris, one of the four studio themes - Iris (indigo), Jade (teal), Ember (warm grey, with the ember kept to buttons and links) and Mono
+(black and white, blue for focus and links) - which share a calm modern look: neutral surfaces,
+hairline lines, one accent, status as a tinted pill with a dot. The papers - Poster, Riso, Memphis,
+Blueprint, Hazard - share the neo-brutalist look: an ink line, a hard offset shadow, flat colour; Glass
+and Neu are one theme each. Whatever the family, the status colours keep their meaning. The top bar's swatch switches theme and mode,
 `Ctrl`/`Cmd` `K` finds them by name, and the choice is kept per user.
 
 | | |
@@ -341,7 +343,7 @@ A boolean setting is `true` (any casing, trimmed) and nothing else: `1` and `yes
 | Key | Values |
 |---|---|
 | `theme` | `light`, `dark` |
-| `dfmTheme` | `poster`, `riso`, `memphis`, `blueprint`, `hazard`, `glass`, `neu` |
+| `dfmTheme` | `iris` (the default), `jade`, `ember`, `mono`, `poster`, `riso`, `memphis`, `blueprint`, `hazard`, `glass`, `neu` |
 | `showTimeAs` | `UTC`, `Local` |
 
 A user's own choices override them, and are kept per user: in the browser as `dfm.<name>` local

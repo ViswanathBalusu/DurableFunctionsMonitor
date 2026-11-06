@@ -71,15 +71,25 @@ describe('Top orchestrators', () => {
 
     expect(Array.from(document.querySelectorAll('thead th')).map((th) => th.textContent?.trim())).toEqual([
       '',
-      'name',
-      'started',
-      'completed',
-      'failed',
-      'failure rate',
+      'Name',
+      'Started',
+      'Completed',
+      'Failed',
+      'Failure rate',
       'p50',
       'p95',
-      'last failure',
+      'Last failure',
     ]);
+
+    // The caption speaks about the figures, not about the endpoint they come from
+    expect(TOP_META).not.toContain('stats.byName');
+
+    // Every figure is right-aligned, so a column compares digit by digit
+    for (const header of ['Started', 'Completed', 'Failed', 'Failure rate', 'p50', 'p95', 'Last failure']) {
+      const cell = document.querySelector(`tbody td[data-label="${header}"]`) as HTMLElement | null;
+
+      expect(cell?.style.textAlign, header).toBe('right');
+    }
 
     // Flat inside a panel, and out of the mobile card layout
     expect(document.querySelector('.tbl-wrap')).toHaveClass('keep', 'flat');
@@ -88,8 +98,9 @@ describe('Top orchestrators', () => {
   it('opens sorted by started, newest work first', () => {
     mount();
 
-    expect(column('started')).toEqual(['1,102', '1,096', '24', '7']);
-    expect(document.querySelector('thead th.sort')).toHaveTextContent(DEFAULT_SORT.id);
+    expect(column('Started')).toEqual(['1,102', '1,096', '24', '7']);
+    // The header reads in sentence case; the sort is still the one DEFAULT_SORT names
+    expect(document.querySelector('thead th.sort')).toHaveTextContent(new RegExp(DEFAULT_SORT.id, 'i'));
   });
 
   it('formats every number the way the mockup writes it', () => {
@@ -108,11 +119,11 @@ describe('Top orchestrators', () => {
       ],
     });
 
-    expect(column('started')).toEqual(['1,102']);
-    expect(column('failure rate')).toEqual(['0.7 %']);
+    expect(column('Started')).toEqual(['1,102']);
+    expect(column('Failure rate')).toEqual(['0.7 %']);
     expect(column('p50')).toEqual(['4 s']);
     expect(column('p95')).toEqual(['22 s']);
-    expect(column('last failure')).toEqual(['13:51:19']);
+    expect(column('Last failure')).toEqual(['13:51:19']);
   });
 
   it('says an em dash where the backend had nothing to say', () => {
@@ -120,7 +131,7 @@ describe('Top orchestrators', () => {
 
     expect(column('p50')).toEqual(['—']);
     expect(column('p95')).toEqual(['—']);
-    expect(column('last failure')).toEqual(['—']);
+    expect(column('Last failure')).toEqual(['—']);
   });
 
   it('re-sorts on a header click, without asking the backend for anything', async () => {
@@ -129,13 +140,13 @@ describe('Top orchestrators', () => {
     await screen.getByRole('button', { name: 'p95' }).click();
 
     // First click is ascending, and the fastest p95 of the fixture is NotifyCustomer's
-    expect(column('name')[0]).toContain('NotifyCustomer');
+    expect(column('Name')[0]).toContain('NotifyCustomer');
   });
 
   it('marks the orchestrators the function map says run inside another one', () => {
     mount({ subOrchestrators: ['NotifyCustomer'] });
 
-    const chips = Array.from(document.querySelectorAll('tbody td[data-label="name"] .chip'));
+    const chips = Array.from(document.querySelectorAll('tbody td[data-label="Name"] .chip'));
 
     expect(chips).toHaveLength(1);
     expect(chips[0].textContent).toBe(SUB_ORCHESTRATOR);
@@ -152,5 +163,18 @@ describe('Top orchestrators', () => {
     expect(route.name).toBe('instances');
     expect(route.query.get('name')).toBe('ProcessOrderOrchestrator');
     expect(route.query.get('range')).toBe('7d');
+  });
+});
+
+describe('failures in the table', () => {
+  it('marks a failure count and rate that are not zero, and draws the rate as a bar', () => {
+    mount();
+
+    const failed = document.querySelectorAll('tbody td[data-label="Failed"] .fail-num');
+    const bars = document.querySelectorAll('tbody td[data-label="Failure rate"] .rate-bar');
+
+    expect(failed.length).toBeGreaterThan(0);
+    expect(bars.length).toBe(failed.length);
+    expect(bars[0].getAttribute('aria-hidden')).toBe('true');
   });
 });

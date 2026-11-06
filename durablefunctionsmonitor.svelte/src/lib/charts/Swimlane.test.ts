@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { fireEvent, render, screen } from '@testing-library/svelte';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/svelte';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import Swimlane from './Swimlane.svelte';
-import { domainTicks, isNarrow, placeSpan, type Swimlane as Lane } from './swimlane';
+import { domainTicks, isNarrow, placeSpan, spillSide, type Swimlane as Lane } from './swimlane';
 
 const domain = { from: new Date('2026-09-04T14:02:00Z'), to: new Date('2026-09-04T14:03:00Z') };
 
@@ -53,6 +53,30 @@ describe('isNarrow', () => {
   });
 });
 
+describe('spillSide', () => {
+  it('keeps the text inside a bar it fits in', () => {
+    expect(spillSide(40, 52, 0, 0)).toBe('inside');
+  });
+
+  it('draws it after the bar when it does not fit and there is room before the next one', () => {
+    // "Timeout 4 s" in a failed retry 30 px wide
+    expect(spillSide(80, 30, 0, 300)).toBe('right');
+  });
+
+  it('draws it before the bar when the room is on that side only, as at the end of a track', () => {
+    expect(spillSide(80, 30, 300, 20)).toBe('left');
+  });
+
+  it('asks for the gap from the bar and as much again before whatever comes next', () => {
+    expect(spillSide(80, 30, 0, 92)).toBe('right');
+    expect(spillSide(80, 30, 0, 91)).toBe('inside');
+  });
+
+  it('leaves the text inside, to be cut with an ellipsis, when there is room on neither side', () => {
+    expect(spillSide(80, 30, 40, 40)).toBe('inside');
+  });
+});
+
 describe('domainTicks', () => {
   it('spreads ticks across the domain, both ends included', () => {
     const ticks = domainTicks(domain, 6);
@@ -65,6 +89,10 @@ describe('domainTicks', () => {
 });
 
 describe('Swimlane', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('renders the mockups’ lane structure', () => {
     render(Swimlane, { props: { lanes, domain, ariaLabel: 'Timeline' } });
 
@@ -88,12 +116,72 @@ describe('Swimlane', () => {
     expect(document.querySelectorAll('.bar.wait')).toHaveLength(1);
   });
 
+  it('marks a bar with no text of its own as bare, so its padding does not widen it under its label', () => {
+    render(Swimlane, { props: { lanes, domain, ariaLabel: 'Timeline' } });
+
+    expect(document.querySelector('[data-bar="bar-1"]')?.classList.contains('bare')).toBe(false);
+    expect(document.querySelector('[data-bar="bar-2"]')?.classList.contains('bare')).toBe(true);
+  });
+
+  it('draws a bar narrower than its own text with the text beside it, measured after layout', async () => {
+    // jsdom lays nothing out, so the layout the measurement reads is given here: a 600 px track,
+    // a bar 30 px wide at 100 px, and words 80 px wide
+    const sized = (element: Element, sizes: { bar: number; text: number; track: number }): number =>
+      element.classList.contains('bar-text')
+        ? sizes.text
+        : element.classList.contains('bar')
+          ? sizes.bar
+          : element.classList.contains('track')
+            ? sizes.track
+            : 0;
+    const sizes = { bar: 30, text: 80, track: 600 };
+
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (this: HTMLElement) {
+      return sized(this, sizes);
+    });
+    vi.spyOn(Element.prototype, 'clientWidth', 'get').mockImplementation(function (this: Element) {
+      return sized(this, sizes);
+    });
+    vi.spyOn(HTMLElement.prototype, 'offsetLeft', 'get').mockImplementation(function (this: HTMLElement) {
+      return this.classList.contains('bar') ? 100 : 0;
+    });
+
+    const failed: Lane[] = [
+      {
+        key: 'ChargePayment (retry 2)',
+        label: 'ChargePayment (retry 2)',
+        bars: [{ key: 'retry-2', cls: 'st-failed', left: 16, width: 6, text: 'Timeout 4 s' }],
+      },
+    ];
+
+    render(Swimlane, { props: { lanes: failed, domain, ariaLabel: 'Timeline' } });
+
+    const bar = document.querySelector('[data-bar="retry-2"]') as HTMLElement;
+
+    await waitFor(() => expect(bar.classList.contains('spilt')).toBe(true));
+
+    const beside = document.querySelector('.track > .blbl') as HTMLElement;
+
+    expect(beside.textContent).toBe('Timeout 4 s');
+    expect(beside.getAttribute('style')?.replace(/\s/g, '')).toContain('left:calc(22%+6px)');
+    // The bar keeps its own copy, hidden by the stylesheet, so a wider strip can take it back
+    expect(bar.querySelector('.bar-text')?.textContent).toBe('Timeout 4 s');
+  });
+
+  it('keeps the text in the bar when nothing says it does not fit', () => {
+    render(Swimlane, { props: { lanes, domain, ariaLabel: 'Timeline' } });
+
+    expect(document.querySelector('[data-bar="bar-1"] .bar-text')?.textContent).toBe('38.4 s');
+    expect(document.querySelector('.bar.spilt')).toBeNull();
+  });
+
   it('draws the outside label and the now line', () => {
     render(Swimlane, { props: { lanes, domain, ariaLabel: 'Timeline' } });
 
     const label = document.querySelector('.blbl') as HTMLElement;
     expect(label.textContent).toBe('6.6 s');
-    expect(label.getAttribute('style')?.replace(/\s/g, '')).toContain('left:92%');
+    // Past the bar's own 4 px frame, not on it: the position the lane asks for, plus 6 px
+    expect(label.getAttribute('style')?.replace(/\s/g, '')).toContain('left:calc(92%+6px)');
 
     expect(document.querySelector('.now')?.getAttribute('style')?.replace(/\s/g, '')).toContain('left:96%');
   });

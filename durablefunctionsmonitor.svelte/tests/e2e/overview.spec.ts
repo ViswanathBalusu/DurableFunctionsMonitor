@@ -49,10 +49,11 @@ test('is the hub in six numbers, each opening the list behind it', async ({ page
   const tiles = page.locator('.tiles .stat-tile');
 
   await expect(tiles).toHaveCount(6);
+  // The Failed label carries when the range's failures began, as the throughput chart marks it
   await expect(tiles.locator('.lbl')).toHaveText([
     'Running',
     'Pending',
-    'Failed',
+    /^Failed( since \d\d:\d\d)?$/,
     'Completed',
     'Suspended',
     'Entities',
@@ -105,7 +106,9 @@ test('draws the range as columns, and lets a window of it become the range', asy
 
   const throughput = panel(page, 'Throughput');
 
-  await expect(throughput.locator('.panel-h .fine.muted')).toHaveText('48 bins · brush sets the global range');
+  await expect(throughput.locator('.panel-h .fine.muted')).toHaveText(
+    'Instances per 30 min · drag across to set the range',
+  );
   await expect(throughput.locator('.chart svg rect').first()).toBeVisible();
 
   // Five ticks, the first of them dated (ScreenOverview.dc.html L57)
@@ -151,9 +154,9 @@ test('lists every orchestrator of the range, busiest first', async ({ page }) =>
 
   const top = panel(page, 'Top orchestrators');
 
-  await expect(top.locator('.panel-h .fine.muted')).toHaveText('stats.byName · p50 and p95 over terminal instances');
+  await expect(top.locator('.panel-h .fine.muted')).toHaveText('p50 and p95 over terminal instances');
 
-  const started = await top.locator('tbody td[data-label="started"]').allTextContents();
+  const started = await top.locator('tbody td[data-label="Started"]').allTextContents();
 
   expect(started.length).toBeGreaterThan(1);
 
@@ -163,7 +166,7 @@ test('lists every orchestrator of the range, busiest first', async ({ page }) =>
 
   expect(numbers).toEqual([...numbers].sort((a, b) => b - a));
 
-  const names = await top.locator('tbody td[data-label="name"]').allTextContents();
+  const names = await top.locator('tbody td[data-label="Name"]').allTextContents();
 
   expect(names.join(' ')).toContain(ORCHESTRATORS.processOrder);
 

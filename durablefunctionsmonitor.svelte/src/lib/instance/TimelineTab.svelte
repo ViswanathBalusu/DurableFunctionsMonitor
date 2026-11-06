@@ -5,7 +5,9 @@
     { label: 'failed', cls: 'st-failed' },
     { label: 'running', cls: 'st-running' },
     { label: 'timer', cls: 'st-suspended' },
-    { label: 'waiting for event', style: 'border-style:dotted' },
+    // `wait`, like the bar it explains (dfm-ui.css L300), so a family that draws its swatches without a
+    // line can still draw this one
+    { label: 'waiting for event', cls: 'wait', style: 'border-style:dotted' },
     // A mark, so the glyph: the ink in the papers, a strong colour where the line is a rim (E14)
     { label: 'orchestrator replay', style: 'background:var(--glyph)' },
   ];
