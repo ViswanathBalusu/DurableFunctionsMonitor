@@ -96,7 +96,7 @@ The UI asks `/about` once and turns each screen and button on or off from what t
 | `DFM_AUDIT_ENABLED` | `true` records every write and dangerous call into the `{hub}DfmAudit` table, which the Activity screen and the `/audit` endpoint read |
 | `DFM_CUSTOM_TEMPLATES_FOLDER` | load custom tab templates, Function Maps and the custom meta tag from this folder instead of Azure Storage. A folder name (`dfm-templates`) is resolved next to your app; an absolute path is used as is. Same as `settings.CustomTemplatesFolderName` |
 
-`DFM_STATS_CAP` and `DFM_AGGREGATION_CACHE_SECONDS` have no effect on this package: `/stats`, `/failures` and `/storage` are unsupported here, so there is nothing to cap or cache.
+`DFM_STATS_CAP`, `DFM_AGGREGATION_CACHE_SECONDS` and `DFM_TABLE_SCAN_PARALLELISM` have no effect on this package: `/stats`, `/failures` and `/storage` are unsupported here, so there is nothing to cap, cache or scan.
 
 ## Notes on Task Hub discovery
 

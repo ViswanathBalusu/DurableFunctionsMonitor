@@ -48,6 +48,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string DFM_AUDIT_ENABLED = "DFM_AUDIT_ENABLED";
         public const string DFM_AGGREGATION_CACHE_SECONDS = "DFM_AGGREGATION_CACHE_SECONDS";
         public const string DFM_STATS_CAP = "DFM_STATS_CAP";
+        public const string DFM_TABLE_SCAN_PARALLELISM = "DFM_TABLE_SCAN_PARALLELISM";
         public const string DFM_CUSTOM_TEMPLATES_FOLDER = "DFM_CUSTOM_TEMPLATES_FOLDER";
     }
 
@@ -118,6 +119,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public const string DangerousOperationsPermission = "DurableFunctionsMonitor.DangerousOperations";
 
         public const string DfMonDisableNewParentIdResolutionAlgorithm = "DfMonDisableNewParentIdResolutionAlgorithm";
+
+        /// <summary>
+        /// Put into AzureWebJobsFeatureFlags, makes the Instances screen list its instances through the
+        /// DurableTaskClient again, instead of reading the XXXInstances table itself (AzureStorageInstances).
+        /// </summary>
+        public const string DfMonDisableInstancesTableScan = "DfMonDisableInstancesTableScan";
 
         /// <summary>
         /// Provides support for dedicated Storage accounts (different from AzureWebJobsStorage)

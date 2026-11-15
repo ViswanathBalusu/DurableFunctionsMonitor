@@ -105,6 +105,21 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        public void ListInstancesRoutineHasItsAzureStorageDefaultAndCanBeTakenOut()
+        {
+            // Act
+            var extensionPoints = new DfmExtensionPoints();
+
+            // Assert: the Instances screen reads the XXXInstances table by default
+            Assert.IsNotNull(extensionPoints.ListInstancesRoutine);
+
+            // And a provider without that table (MSSQL, Netherite) takes the routine out, which leaves
+            // the listing to the DurableTaskClient
+            extensionPoints.ListInstancesRoutine = null;
+            Assert.IsNull(extensionPoints.ListInstancesRoutine);
+        }
+
+        [TestMethod]
         public void PreExistingRoutinesStillHaveTheirAzureStorageDefaults()
         {
             // Act

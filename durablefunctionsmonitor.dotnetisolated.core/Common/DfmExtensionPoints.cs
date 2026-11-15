@@ -36,6 +36,27 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public Func<DurableTaskClient, string, string, string, Task<string>> GetParentInstanceIdRoutine { get; set; }
 
         /// <summary>
+        /// Routine for listing the orchestration instances of the /orchestrations endpoint straight from the
+        /// storage, instead of through the DurableTaskClient.
+        /// Takes IDurableClient, connString env variable name, taskHubName, the OrchestrationQuery the client
+        /// would have been given (the created-time range, the statuses, whether inputs and outputs are wanted)
+        /// and a flag that says whether the caller is going to read the list to its end,
+        /// and returns the instances that DurableTaskClient.GetAllInstancesAsync would return for it - the same
+        /// ones, with the same values, in the same order - or null for a query it leaves to the client.
+        /// The flag is true for a request that sorts (it has to hold every instance before it can return one)
+        /// and false for one that may stop after the page it asked for: a routine should read ahead only for
+        /// the first kind, and read nothing at all before the list is enumerated.
+        /// Default implementation reads the XXXInstances table of Azure Storage - as several PartitionKey ranges
+        /// side by side when the table is large and all of it is wanted, a request at a time otherwise - and
+        /// only for queries that want no inputs and outputs.
+        /// Null means the instances are always listed through the DurableTaskClient, which is what a storage
+        /// provider without that table needs. (A routine that fails before it has returned its first instance
+        /// is replaced by the client for that request, with a warning in the log - so a provider that forgets
+        /// to set this to null still lists its instances, one failed request to Azure Storage later.)
+        /// </summary>
+        public Func<DurableTaskClient, string, string, OrchestrationQuery, bool, IAsyncEnumerable<OrchestrationMetadata>> ListInstancesRoutine { get; set; }
+
+        /// <summary>
         /// Routine for getting Task Hub names
         /// Takes connString env variable name and returns names of Task Hubs discovered there.
         /// Provide your own implementation for a custom storage provider.
@@ -157,6 +178,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             this.GetInstanceHistoryRoutine = OrchestrationHistory.GetHistoryDirectlyFromTable;
             this.GetParentInstanceIdRoutine = DetailedOrchestrationStatus.GetParentInstanceIdDirectlyFromTable;
             this.GetTaskHubNamesRoutine = Auth.GetTaskHubNamesFromStorage;
+            this.ListInstancesRoutine = AzureStorageInstances.List;
             this.GetHistoryEventInputRoutine = OrchestrationHistoryEditor.GetEventInputAsync;
             this.UpdateHistoryEventInputRoutine = OrchestrationHistoryEditor.UpdateEventInputAsync;
             this.TruncateHistoryRoutine = OrchestrationHistoryEditor.TruncateHistoryAsync;

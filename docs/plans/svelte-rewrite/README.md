@@ -33,7 +33,7 @@ When a mockup and a design document disagree, the mockup wins for visuals and co
 | D4 | Every JSON value shown anywhere is pretty-printed (2 spaces) and fully expanded. The only exception is a one-line truncated preview inside a table cell, which opens the full viewer on click. | Explicit user requirement. See contracts §9. |
 | D5 | Graph layout: `@dagrejs/dagre`, left to right. ELK is not used. | Synchronous, small, no worker; fits `inlineDynamicImports: true`. |
 | D6 | Charts: D3 (`d3-scale`, `d3-shape`, `d3-axis`, `d3-brush`, `d3-selection`, `d3-time`) rendering into SVG owned by Svelte. Function graph: `@xyflow/svelte`. | As specified by the design system. |
-| D7 | Data table: shadcn-svelte `data-table` pattern over `@tanstack/table-core`, virtualised with `@tanstack/svelte-virtual`. | Column chooser, sorting and sticky header come for free; matches the design document. |
+| D7 | Data table: shadcn-svelte `data-table` pattern, virtualised with `@tanstack/svelte-virtual`. The plan put it over `@tanstack/table-core`; `DataTable.svelte` was written without it (sorting and the column chooser are the screen states' own), nothing ever imported the package, and it was removed. | Sticky header and virtual rows as in the design document; one dependency fewer. |
 | D8 | Canonical instance route is `/{hub}/instances/{instanceId}`. `/{hub}/durable-instances/{id}` (React) and `/{hub}/orchestrations/{id}` (design docs) are accepted and rewritten to the canonical form. | Keeps old bookmarks and the VS Code deep link working. |
 | D9 | Capability driven UI. Nav items, actions and panels appear according to `/about.capabilities`, never according to a provider name. Where a capability is missing, the UI degrades (fallback or hidden) as each task specifies. | Lets UI epics ship before or without their backend epic, and keeps MSSQL and Netherite honest. |
 | D10 | Backend aggregation endpoints are cached in memory for 30 s per hub and query, with in-flight de-duplication, and scans are capped at 50,000 rows with `partial: true` in the response. | Table Storage has no server-side counts. |
@@ -56,7 +56,6 @@ When a mockup and a design document disagree, the mockup wins for visuals and co
 | mode-watcher | 1.1.0 | |
 | @lucide/svelte | 1.62.0 | not `lucide-svelte` (that package is stale) |
 | svelte-sonner | 1.2.2 | |
-| @tanstack/table-core | 9.3.1 | via shadcn data-table |
 | @tanstack/svelte-virtual | 3.13.49 | |
 | svelte-jsoneditor | 3.13.0 | |
 | d3 | 7.9.0 | + `@types/d3` 7.4.3 |
@@ -76,7 +75,7 @@ When a mockup and a design document disagree, the mockup wins for visuals and co
 
 Toolchain on the reference machine: Node 22.23.2 (pinned in the repo-root `.node-version`; install with `fnm install` and let `fnm env --use-on-cd` select it), npm 11.6, .NET SDK 10.0.400, Azure Functions Core Tools 4 (`func` 4.126.0 from `%LOCALAPPDATA%/AzureFunctionsTools/Releases/4.126.0/cli_x64`).
 
-Dev tooling not listed above (eslint, eslint-plugin-svelte, typescript-eslint, prettier, prettier-plugin-svelte, @testing-library/jest-dom, ncp, rimraf, html-to-image if ever needed): take the latest stable at install time and pin it exactly (`--save-exact`); record the chosen versions in the E0-S1-T1 commit message.
+Dev tooling not listed above (eslint, eslint-plugin-svelte, typescript-eslint, prettier, prettier-plugin-svelte, @testing-library/jest-dom, html-to-image if ever needed): take the latest stable at install time and pin it exactly (`--save-exact`); record the chosen versions in the E0-S1-T1 commit message. `copy-build-artifacts.js` needs no package: it started with `rimraf` and `ncp`, and uses `fs.rm` and `fs.cp` of Node 22 since.
 
 ## Id scheme
 

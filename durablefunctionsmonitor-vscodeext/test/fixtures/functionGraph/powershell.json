@@ -1,0 +1,98 @@
+{
+    "functions": {
+        "Approver": {
+            "bindings": [
+                {
+                    "authLevel": "function",
+                    "name": "Request",
+                    "type": "httpTrigger",
+                    "direction": "in",
+                    "methods": [
+                        "post"
+                    ]
+                },
+                {
+                    "type": "http",
+                    "direction": "out",
+                    "name": "Response"
+                },
+                {
+                    "name": "starter",
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [],
+            "isSignalledBy": [],
+            "filePath": "Approver/run.ps1",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "Hello": {
+            "bindings": [
+                {
+                    "name": "name",
+                    "type": "activityTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "Orchestrator"
+            ],
+            "isSignalledBy": [],
+            "filePath": "Hello/say-hello.ps1",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "HttpStart": {
+            "bindings": [
+                {
+                    "authLevel": "anonymous",
+                    "name": "Request",
+                    "type": "httpTrigger",
+                    "direction": "in",
+                    "methods": [
+                        "post"
+                    ]
+                },
+                {
+                    "type": "http",
+                    "direction": "out",
+                    "name": "Response"
+                },
+                {
+                    "name": "starter",
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [],
+            "isSignalledBy": [],
+            "filePath": "HttpStart/run.ps1",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "Orchestrator": {
+            "bindings": [
+                {
+                    "name": "Context",
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "HttpStart"
+            ],
+            "isSignalledBy": [
+                {
+                    "name": "Approver",
+                    "signalName": "Approval"
+                }
+            ],
+            "filePath": "Orchestrator/run.ps1",
+            "pos": 0,
+            "lineNr": 1
+        }
+    },
+    "proxies": {}
+}

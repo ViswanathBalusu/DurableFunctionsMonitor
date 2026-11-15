@@ -1,0 +1,6604 @@
+{
+  "Instances": [
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "",
+      "Properties": {
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.1938728Z"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Parent"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Running"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.6072439Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0005519Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "6ecc547cd94e5ed581d71093cedc23de"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8154586Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"grandchild\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0494105Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4204335Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "9f2fe5faf6524aa2b4bbaadf75b4dc6c"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.2833768Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"child of round 1\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4531355Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello child of round 1!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "513d646a4818425ea28386bd315f8f52",
+      "RowKey": "",
+      "Properties": {
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.3258241Z"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "none"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Failed"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.5141178Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "e2edfbf3-beb8-4366-b3a3-b82da7e9871e"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.5259136Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "{\"message\":\"The function 'none' doesn't exist, is disabled, or is not an orchestrator function. Additional info: The following are the known orchestrator functions: 'Parent', 'Looper', 'Child'.\",\"details\":null}"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0884806Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "9f2fe5faf6524aa2b4bbaadf75b4dc6c"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.9620781Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"child of round 2\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1229556Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello child of round 2!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0665776Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "aa5e03b9e75342528fee200231965d22"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6364415Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"generated id\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1251074Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello generated id! / Hello grandchild!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.8165394Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "9f2fe5faf6524aa2b4bbaadf75b4dc6c"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.6467806Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"child of round 3\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.8509915Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello child of round 3!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "791eed7f76dc474185f4c9050f8e21d7",
+      "RowKey": "",
+      "Properties": {
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.6695597Z"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Looper"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Failed"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.9585766Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "72a65959-0c1a-4b99-952b-067c13b71969"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.9598606Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "System.Text.Json.JsonException: The JSON value could not be converted to System.Int32. Path: $ | LineNumber: 0 | BytePositionInLine: 1."
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "",
+      "Properties": {
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":1}"
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1349331Z"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Looper"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4659587Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4670219Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "",
+      "Properties": {
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:26.6454904Z"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Parent"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:38.0388569Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:38.0406097Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello Tokyo!, Hello Seattle!, Hello London!, recovered, Hello generated id! / Hello grandchild!, Hello own id!, approved\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0976537Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "f889a52de89a5604ab26065c08ef1463"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9125819Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"grandchild\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1604030Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1721616Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "0850082987504f0e883fa60a0c3d5288"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7213398Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"generated id\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2347732Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello generated id! / Hello grandchild!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4786031Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "0850082987504f0e883fa60a0c3d5288"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2480603Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"own id\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5479075Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "",
+      "Properties": {
+        "CustomStatus": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        },
+        "LastUpdatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3664068Z"
+        },
+        "TaskHubName": {
+          "Type": "String",
+          "Value": "RealHub"
+        },
+        "ParentInstanceId": {
+          "Type": "String",
+          "Value": "aa5e03b9e75342528fee200231965d22"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "CreatedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1377063Z"
+        },
+        "RuntimeStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"own id\""
+        },
+        "CompletedTime": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4284034Z"
+        },
+        "Output": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        }
+      }
+    }
+  ],
+  "History": [
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.2561918Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Parent"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"0850082987504f0e883fa60a0c3d5288\",\"ExecutionId\":\"69e3d3a2-d6fb-465d-87c0-1999d5f95a0d\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.1938728Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.2582368Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.2582459Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.3970546Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello Tokyo!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.3292492Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.3989650Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.3989728Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000008",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.4941835Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000009",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello Seattle!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.4483299Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000000A",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "2"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.4962571Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000000B",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.4962667Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000000C",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.5863396Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000000D",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "2"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello London!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.5479391Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000000E",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Fail"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "3"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.5883449Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000000F",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.5883558Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000010",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7191215Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000011",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "3"
+        },
+        "Reason": {
+          "Type": "String",
+          "Value": "Function 'Fail' failed with an unhandled exception."
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "{\"ErrorType\":\"System.InvalidOperationException\",\"ErrorMessage\":\"Failed on purpose\",\"StackTrace\":\"   at RealApp.Functions.Fail(String reason) in C:\\\\src\\\\RealApp\\\\Functions.cs:line 98\\r\\n   at RealApp.DirectFunctionExecutor.ExecuteAsync(FunctionContext context) in C:\\\\src\\\\RealApp\\\\obj\\\\Release\\\\net10.0\\\\Microsoft.Azure.Functions.Worker.Sdk.Generators\\\\Microsoft.Azure.Functions.Worker.Sdk.Generators.FunctionExecutorGenerator\\\\GeneratedFunctionExecutor.g.cs:line 62\\r\\n   at Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Execution.DurableFunctionExecutor.RunActivityAsync(FunctionContext context, BindingMetadata triggerBinding) in /_/src/Worker.Extensions.DurableTask/Execution/DurableFunctionExecutor.Activity.cs:line 34\",\"InnerFailure\":null,\"IsNonRetriable\":false,\"Properties\":null}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6524372Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskFailed"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000012",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "InstanceId": {
+          "Type": "String",
+          "Value": "f889a52de89a5604ab26065c08ef1463"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "4"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7213378Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000013",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7213672Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000014",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2457705Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000015",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "4"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello generated id! / Hello grandchild!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1721574Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000016",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "InstanceId": {
+          "Type": "String",
+          "Value": "named-child-of-0850082987504f0e883fa60a0c3d5288"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "5"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2480574Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000017",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2480731Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000018",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5530649Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000019",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "5"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4786002Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000001A",
+      "Properties": {
+        "FireAt": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:30.5530649Z"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "6"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5548859Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TimerCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000001B",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5549393Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000001C",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.6052961Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000001D",
+      "Properties": {
+        "TimerId": {
+          "Type": "Int32",
+          "Value": "6"
+        },
+        "FireAt": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:30.5530649Z"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5548873Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TimerFired"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "000000000000001E",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.6072439Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "69e3d3a2-d6fb-465d-87c0-1999d5f95a0d"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.6072759Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8792233Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Child\",\"OrchestrationInstance\":{\"InstanceId\":\"6ecc547cd94e5ed581d71093cedc23de\",\"ExecutionId\":\"38456ea2e0fa4f7ebaabbd7d0e0aab7a\"},\"TaskScheduleId\":1,\"Version\":\"\"}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"grandchild\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"0e6f9ff725dd5eefb45133904657605f\",\"ExecutionId\":\"a7b2a1aa00434636bd33a1106b9486e2\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8154586Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8815030Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8815131Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9958605Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9379477Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0003701Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0005519Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "0e6f9ff725dd5eefb45133904657605f",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a7b2a1aa00434636bd33a1106b9486e2"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0494146Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.3277098Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Looper\",\"OrchestrationInstance\":{\"InstanceId\":\"9f2fe5faf6524aa2b4bbaadf75b4dc6c\",\"ExecutionId\":\"3bbece2263ff40adb7a4aeba2eecf508\"},\"TaskScheduleId\":1,\"Version\":null}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"child of round 1\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"1e659500293257799e89c7a9f0cf414a\",\"ExecutionId\":\"ee2d07fb7cba44abad7a043d8206ba1f\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.2833768Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.3298946Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.3299051Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4185018Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello child of round 1!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.3721427Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello child of round 1!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4204223Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4204335Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        }
+      }
+    },
+    {
+      "PartitionKey": "1e659500293257799e89c7a9f0cf414a",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "ee2d07fb7cba44abad7a043d8206ba1f"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4531398Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "513d646a4818425ea28386bd315f8f52",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.4989074Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "e2edfbf3-beb8-4366-b3a3-b82da7e9871e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "513d646a4818425ea28386bd315f8f52",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "none"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"513d646a4818425ea28386bd315f8f52\",\"ExecutionId\":\"e2edfbf3-beb8-4366-b3a3-b82da7e9871e\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.3258241Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "e2edfbf3-beb8-4366-b3a3-b82da7e9871e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "513d646a4818425ea28386bd315f8f52",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Failed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "{\"message\":\"The function 'none' doesn't exist, is disabled, or is not an orchestrator function. Additional info: The following are the known orchestrator functions: 'Parent', 'Looper', 'Child'.\",\"details\":null}"
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.5125907Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "e2edfbf3-beb8-4366-b3a3-b82da7e9871e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "513d646a4818425ea28386bd315f8f52",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.5141178Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "e2edfbf3-beb8-4366-b3a3-b82da7e9871e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "513d646a4818425ea28386bd315f8f52",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "e2edfbf3-beb8-4366-b3a3-b82da7e9871e"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:19.5276855Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0038103Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Looper\",\"OrchestrationInstance\":{\"InstanceId\":\"9f2fe5faf6524aa2b4bbaadf75b4dc6c\",\"ExecutionId\":\"2d2d715927b44ae99b2876cbbfabc829\"},\"TaskScheduleId\":1,\"Version\":null}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"child of round 2\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"59546e821ae95ff0bbaefa270c885631\",\"ExecutionId\":\"a2829e900dea4cfc95c359967b70bf6b\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.9620781Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0059788Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0059874Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0865342Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello child of round 2!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0498916Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello child of round 2!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0884716Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.0884806Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "59546e821ae95ff0bbaefa270c885631",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "a2829e900dea4cfc95c359967b70bf6b"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1229593Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6792615Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Parent\",\"OrchestrationInstance\":{\"InstanceId\":\"aa5e03b9e75342528fee200231965d22\",\"ExecutionId\":\"68fd9d12-846b-4ef2-8022-87e489ab6764\"},\"TaskScheduleId\":4,\"Version\":null}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"generated id\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"6ecc547cd94e5ed581d71093cedc23de\",\"ExecutionId\":\"38456ea2e0fa4f7ebaabbd7d0e0aab7a\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6364415Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6859115Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6859224Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8129524Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello generated id!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7468849Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "InstanceId": {
+          "Type": "String",
+          "Value": "0e6f9ff725dd5eefb45133904657605f"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8154561Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8154690Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000008",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0609732Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "0000000000000009",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0004847Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "000000000000000A",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello generated id! / Hello grandchild!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "2"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0665643Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "000000000000000B",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0665776Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        }
+      }
+    },
+    {
+      "PartitionKey": "6ecc547cd94e5ed581d71093cedc23de",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "38456ea2e0fa4f7ebaabbd7d0e0aab7a"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1251129Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.7086934Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Looper\",\"OrchestrationInstance\":{\"InstanceId\":\"9f2fe5faf6524aa2b4bbaadf75b4dc6c\",\"ExecutionId\":\"1057c410-8e0d-4831-8a83-5c42ec5ecd8f\"},\"TaskScheduleId\":1,\"Version\":null}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"child of round 3\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"77226fa0995d5e19a2fe5e1d4bd3be68\",\"ExecutionId\":\"9ef932ae52e74b56b3b2066ecdfba1cf\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.6467806Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.7171187Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.7171746Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.8062342Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello child of round 3!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.7692198Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello child of round 3!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.8152461Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.8165394Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        }
+      }
+    },
+    {
+      "PartitionKey": "77226fa0995d5e19a2fe5e1d4bd3be68",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "9ef932ae52e74b56b3b2066ecdfba1cf"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:45.8509974Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "791eed7f76dc474185f4c9050f8e21d7",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.9119588Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "72a65959-0c1a-4b99-952b-067c13b71969"
+        }
+      }
+    },
+    {
+      "PartitionKey": "791eed7f76dc474185f4c9050f8e21d7",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Looper"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"791eed7f76dc474185f4c9050f8e21d7\",\"ExecutionId\":\"72a65959-0c1a-4b99-952b-067c13b71969\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.6695597Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "72a65959-0c1a-4b99-952b-067c13b71969"
+        }
+      }
+    },
+    {
+      "PartitionKey": "791eed7f76dc474185f4c9050f8e21d7",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Failed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "The JSON value could not be converted to System.Int32. Path: $ | LineNumber: 0 | BytePositionInLine: 1."
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "{\"ErrorType\":\"System.Text.Json.JsonException\",\"ErrorMessage\":\"The JSON value could not be converted to System.Int32. Path: $ | LineNumber: 0 | BytePositionInLine: 1.\",\"StackTrace\":\"   at System.Text.Json.ThrowHelper.ReThrowWithPath(ReadStack& state, Utf8JsonReader& reader, Exception ex)\\r\\n   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)\\r\\n   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.Deserialize(Utf8JsonReader& reader, ReadStack& state)\\r\\n   at System.Text.Json.Serialization.Metadata.JsonTypeInfo`1.DeserializeAsObject(Utf8JsonReader& reader, ReadStack& state)\\r\\n   at System.Text.Json.JsonSerializer.ReadFromSpanAsObject(ReadOnlySpan`1 utf8Json, JsonTypeInfo jsonTypeInfo, Nullable`1 actualByteCount)\\r\\n   at Azure.Core.Serialization.JsonObjectSerializer.Deserialize(Stream stream, Type returnType, CancellationToken cancellationToken)\\r\\n   at Microsoft.Azure.Functions.Worker.Extensions.DurableTask.ObjectConverterShim.Deserialize(String data, Type targetType) in /_/src/Worker.Extensions.DurableTask/ObjectConverterShim.cs:line 32\\r\\n   at Microsoft.DurableTask.Worker.Shims.TaskOrchestrationShim.Execute(OrchestrationContext innerContext, String rawInput)\",\"InnerFailure\":{\"ErrorType\":\"System.InvalidOperationException\",\"ErrorMessage\":\"Cannot get the value of a token type 'StartObject' as a number.\",\"StackTrace\":\"   at System.Text.Json.ThrowHelper.ThrowInvalidOperationException_ExpectedNumber(JsonTokenType tokenType)\\r\\n   at System.Text.Json.Utf8JsonReader.TryGetInt32(Int32& value)\\r\\n   at System.Text.Json.Utf8JsonReader.GetInt32()\\r\\n   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value, Boolean& isPopulatedValue)\\r\\n   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, T& value, JsonSerializerOptions options, ReadStack& state)\",\"InnerFailure\":null,\"IsNonRetriable\":false,\"Properties\":{}},\"IsNonRetriable\":false,\"Properties\":{}}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.9585410Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "72a65959-0c1a-4b99-952b-067c13b71969"
+        }
+      }
+    },
+    {
+      "PartitionKey": "791eed7f76dc474185f4c9050f8e21d7",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.9585766Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "72a65959-0c1a-4b99-952b-067c13b71969"
+        }
+      }
+    },
+    {
+      "PartitionKey": "791eed7f76dc474185f4c9050f8e21d7",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "72a65959-0c1a-4b99-952b-067c13b71969"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.9598688Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1349440Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Looper"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":1}"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"9f2fe5faf6524aa2b4bbaadf75b4dc6c\",\"ExecutionId\":\"3bbece2263ff40adb7a4aeba2eecf508\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1349331Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1349446Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1365269Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.1365340Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.2813107Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello round 1!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.2424454Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "InstanceId": {
+          "Type": "String",
+          "Value": "1e659500293257799e89c7a9f0cf414a"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.2833738Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000008",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.2833893Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "0000000000000009",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4633824Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "000000000000000A",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello child of round 1!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4204292Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "000000000000000B",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "2"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4659471Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "000000000000000C",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4659587Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        }
+      }
+    },
+    {
+      "PartitionKey": "9f2fe5faf6524aa2b4bbaadf75b4dc6c",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "3bbece2263ff40adb7a4aeba2eecf508"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:57:46.4670268Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.3970461Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Parent"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "{\"requestedBy\":\"probe\",\"count\":3}"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Generation": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"aa5e03b9e75342528fee200231965d22\",\"ExecutionId\":\"68fd9d12-846b-4ef2-8022-87e489ab6764\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:26.6454904Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.8444249Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.8449978Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.0505595Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello Tokyo!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:27.9767640Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.0599661Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.0599967Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000008",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.1654085Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000009",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello Seattle!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.1106680Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000000A",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "2"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.1673670Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000000B",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.1673744Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000000C",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.2924417Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000000D",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "2"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello London!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.2168290Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000000E",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Fail"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "3"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.3039227Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000000F",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.3039346Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000010",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6171886Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000011",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "3"
+        },
+        "Reason": {
+          "Type": "String",
+          "Value": "Function 'Fail' failed with an unhandled exception."
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "{\"ErrorType\":\"System.InvalidOperationException\",\"ErrorMessage\":\"Failed on purpose\",\"StackTrace\":\"   at RealApp.Functions.Fail(String reason) in C:\\\\src\\\\RealApp\\\\Functions.cs:line 98\\r\\n   at RealApp.DirectFunctionExecutor.ExecuteAsync(FunctionContext context) in C:\\\\src\\\\RealApp\\\\obj\\\\Release\\\\net10.0\\\\Microsoft.Azure.Functions.Worker.Sdk.Generators\\\\Microsoft.Azure.Functions.Worker.Sdk.Generators.FunctionExecutorGenerator\\\\GeneratedFunctionExecutor.g.cs:line 62\\r\\n   at Microsoft.Azure.Functions.Worker.Extensions.DurableTask.Execution.DurableFunctionExecutor.RunActivityAsync(FunctionContext context, BindingMetadata triggerBinding) in /_/src/Worker.Extensions.DurableTask/Execution/DurableFunctionExecutor.Activity.cs:line 34\",\"InnerFailure\":null,\"IsNonRetriable\":false,\"Properties\":null}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.5710319Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskFailed"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000012",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "InstanceId": {
+          "Type": "String",
+          "Value": "6ecc547cd94e5ed581d71093cedc23de"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "4"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6360406Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000013",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.6374917Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000014",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1350448Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000015",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "4"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello generated id! / Hello grandchild!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0665728Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000016",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "InstanceId": {
+          "Type": "String",
+          "Value": "named-child-of-aa5e03b9e75342528fee200231965d22"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "5"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1377035Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000017",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1377182Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000018",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4395036Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000019",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "5"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3664026Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000001A",
+      "Properties": {
+        "FireAt": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:30.4395036Z"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "6"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4452689Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TimerCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000001B",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4459882Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000001C",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5241274Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000001D",
+      "Properties": {
+        "TimerId": {
+          "Type": "Int32",
+          "Value": "6"
+        },
+        "FireAt": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:30.4395036Z"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4453274Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TimerFired"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000001E",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5303673Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "000000000000001F",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:38.0345424Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000020",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Go"
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "{\"approved\":true}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:37.6434266Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "EventRaised"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000021",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello Tokyo!, Hello Seattle!, Hello London!, recovered, Hello generated id! / Hello grandchild!, Hello own id!, approved\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "7"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:38.0388118Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000022",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:38.0388569Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        }
+      }
+    },
+    {
+      "PartitionKey": "aa5e03b9e75342528fee200231965d22",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "68fd9d12-846b-4ef2-8022-87e489ab6764"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:38.0406168Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9661344Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Child\",\"OrchestrationInstance\":{\"InstanceId\":\"f889a52de89a5604ab26065c08ef1463\",\"ExecutionId\":\"00e73594578c420688e5d8616780553b\"},\"TaskScheduleId\":1,\"Version\":\"\"}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"grandchild\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"c113e6d2a21b54aeaf2057b2a08d7f1d\",\"ExecutionId\":\"7ad6028b4af04df0ab9853c5a24af0d2\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9125819Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9681665Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9681766Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0957647Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0164677Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0976426Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0976537Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        }
+      }
+    },
+    {
+      "PartitionKey": "c113e6d2a21b54aeaf2057b2a08d7f1d",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "7ad6028b4af04df0ab9853c5a24af0d2"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1604071Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7853939Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Parent\",\"OrchestrationInstance\":{\"InstanceId\":\"0850082987504f0e883fa60a0c3d5288\",\"ExecutionId\":\"69e3d3a2-d6fb-465d-87c0-1999d5f95a0d\"},\"TaskScheduleId\":4,\"Version\":null}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"generated id\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"f889a52de89a5604ab26065c08ef1463\",\"ExecutionId\":\"00e73594578c420688e5d8616780553b\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7213398Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7874156Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.7874245Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9105875Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello generated id!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.8493571Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "InstanceId": {
+          "Type": "String",
+          "Value": "c113e6d2a21b54aeaf2057b2a08d7f1d"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9125793Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCreated"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:28.9125943Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000008",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1702996Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "0000000000000009",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello grandchild!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.0976493Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "SubOrchestrationInstanceCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "000000000000000A",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello generated id! / Hello grandchild!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "2"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1721508Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "000000000000000B",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1721616Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        }
+      }
+    },
+    {
+      "PartitionKey": "f889a52de89a5604ab26065c08ef1463",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "00e73594578c420688e5d8616780553b"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2347770Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3209420Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Parent\",\"OrchestrationInstance\":{\"InstanceId\":\"0850082987504f0e883fa60a0c3d5288\",\"ExecutionId\":\"69e3d3a2-d6fb-465d-87c0-1999d5f95a0d\"},\"TaskScheduleId\":5,\"Version\":null}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"own id\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"named-child-of-0850082987504f0e883fa60a0c3d5288\",\"ExecutionId\":\"655d792d69ce4a6db6478701602ba83e\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2480603Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3229170Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3229269Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4768744Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4015285Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4785947Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4786031Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-0850082987504f0e883fa60a0c3d5288",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "655d792d69ce4a6db6478701602ba83e"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.5479109Z"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000000",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2077918Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000001",
+      "Properties": {
+        "ParentInstance": {
+          "Type": "String",
+          "Value": "{\"Name\":\"Parent\",\"OrchestrationInstance\":{\"InstanceId\":\"aa5e03b9e75342528fee200231965d22\",\"ExecutionId\":\"68fd9d12-846b-4ef2-8022-87e489ab6764\"},\"TaskScheduleId\":5,\"Version\":null}"
+        },
+        "Name": {
+          "Type": "String",
+          "Value": "Child"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "Input": {
+          "Type": "String",
+          "Value": "\"own id\""
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "GenerateNewTrace": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "OrchestrationInstance": {
+          "Type": "String",
+          "Value": "{\"InstanceId\":\"named-child-of-aa5e03b9e75342528fee200231965d22\",\"ExecutionId\":\"dd4604b6086e4538b5ec4541b8c502f5\"}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.1377063Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000002",
+      "Properties": {
+        "Name": {
+          "Type": "String",
+          "Value": "SayHello"
+        },
+        "Version": {
+          "Type": "String",
+          "Value": ""
+        },
+        "ParentTraceContext": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "Tags": {
+          "Type": "String",
+          "Value": "{}"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2096754Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskScheduled"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000003",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2096847Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000004",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3641459Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorStarted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000005",
+      "Properties": {
+        "TaskScheduledId": {
+          "Type": "Int32",
+          "Value": "0"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.2808884Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "TaskCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000006",
+      "Properties": {
+        "OrchestrationStatus": {
+          "Type": "String",
+          "Value": "Completed"
+        },
+        "Result": {
+          "Type": "String",
+          "Value": "\"Hello own id!\""
+        },
+        "FailureDetails": {
+          "Type": "String",
+          "Value": "null"
+        },
+        "EventId": {
+          "Type": "Int32",
+          "Value": "1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3663960Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "ExecutionCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "0000000000000007",
+      "Properties": {
+        "EventId": {
+          "Type": "Int32",
+          "Value": "-1"
+        },
+        "IsPlayed": {
+          "Type": "Boolean",
+          "Value": "false"
+        },
+        "_Timestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.3664068Z"
+        },
+        "EventType": {
+          "Type": "String",
+          "Value": "OrchestratorCompleted"
+        },
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        }
+      }
+    },
+    {
+      "PartitionKey": "named-child-of-aa5e03b9e75342528fee200231965d22",
+      "RowKey": "sentinel",
+      "Properties": {
+        "ExecutionId": {
+          "Type": "String",
+          "Value": "dd4604b6086e4538b5ec4541b8c502f5"
+        },
+        "IsCheckpointComplete": {
+          "Type": "Boolean",
+          "Value": "true"
+        },
+        "CheckpointCompletedTimestamp": {
+          "Type": "DateTime",
+          "Value": "2026-11-14T22:56:29.4284066Z"
+        }
+      }
+    }
+  ]
+}

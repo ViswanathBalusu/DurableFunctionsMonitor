@@ -49,6 +49,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 TableClient.CustomUserAgent = $"DurableFunctionsMonitorIsolated-Injected/{Globals.GetVersion()}";
             }
 
+            // The table scans read their degree of parallelism from a static as well, for the same reason:
+            // the routines that scan are plain static methods, handed out as extension points
+            TableScan.Parallelism = Math.Clamp(settings.TableScanParallelism, 1, TableScan.MaxParallelism);
+
             // Placing settings and extension points into DI container
             builder.Services.AddSingleton(settings);
             builder.Services.AddSingleton(extensionPoints);

@@ -474,7 +474,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             {
                 // Projected down to the keys: counting rows must never drag Input/Output/CustomStatus over
                 // the wire. ITableClient adds PartitionKey and RowKey to every projection.
-                var (rows, truncated) = await tableClient.QueryAsync(tableName, null, CountColumns, MaxRowsToCount, ct);
+                // Counting is reading every row there is, up to the cap: TableScan does that for a large table
+                // as several PartitionKey ranges side by side.
+                var (rows, truncated) = await TableScan.QueryAsync(tableClient, tableName, null, CountColumns, MaxRowsToCount, ct);
 
                 return (rows.Count, truncated);
             }

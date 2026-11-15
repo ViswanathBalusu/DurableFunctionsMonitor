@@ -7,11 +7,9 @@ import * as vscode from 'vscode';
 
 import type { Log } from '../logging';
 import { FunctionGraphView } from './FunctionGraphView';
+import { cloneFromGitHub } from './gitClone';
+import { parseFunctionProject } from './projectParser';
 import type { TraversalResult } from './traversal';
-
-import { FunctionProjectParser } from 'az-func-as-a-graph.core/dist/functionProjectParser';
-import { FileSystemWrapper } from 'az-func-as-a-graph.core/dist/fileSystemWrapper';
-import { cloneFromGitHub } from 'az-func-as-a-graph.core/dist/gitUtils';
 
 // Aggregates Function Graph views
 export class FunctionGraphList {
@@ -37,7 +35,7 @@ export class FunctionGraphList {
             projectPath = gitInfo.projectFolder;
         }
 
-        const result = await FunctionProjectParser.parseFunctions(projectPath, new FileSystemWrapper(), this._log);
+        const result = await parseFunctionProject(projectPath, this._log);
 
         // Caching current project's functions
         if (vscode.workspace.workspaceFolders?.some(f => f.uri.fsPath === projectPath)) {

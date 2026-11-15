@@ -98,4 +98,4 @@ The UI asks `/about` once and turns each screen and button on or off from what t
 | `DFM_AGGREGATION_CACHE_SECONDS` | how long `/stats` may serve a previously computed answer for the same query instead of scanning storage again (default 30; 0 disables caching) |
 | `DFM_CUSTOM_TEMPLATES_FOLDER` | load custom tab templates, Function Maps and the custom meta tag from this folder instead of Azure Storage. A folder name (`dfm-templates`) is resolved next to your app; an absolute path is used as is. Same as `settings.CustomTemplatesFolderName` |
 
-`DFM_AUDIT_ENABLED` has no effect on this package: there is no SQL-backed audit store, so `/audit` reports auditing as off either way.
+`DFM_AUDIT_ENABLED` has no effect on this package: there is no SQL-backed audit store, so `/audit` reports auditing as off either way. Neither has `DFM_TABLE_SCAN_PARALLELISM`: it is about scanning Azure Storage tables, and the statistics here are a SQL query.

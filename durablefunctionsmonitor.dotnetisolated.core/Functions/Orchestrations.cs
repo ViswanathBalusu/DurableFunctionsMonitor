@@ -40,8 +40,18 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 hiddenColumns.Remove(filterClause.FieldName);
             }
 
-            var orchestrations = durableClient
-                .ListAllInstances(filterClause.TimeFrom, filterClause.TimeTill, !hiddenColumns.Contains("input"), filterClause.RuntimeStatuses)
+            var query = ExtensionMethodsForOrchestrations.CreateQuery(filterClause.TimeFrom, filterClause.TimeTill, !hiddenColumns.Contains("input"), filterClause.RuntimeStatuses);
+
+            // The storage provider may know a faster way to the same instances than the client's (for Azure
+            // Storage: the XXXInstances table, read as several ranges at once when all of it is wanted). A null
+            // routine, or a null from it for this particular query, leaves the query to the client - and so
+            // does a routine that cannot get at its storage, which is what the default one is for a Task Hub
+            // that is not kept in Azure Storage tables and has not taken the routine out.
+            var instances = this.ExtensionPoints.ListInstancesRoutine?.Invoke(durableClient, Globals.GetFullConnectionStringEnvVariableName(connName), hubName, query, req.Query.ReadsTheListToItsEnd())
+                ?.OrWhenItCannotStart(() => durableClient.GetAllInstancesAsync(query), this._logger, hubName)
+                ?? durableClient.GetAllInstancesAsync(query);
+
+            var orchestrations = instances
                 .ExpandStatus(durableClient, connName, hubName, filterClause, hiddenColumns, this.ExtensionPoints)
                 .ListDurableEntities(durableClient, filterClause.TimeFrom, filterClause.TimeTill, filterClause.RuntimeStatuses, hiddenColumns, this._logger)
                 .ApplyRuntimeStatusesFilter(filterClause.RuntimeStatuses)
@@ -122,6 +132,73 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             return orchestrations.OrderBy(orderByParts[0], desc);
         }
 
+        /// <summary>
+        /// Whether a request is going to read every instance of its query, however few it returns.
+        ///
+        /// Sorting does that: the list is held whole before its first row can be returned. So does a request
+        /// without $top, which returns all of it. Anything else - a page of the list in the order it comes in -
+        /// is read lazily and stops at the last row of that page, so whoever lists the instances for it should
+        /// not read further ahead than it is asked to.
+        /// </summary>
+        internal static bool ReadsTheListToItsEnd(this NameValueCollection query)
+        {
+            return !string.IsNullOrEmpty(query["$orderby"]) || string.IsNullOrEmpty(query["$top"]);
+        }
+
+        /// <summary>
+        /// The instances a storage provider's routine lists - or, when the routine fails before it has
+        /// returned the first of them, the instances of <paramref name="fallback"/> instead.
+        ///
+        /// A routine reads its storage when its list is enumerated, so that is where it finds out that it
+        /// cannot: there is no XXXInstances table (a Task Hub of another storage provider, whose setup did not
+        /// set ListInstancesRoutine to null), no connection to read it with, no permission. The list worked
+        /// through the client before there was a routine, and it goes on working that way, with a warning that
+        /// says why. Once an instance has been returned there is no going back - the other list would return it
+        /// again - and a failure from there on is the failure of the request.
+        /// </summary>
+        internal static async IAsyncEnumerable<OrchestrationMetadata> OrWhenItCannotStart(this IAsyncEnumerable<OrchestrationMetadata> instances,
+            Func<IAsyncEnumerable<OrchestrationMetadata>> fallback, ILogger log, string hubName)
+        {
+            bool couldNotStart = false;
+
+            var enumerator = instances.GetAsyncEnumerator();
+            try
+            {
+                bool more;
+                try
+                {
+                    more = await enumerator.MoveNextAsync();
+                }
+                catch (Exception ex)
+                {
+                    log.LogWarning(ex, $"The instances of {hubName} could not be listed straight from its storage, so they are listed through the DurableTaskClient instead. " +
+                        $"If this Task Hub is not kept in Azure Storage tables, set {nameof(DfmExtensionPoints)}.{nameof(DfmExtensionPoints.ListInstancesRoutine)} to null.");
+
+                    more = false;
+                    couldNotStart = true;
+                }
+
+                while (more)
+                {
+                    yield return enumerator.Current;
+
+                    more = await enumerator.MoveNextAsync();
+                }
+            }
+            finally
+            {
+                await enumerator.DisposeAsync();
+            }
+
+            if (couldNotStart)
+            {
+                await foreach (var instance in fallback())
+                {
+                    yield return instance;
+                }
+            }
+        }
+
         // OrderBy that takes property name as a string (instead of an expression)
         internal static IEnumerable<T> OrderBy<T>(this IEnumerable<T> sequence, string fieldName, bool desc)
         {
@@ -180,10 +257,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             });
         }
 
-        // Fetches orchestration instances
-        internal static IAsyncEnumerable<OrchestrationMetadata> ListAllInstances(this DurableTaskClient durableClient, DateTime? timeFrom, DateTime? timeTill, bool showInput, string[] statuses)
+        // The query for the orchestration instances of a time range and a set of statuses
+        internal static OrchestrationQuery CreateQuery(DateTime? timeFrom, DateTime? timeTill, bool showInput, string[] statuses)
         {
-            var queryCondition = new OrchestrationQuery()
+            return new OrchestrationQuery()
             {
                 PageSize = ListInstancesPageSize,
                 FetchInputsAndOutputs = showInput,
@@ -191,8 +268,6 @@ namespace DurableFunctionsMonitor.DotNetIsolated
                 CreatedTo = timeTill.HasValue ? timeTill.Value : null,
                 Statuses = statuses?.ToRuntimeStatuses().ToList()
             };
-
-            return durableClient.GetAllInstancesAsync(queryCondition);
         }
 
         // Fetches and adds Durable Entities to the dataset (needs to be done separately, since there's now a separate method for fetching them)

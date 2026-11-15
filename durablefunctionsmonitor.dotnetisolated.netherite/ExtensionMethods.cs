@@ -34,6 +34,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated.Netherite
                 // looks for, so Task Hub names have to be read from its own partitions table instead.
                 extPoints.GetTaskHubNamesRoutine = GetTaskHubNames;
 
+                // For the same reason there is no XXXInstances table for the Instances screen to be read from:
+                // the instances are listed through the DurableTaskClient, as they always were.
+                extPoints.ListInstancesRoutine = null;
+
                 // Netherite keeps history in FASTER storage, which cannot be edited from outside, so the
                 // update-input-and-rewind and replay endpoints answer 400 for this provider.
                 extPoints.GetHistoryEventInputRoutine = null;

@@ -256,7 +256,7 @@ All relative to the hub. Existing endpoints keep their shapes (see `src/lib/api/
 | `/orchestrations('{id}')/update-input-and-rewind` | POST | write + `storageSupports.updateInput` | `UpdateInputAndRewindRequest` → `UpdateInputAndRewindResult`; 500 body `UpdateInputRecovery` |
 | `/orchestrations('{id}')/replay` | POST | dangerous + `truncateHistory` | `ReplayRequest` → `ReplayResult`; 500 body `ReplayRecovery` |
 | `/orchestrations('{id}')/restart-in-place` | POST | dangerous | `RestartInPlaceRequest` → `RestartInPlaceResult`; 500 body `RestartInPlaceRecovery` |
-| `/id-suggestions(prefix='{prefix}')` | GET | always | `string[]` |
+| `/id-suggestions(prefix='{prefix}')` | GET | always | `string[]` (the first 50 ids that start with the prefix, in id order; the field shows six) |
 | `/function-map` | GET | `IsFunctionGraphAvailable` | `{ functions: FunctionsMap; proxies: ProxiesMap }` |
 | `/purge-history` | POST | `capabilities.purgeHistory` | `{ timeFrom, timeTill, statuses: RuntimeStatus[], entityType: 'Orchestration' \| 'DurableEntity' }` → `{ instancesDeleted }` |
 | `/clean-entity-storage` | POST | `capabilities.cleanEntityStorage` | `{ removeEmptyEntities, releaseOrphanedLocks }` → `{ numberOfEmptyEntitiesRemoved, numberOfOrphanedLocksRemoved }` |

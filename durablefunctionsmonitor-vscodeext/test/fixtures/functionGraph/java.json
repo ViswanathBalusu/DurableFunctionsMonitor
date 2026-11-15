@@ -1,0 +1,53 @@
+{
+    "functions": {
+        "HttpStart": {
+            "filePath": "src/main/java/com/example/Functions.java",
+            "pos": 156,
+            "lineNr": 8,
+            "bindings": [
+                {
+                    "type": "httpTrigger",
+                    "methods": [],
+                    "authLevel": "anonymous"
+                },
+                {
+                    "type": "http",
+                    "direction": "out"
+                },
+                {
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ]
+        },
+        "Cities": {
+            "filePath": "src/main/java/com/example/Functions.java",
+            "pos": 770,
+            "lineNr": 20,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "HttpStart"
+            ]
+        },
+        "Capitalize": {
+            "filePath": "src/main/java/com/example/Functions.java",
+            "pos": 1042,
+            "lineNr": 29,
+            "bindings": [
+                {
+                    "type": "activityTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "Cities"
+            ]
+        }
+    },
+    "proxies": {}
+}

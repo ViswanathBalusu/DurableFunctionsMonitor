@@ -115,6 +115,16 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         public int StatsScanCap { get; set; }
 
         /// <summary>
+        /// How many PartitionKey ranges of a table are read at once, when a scan of the whole XXXInstances or
+        /// XXXHistory table (/stats, /failures, the row counts of /storage) does not fit into one request.
+        /// A Task Hub with millions of instances is then scanned several times faster, at the price of that
+        /// many requests to the storage account at a time instead of one. 1 reads a table the old way, one
+        /// request after another. Defaults to 4; the most is 16.
+        /// Can also be set by setting DFM_TABLE_SCAN_PARALLELISM to a number.
+        /// </summary>
+        public int TableScanParallelism { get; set; }
+
+        /// <summary>
         /// Custom prefix for 'User-Agent' header for requests to Azure Storage.
         /// When specified, the final 'User-Agent' header will look like this: 
         /// "CustomUserAgentPrefix/{DfMon's Version}"
@@ -142,6 +152,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string dfmAuditEnabled = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_AUDIT_ENABLED);
             string dfmAggregationCacheSeconds = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_AGGREGATION_CACHE_SECONDS);
             string dfmStatsCap = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_STATS_CAP);
+            string dfmTableScanParallelism = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_TABLE_SCAN_PARALLELISM);
             string dfmCustomTemplatesFolder = Environment.GetEnvironmentVariable(EnvVariableNames.DFM_CUSTOM_TEMPLATES_FOLDER);
 
             // NOTE: an unset setting and a setting explicitly set to an empty string both mean
@@ -179,6 +190,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // range all mean "use the documented default" rather than failing startup.
             this.AggregationCacheSeconds = ParseIntOrDefault(dfmAggregationCacheSeconds, DefaultAggregationCacheSeconds, 0, MaxAggregationCacheSeconds);
             this.StatsScanCap = ParseIntOrDefault(dfmStatsCap, DefaultStatsScanCap, 1, int.MaxValue);
+            this.TableScanParallelism = ParseIntOrDefault(dfmTableScanParallelism, TableScan.DefaultParallelism, 1, TableScan.MaxParallelism);
 
             // Unset, empty or whitespace all mean "no local folder configured", which is how the rest of
             // DfMon spells "load custom templates from Storage instead".

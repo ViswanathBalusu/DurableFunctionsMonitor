@@ -36,7 +36,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
             // The history table also holds the rows of the generations that ran before this one, so the
             // current ExecutionId (which only the instance row knows) is what tells them apart.
-            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty);
+            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty, ExecutionIdColumns);
             if (instanceEntity == null)
             {
                 // No such instance (or it was purged). Nothing to correlate against, so no episodes.
@@ -126,7 +126,9 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string filter = Azure.Data.Tables.TableClient.CreateQueryFilter(
                 $"CreatedTime ge {query.From} and CreatedTime le {query.To}");
 
-            var (rows, truncated) = await tableClient.QueryAsync($"{hubName}Instances", filter, StatsColumns, cap, ct);
+            // CreatedTime is not a key, so this looks at every row of the table: TableScan reads a large one
+            // as several PartitionKey ranges side by side
+            var (rows, truncated) = await TableScan.QueryAsync(tableClient, $"{hubName}Instances", filter, StatsColumns, cap, ct);
 
             var instanceRows = rows.Select(row => new InstanceRowLite
             {
@@ -170,7 +172,8 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             string filter = Azure.Data.Tables.TableClient.CreateQueryFilter(
                 $"RuntimeStatus eq {FailedRuntimeStatus} and CreatedTime ge {query.From} and CreatedTime le {query.To}");
 
-            var (rows, truncated) = await tableClient.QueryAsync($"{hubName}Instances", filter, FailureColumns, cap, ct);
+            // Neither RuntimeStatus nor CreatedTime is a key: a scan of the whole table, as for /stats
+            var (rows, truncated) = await TableScan.QueryAsync(tableClient, $"{hubName}Instances", filter, FailureColumns, cap, ct);
 
             var failedRows = new List<FailedInstanceRow>();
             int downloadsLeft = MaxFailureOutputDownloads;
@@ -263,7 +266,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             var tableClient = TableClient.GetTableClient(connName);
 
             // Only the instance row knows the current ExecutionId, and the child ids are built from it
-            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty);
+            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty, ExecutionIdColumns);
 
             string executionId = instanceEntity?.GetString(ExecutionIdColumn);
             if (string.IsNullOrEmpty(executionId))
@@ -312,7 +315,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         {
             var tableClient = TableClient.GetTableClient(connName);
 
-            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty);
+            var instanceEntity = await tableClient.GetEntityAsync($"{hubName}Instances", instanceId, string.Empty, RowInfoColumns);
             if (instanceEntity == null)
             {
                 return null;
@@ -418,6 +421,13 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         // PartitionKey and RowKey come back regardless - ITableClient adds them to every projection
         private static readonly string[] MarkerColumns = new[] { EventTypeColumn, TimestampColumn };
+
+        // What is read of an XXXInstances row when all that is wanted from it is which execution is the
+        // current one. The row also holds the instance's input, output and custom status, up to tens of
+        // kilobytes each, and none of that is pulled over the wire to learn an id.
+        private static readonly string[] ExecutionIdColumns = new[] { ExecutionIdColumn };
+
+        private static readonly string[] RowInfoColumns = new[] { ExecutionIdColumn, GenerationColumn };
 
         // Everything StatsAggregator needs and nothing else: Input, Output and CustomStatus are the big
         // columns of an Instances row and are never pulled over the wire for statistics.

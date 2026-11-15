@@ -1,0 +1,175 @@
+{
+    "functions": {
+        "ValidateOrder": {
+            "filePath": "Functions/Activities.cs",
+            "pos": 97,
+            "lineNr": 7,
+            "bindings": [
+                {
+                    "type": "activityTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "ProcessOrder",
+                "ShipOrder"
+            ]
+        },
+        "ChargeCard": {
+            "filePath": "Functions/Activities.cs",
+            "pos": 241,
+            "lineNr": 13,
+            "bindings": [
+                {
+                    "type": "activityTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "ProcessOrder"
+            ]
+        },
+        "Counter": {
+            "filePath": "Functions/Activities.cs",
+            "pos": 407,
+            "lineNr": 19,
+            "bindings": [
+                {
+                    "type": "entityTrigger",
+                    "direction": "in"
+                }
+            ]
+        },
+        "ProcessOrder": {
+            "filePath": "Functions/Orchestrators.cs",
+            "pos": 129,
+            "lineNr": 8,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "HttpStart"
+            ],
+            "isSignalledBy": [
+                {
+                    "name": "Approve",
+                    "signalName": "Approval"
+                }
+            ]
+        },
+        "ShipOrder": {
+            "filePath": "Functions/Orchestrators.cs",
+            "pos": 625,
+            "lineNr": 21,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "ProcessOrder"
+            ]
+        },
+        "Cleanup": {
+            "filePath": "Functions/Orchestrators.cs",
+            "pos": 848,
+            "lineNr": 27,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "TimerStart"
+            ],
+            "isCalledByItself": true
+        },
+        "HttpStart": {
+            "filePath": "Functions/Starters.cs",
+            "pos": 169,
+            "lineNr": 9,
+            "bindings": [
+                {
+                    "type": "httpTrigger",
+                    "methods": [
+                        "get",
+                        "post"
+                    ],
+                    "route": "orders/{id}",
+                    "authLevel": "anonymous"
+                },
+                {
+                    "type": "http",
+                    "direction": "out"
+                },
+                {
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ]
+        },
+        "TimerStart": {
+            "filePath": "Functions/Starters.cs",
+            "pos": 582,
+            "lineNr": 19,
+            "bindings": [
+                {
+                    "type": "timerTrigger",
+                    "schedule": "0"
+                },
+                {
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ]
+        },
+        "Approve": {
+            "filePath": "Functions/Starters.cs",
+            "pos": 825,
+            "lineNr": 25,
+            "bindings": [
+                {
+                    "type": "httpTrigger",
+                    "methods": [
+                        "post"
+                    ]
+                },
+                {
+                    "type": "http",
+                    "direction": "out"
+                },
+                {
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ]
+        },
+        "QueueToMany": {
+            "filePath": "Functions/Starters.cs",
+            "pos": 1250,
+            "lineNr": 36,
+            "bindings": [
+                {
+                    "type": "queueTrigger",
+                    "queueName": "incoming-orders"
+                },
+                {
+                    "type": "queue",
+                    "direction": "out",
+                    "queueName": "processed-orders"
+                },
+                {
+                    "type": "blob",
+                    "direction": "out",
+                    "path": "archive/{rand-guid}.json"
+                }
+            ]
+        }
+    },
+    "proxies": {}
+}

@@ -67,6 +67,10 @@ namespace DurableFunctionsMonitor.DotNetIsolated.MsSql
                 extPoints.GetParentInstanceIdRoutine = GetParentInstanceId;
                 extPoints.GetTaskHubNamesRoutine = GetTaskHubNames;
 
+                // The default reads the XXXInstances table of Azure Storage, which does not exist here: the
+                // instances are listed through the DurableTaskClient, as they always were.
+                extPoints.ListInstancesRoutine = null;
+
                 // The history query above returns complete payloads, and the defaults for the two editing routines
                 // work on Azure Storage tables. Editing dt.History/dt.Payloads is not implemented yet, so the
                 // update-input-and-rewind and replay endpoints answer 400 for this provider.

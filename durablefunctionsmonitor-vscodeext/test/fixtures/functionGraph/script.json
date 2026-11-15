@@ -1,0 +1,142 @@
+{
+    "functions": {
+        "Counter": {
+            "bindings": [
+                {
+                    "name": "context",
+                    "type": "entityTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "Signaler"
+            ],
+            "isSignalledBy": [],
+            "filePath": "Counter/index.js",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "Hello": {
+            "bindings": [
+                {
+                    "name": "name",
+                    "type": "activityTrigger",
+                    "direction": "in"
+                },
+                {
+                    "name": "outputQueue",
+                    "type": "queue",
+                    "direction": "out",
+                    "queueName": "greetings",
+                    "connection": "AzureWebJobsStorage"
+                }
+            ],
+            "isCalledBy": [
+                "Orchestrator",
+                "SubOrchestrator"
+            ],
+            "isSignalledBy": [],
+            "filePath": "Hello/index.js",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "HttpStart": {
+            "bindings": [
+                {
+                    "authLevel": "anonymous",
+                    "name": "req",
+                    "type": "httpTrigger",
+                    "direction": "in",
+                    "route": "start/{functionName}",
+                    "methods": [
+                        "post"
+                    ]
+                },
+                {
+                    "name": "$return",
+                    "type": "http",
+                    "direction": "out"
+                },
+                {
+                    "name": "starter",
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [],
+            "isSignalledBy": [],
+            "filePath": "HttpStart/index.js",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "Orchestrator": {
+            "bindings": [
+                {
+                    "name": "context",
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "HttpStart"
+            ],
+            "isSignalledBy": [
+                {
+                    "name": "Signaler",
+                    "signalName": "Approval"
+                }
+            ],
+            "isCalledByItself": true,
+            "filePath": "Orchestrator/index.js",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "Signaler": {
+            "bindings": [
+                {
+                    "name": "myTimer",
+                    "type": "timerTrigger",
+                    "direction": "in",
+                    "schedule": "0 */5 * * * *"
+                },
+                {
+                    "name": "starter",
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [],
+            "isSignalledBy": [],
+            "filePath": "Signaler/index.js",
+            "pos": 0,
+            "lineNr": 1
+        },
+        "SubOrchestrator": {
+            "bindings": [
+                {
+                    "name": "context",
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "Orchestrator"
+            ],
+            "isSignalledBy": [],
+            "filePath": "SubOrchestrator/index.ts",
+            "pos": 0,
+            "lineNr": 1
+        }
+    },
+    "proxies": {
+        "Health": {
+            "matchCondition": {
+                "route": "/health"
+            },
+            "backendUri": "https://example.org/health",
+            "filePath": "proxies.json",
+            "pos": 27,
+            "lineNr": 3
+        }
+    }
+}

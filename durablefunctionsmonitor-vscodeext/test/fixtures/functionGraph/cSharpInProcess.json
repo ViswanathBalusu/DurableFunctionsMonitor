@@ -1,0 +1,149 @@
+{
+    "functions": {
+        "Starter": {
+            "filePath": "Functions.cs",
+            "pos": 154,
+            "lineNr": 8,
+            "bindings": [
+                {
+                    "type": "serviceBusTrigger",
+                    "queueName": "incoming"
+                },
+                {
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ]
+        },
+        "MainOrchestrator": {
+            "filePath": "Functions.cs",
+            "pos": 479,
+            "lineNr": 16,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "Starter"
+            ],
+            "isSignalledBy": [
+                {
+                    "name": "EventsIn",
+                    "signalName": "Go"
+                }
+            ]
+        },
+        "Notify": {
+            "filePath": "Functions.cs",
+            "pos": 1012,
+            "lineNr": 27,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "MainOrchestrator"
+            ]
+        },
+        "Transform": {
+            "filePath": "Functions.cs",
+            "pos": 1230,
+            "lineNr": 33,
+            "bindings": [
+                {
+                    "type": "queue",
+                    "direction": "out",
+                    "queueName": "transformed"
+                },
+                {
+                    "type": "activityTrigger",
+                    "direction": "in"
+                },
+                {
+                    "type": "blob",
+                    "direction": "in",
+                    "path": "templates/default.txt"
+                },
+                {
+                    "type": "table",
+                    "direction": "in",
+                    "tableName": "Lookups"
+                }
+            ],
+            "isCalledBy": [
+                "MainOrchestrator",
+                "Notify"
+            ]
+        },
+        "EventsIn": {
+            "filePath": "Functions.cs",
+            "pos": 1548,
+            "lineNr": 43,
+            "bindings": [
+                {
+                    "type": "eventHubTrigger",
+                    "eventHubName": "telemetry"
+                },
+                {
+                    "type": "cosmosDB",
+                    "direction": "out",
+                    "databaseName": "telemetry-db",
+                    "collectionName": "readings"
+                },
+                {
+                    "type": "signalR",
+                    "direction": "out",
+                    "hubName": "dashboard"
+                },
+                {
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ]
+        },
+        "Digest": {
+            "filePath": "Functions.cs",
+            "pos": 2073,
+            "lineNr": 53,
+            "bindings": [
+                {
+                    "type": "timerTrigger",
+                    "schedule": "0"
+                },
+                {
+                    "type": "sendGrid",
+                    "direction": "out"
+                }
+            ]
+        }
+    },
+    "proxies": {
+        "ToBackend": {
+            "matchCondition": {
+                "methods": [
+                    "GET"
+                ],
+                "route": "/api/legacy/{*rest}"
+            },
+            "backendUri": "https://example.org/{rest}",
+            "filePath": "proxies.json",
+            "warningNotAddedToCsProjFile": true,
+            "pos": 81,
+            "lineNr": 4
+        },
+        "Docs": {
+            "matchCondition": {
+                "route": "/docs"
+            },
+            "backendUri": "https://example.org/docs",
+            "filePath": "proxies.json",
+            "warningNotAddedToCsProjFile": true,
+            "pos": 302,
+            "lineNr": 11
+        }
+    }
+}

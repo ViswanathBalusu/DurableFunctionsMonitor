@@ -96,9 +96,17 @@ This package is the reference implementation, backing a plain Azure Storage Task
 | `DFM_CLIENT_CONFIG` | a JSON object with the UI's defaults, injected into `index.html` - for example `{"dfmTheme":"glass","theme":"dark","showTimeAs":"Local"}`. `dfmTheme` is one of `iris` (the default), `jade`, `ember`, `mono`, `poster`, `riso`, `memphis`, `blueprint`, `hazard`, `glass`, `neu`; the other keys are listed in [docs/ui.md](../docs/ui.md) |
 | `DFM_STATS_CAP` | how many instance rows `/stats` and `/failures` scan before answering `partial: true` instead of scanning further (default 50000) |
 | `DFM_AGGREGATION_CACHE_SECONDS` | how long `/stats`, `/failures` and `/storage` may serve a previously computed answer for the same query instead of scanning storage again (default 30; 0 disables caching) |
+| `DFM_TABLE_SCAN_PARALLELISM` | how many PartitionKey ranges of the Instances or History table are read at once when the list of the Instances screen, `/stats`, `/failures` or the row counts of `/storage` have to scan a table that does not fit into one request (default 4, at most 16; 1 scans one request after another). A large Task Hub is scanned that much faster, with that many requests to the storage account at a time. Same as `settings.TableScanParallelism` |
 | `DFM_CUSTOM_TEMPLATES_FOLDER` | load custom tab templates, Function Maps and the custom meta tag from this folder instead of Azure Storage. A folder name (`dfm-templates`) is resolved next to your app; an absolute path is used as is. Same as `settings.CustomTemplatesFolderName` |
 
-This package implements every capability, so all seven apply.
+This package implements every capability, so all of them apply.
+
+Two flags in the host's own `AzureWebJobsFeatureFlags` list switch a storage shortcut off, should one ever get in the way (Azure Storage only):
+
+| Flag | Effect |
+|---|---|
+| `DfMonDisableInstancesTableScan` | the Instances screen lists its instances through the Durable Task client again, instead of reading the `{hub}Instances` table itself (as PartitionKey ranges side by side, and without the inputs and outputs it does not show). The list is the same either way; through the client it is slower on a large Task Hub. Other storage providers always list through the client, or through their own `extensionPoints.ListInstancesRoutine` |
+| `DfMonDisableNewParentIdResolutionAlgorithm` | the parent of an instance whose own row and history do not name one is not searched for in the `{hub}History` table |
 
 ## Editing an instance's inputs
 

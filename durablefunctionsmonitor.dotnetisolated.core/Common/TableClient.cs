@@ -28,8 +28,24 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         // maxRows + 1 rows, and reports truncated == true when the table held more matching rows.
         Task<(IReadOnlyList<TableEntity> rows, bool truncated)> QueryAsync(string tableName, string filter, IEnumerable<string> select, int maxRows, CancellationToken ct);
 
+        // Asynchronously retrieves one page of the entities matching an OData filter (null == no filter), with only
+        // the listed properties plus PartitionKey and RowKey (null == all of them). One call is one request to the
+        // Table service: at most maxPerPage rows (and never more than 1000) come back, together with the token the
+        // next page is asked for with (null as a token == from the beginning).
+        // A page may come back short, or even empty, and still not be the last one: the service answers after five
+        // seconds of scanning, and at the boundaries of the ranges it keeps a table in. Only a page without a
+        // continuation token is the last one.
+        // This is what everything that must not read more than it needs is built on (the history of an instance a
+        // page at a time, a whole-table scan cut into PartitionKey ranges).
+        Task<TablePage> QueryPageAsync(string tableName, string filter, IEnumerable<string> select, int maxPerPage, string continuationToken, CancellationToken ct);
+
         // Retrieves a single entity, or null if it does not exist
         Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey);
+
+        // Retrieves a single entity with only the listed properties (plus PartitionKey and RowKey), or null if it
+        // does not exist. An XXXInstances row carries the instance's input, output and custom status, tens of
+        // kilobytes each when they are large, and most of what reads that row is after its ExecutionId.
+        Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey, IEnumerable<string> select);
 
         // Replaces an entity. Fails if the entity was modified after it was read.
         Task ReplaceEntityAsync(string tableName, TableEntity entity);
@@ -39,6 +55,24 @@ namespace DurableFunctionsMonitor.DotNetIsolated
 
         // Deletes entities, all of which must share one partition key, in transaction batches
         Task DeleteEntitiesAsync(string tableName, IEnumerable<TableEntity> entities);
+    }
+
+    /// <summary>
+    /// One page of a table query: what a single request to the Table service returned.
+    /// </summary>
+    public sealed class TablePage
+    {
+        public TablePage(IReadOnlyList<TableEntity> rows, string continuationToken)
+        {
+            this.Rows = rows ?? Array.Empty<TableEntity>();
+            this.ContinuationToken = string.IsNullOrEmpty(continuationToken) ? null : continuationToken;
+        }
+
+        /// <summary>The rows of this page, in the order of their keys. May be empty even when more pages follow.</summary>
+        public IReadOnlyList<TableEntity> Rows { get; }
+
+        /// <summary>What to ask for the next page with. Null when this was the last page.</summary>
+        public string ContinuationToken { get; }
     }
 
     // TableServiceClient wrapper. Seems to be the only way to unit-test.
@@ -146,9 +180,7 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // cap is small keeps a tiny query from dragging a full page over the wire.
             int maxPerPage = Math.Min(MaxPageSize, limit);
 
-            // A projected query returns nothing but the listed properties - the keys included. Every
-            // aggregation identifies its rows by the PartitionKey (the instance id), so add them.
-            var selectedProperties = select == null ? null : new List<string>(select).Union(KeyProperties).ToList();
+            var selectedProperties = WithKeyProperties(select);
 
             var result = new List<TableEntity>(Math.Min(limit, MaxPageSize));
             bool truncated = false;
@@ -171,11 +203,39 @@ namespace DurableFunctionsMonitor.DotNetIsolated
         }
 
         /// <inheritdoc/>
-        public async Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey)
+        public async Task<TablePage> QueryPageAsync(string tableName, string filter, IEnumerable<string> select, int maxPerPage, string continuationToken, CancellationToken ct)
+        {
+            if (maxPerPage < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxPerPage), maxPerPage, "maxPerPage should be a positive number");
+            }
+
+            int pageSize = Math.Min(MaxPageSize, maxPerPage);
+
+            var pages = this._client.GetTableClient(tableName)
+                .QueryAsync<TableEntity>(filter, pageSize, WithKeyProperties(select), ct)
+                .AsPages(string.IsNullOrEmpty(continuationToken) ? null : continuationToken, pageSize);
+
+            // The first page of the enumeration is one request. Leaving the loop there is what keeps
+            // the pageable from asking for the next one.
+            await foreach (var page in pages)
+            {
+                return new TablePage(page.Values, page.ContinuationToken);
+            }
+
+            return new TablePage(Array.Empty<TableEntity>(), null);
+        }
+
+        /// <inheritdoc/>
+        public Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey)
+            => this.GetEntityAsync(tableName, partitionKey, rowKey, null);
+
+        /// <inheritdoc/>
+        public async Task<TableEntity> GetEntityAsync(string tableName, string partitionKey, string rowKey, IEnumerable<string> select)
         {
             // GetEntityIfExistsAsync (rather than GetEntityAsync) so that a missing entity comes
             // back as null instead of throwing, which is what the legacy TableOperation.Retrieve did.
-            var response = await this._client.GetTableClient(tableName).GetEntityIfExistsAsync<TableEntity>(partitionKey, rowKey);
+            var response = await this._client.GetTableClient(tableName).GetEntityIfExistsAsync<TableEntity>(partitionKey, rowKey, WithKeyProperties(select));
 
             return response.HasValue ? response.Value : null;
         }
@@ -230,10 +290,17 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             }
         }
 
+        // A projected query returns nothing but the listed properties - the keys included. Everything
+        // here identifies its rows by their keys (the PartitionKey is the instance id), so add them.
+        private static List<string> WithKeyProperties(IEnumerable<string> select)
+        {
+            return select == null ? null : new List<string>(select).Union(KeyProperties).ToList();
+        }
+
         private const int MaxTransactionSize = 100;
 
         // Table Storage never returns more than this many entities in one page
-        private const int MaxPageSize = 1000;
+        internal const int MaxPageSize = 1000;
 
         private static readonly string[] KeyProperties = new[] { "PartitionKey", "RowKey" };
 

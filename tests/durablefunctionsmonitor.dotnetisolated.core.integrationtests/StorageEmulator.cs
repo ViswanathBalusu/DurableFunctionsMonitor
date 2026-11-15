@@ -71,6 +71,12 @@ namespace durablefunctionsmonitor.dotnetisolated.core.integrationtests
                 $"or point {ConnectionStringVariableName} at an account of your own.");
         }
 
+        /// <summary>
+        /// Whether something is listening. For the setup that runs once per class, which must not throw:
+        /// each test of the class still calls <see cref="SkipIfUnavailable"/> and reports for itself.
+        /// </summary>
+        public static bool IsAvailable => IsReachable.Value;
+
         private static readonly Lazy<bool> IsReachable = new Lazy<bool>(() =>
         {
             var endpoints = Endpoints;

@@ -10,20 +10,24 @@
 // Differences from the React script this is ported from: the whole DfmStatics folder is wiped
 // first (not just static/), the whole build/ folder is copied in one go, there is no
 // service-worker.js to copy, and the .map files are copied along with everything else.
+//
+// Node does both steps itself (fs.rm and fs.cp, stable since Node 22, which is what "engines" asks
+// for), so this needs no package: it used to take rimraf and ncp to do the same.
 
+import { cp, rm, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { promisify } from 'node:util';
-import ncp from 'ncp';
-import { rimraf } from 'rimraf';
 
 const buildFolder = fileURLToPath(new URL('./build', import.meta.url));
 const outputFolder = fileURLToPath(new URL('../durablefunctionsmonitor.dotnetisolated/DfmStatics', import.meta.url));
 
-const copy = promisify(ncp);
-
 try {
-  await rimraf(outputFolder);
-  await copy(buildFolder, outputFolder);
+  // Fails here, with the old statics still in place, when there is no build to copy
+  if (!(await stat(buildFolder)).isDirectory()) {
+    throw new Error(`${buildFolder} is not a folder`);
+  }
+
+  await rm(outputFolder, { recursive: true, force: true });
+  await cp(buildFolder, outputFolder, { recursive: true });
 } catch (err) {
   console.error(`Failed to copy ${buildFolder} to ${outputFolder}`);
   console.error(err);

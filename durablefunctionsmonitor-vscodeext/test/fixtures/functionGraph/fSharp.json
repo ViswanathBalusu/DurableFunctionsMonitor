@@ -1,0 +1,55 @@
+{
+    "functions": {
+        "HttpStart": {
+            "filePath": "Functions.fs",
+            "pos": 102,
+            "lineNr": 6,
+            "bindings": [
+                {
+                    "type": "httpTrigger",
+                    "methods": [
+                        "post"
+                    ],
+                    "authLevel": "anonymous"
+                },
+                {
+                    "type": "http",
+                    "direction": "out"
+                },
+                {
+                    "type": "durableClient",
+                    "direction": "in"
+                }
+            ]
+        },
+        "Orchestrator": {
+            "filePath": "Functions.fs",
+            "pos": 438,
+            "lineNr": 13,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "HttpStart"
+            ]
+        },
+        "SayHello": {
+            "filePath": "Functions.fs",
+            "pos": 676,
+            "lineNr": 20,
+            "bindings": [
+                {
+                    "type": "activityTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "Orchestrator"
+            ]
+        }
+    },
+    "proxies": {}
+}

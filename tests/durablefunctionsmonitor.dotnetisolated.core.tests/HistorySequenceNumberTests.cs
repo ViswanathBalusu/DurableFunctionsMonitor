@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Azure.Data.Tables;
 using DurableFunctionsMonitor.DotNetIsolated;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace durablefunctionsmonitor.dotnetisolated.core.tests
 {
@@ -20,6 +19,12 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
     {
         [TestInitialize]
         public void TestInit()
+        {
+            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = null;
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
         {
             DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = null;
         }
@@ -129,21 +134,9 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 Row(3, "OrchestratorCompleted")
             };
 
-            var tableClient = new Mock<ITableClient>();
-
-            tableClient
-                .Setup(c => c.GetEntityAsync("HubInstances", instanceId, string.Empty))
-                .ReturnsAsync(new TableEntity(instanceId, string.Empty) { ["ExecutionId"] = executionId });
-
-            tableClient
-                .Setup(c => c.GetAll("HubHistory", It.IsAny<string>()))
-                .Returns(rows);
-
-            tableClient
-                .Setup(c => c.GetAllAsync("HubHistory", It.Is<string>(filter => filter.Contains("TaskScheduledId ge 0"))))
-                .ReturnsAsync(rows.Where(r => r.ContainsKey("TaskScheduledId")).ToList());
-
-            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = tableClient.Object;
+            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = new InMemoryTableClient()
+                .Add("HubInstances", new TableEntity(instanceId, string.Empty) { ["ExecutionId"] = executionId })
+                .Add("HubHistory", rows);
 
             // Act
 
@@ -187,13 +180,9 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             // Arrange
 
-            var tableClient = new Mock<ITableClient>();
+            var tableClient = new InMemoryTableClient();
 
-            tableClient
-                .Setup(c => c.GetEntityAsync("HubInstances", "no-such-instance", string.Empty))
-                .ReturnsAsync((TableEntity)null);
-
-            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = tableClient.Object;
+            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = tableClient;
 
             // Act
 
@@ -202,6 +191,9 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             // Assert
 
             Assert.AreEqual(0, history.Count());
+
+            // The row was looked for, and with it gone the history was not
+            Assert.AreEqual("GetEntity", tableClient.Requests.Single().Kind);
         }
 
         [TestMethod]
@@ -224,21 +216,9 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 Row(7, "OrchestratorCompleted")
             };
 
-            var tableClient = new Mock<ITableClient>();
-
-            tableClient
-                .Setup(c => c.GetEntityAsync("HubInstances", instanceId, string.Empty))
-                .ReturnsAsync(new TableEntity(instanceId, string.Empty) { ["ExecutionId"] = executionId });
-
-            tableClient
-                .Setup(c => c.GetAll("HubHistory", It.IsAny<string>()))
-                .Returns(rows);
-
-            tableClient
-                .Setup(c => c.GetAllAsync("HubHistory", It.Is<string>(filter => filter.Contains("TaskScheduledId ge 0"))))
-                .ReturnsAsync(rows.Where(r => r.ContainsKey("TaskScheduledId")).ToList());
-
-            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = tableClient.Object;
+            DurableFunctionsMonitor.DotNetIsolated.TableClient.MockedTableClient = new InMemoryTableClient()
+                .Add("HubInstances", new TableEntity(instanceId, string.Empty) { ["ExecutionId"] = executionId })
+                .Add("HubHistory", rows);
 
             // Act
 

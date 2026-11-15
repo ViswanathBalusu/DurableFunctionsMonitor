@@ -1,0 +1,81 @@
+{
+    "functions": {
+        "http_start": {
+            "filePath": "function_app.py",
+            "pos": 230,
+            "lineNr": 8,
+            "bindings": [
+                {
+                    "type": "httpTrigger",
+                    "methods": []
+                },
+                {
+                    "type": "http",
+                    "direction": "out"
+                }
+            ]
+        },
+        "hello_orchestrator": {
+            "filePath": "function_app.py",
+            "pos": 465,
+            "lineNr": 13,
+            "bindings": [
+                {
+                    "type": "orchestrationTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "http_start"
+            ],
+            "isSignalledBy": [
+                {
+                    "name": "raise_approval",
+                    "signalName": "Approval"
+                }
+            ]
+        },
+        "hello": {
+            "filePath": "function_app.py",
+            "pos": 690,
+            "lineNr": 19,
+            "bindings": [
+                {
+                    "type": "activityTrigger",
+                    "direction": "in"
+                }
+            ],
+            "isCalledBy": [
+                "hello_orchestrator"
+            ]
+        },
+        "QueueWorker": {
+            "filePath": "function_app.py",
+            "pos": 740,
+            "lineNr": 22,
+            "bindings": [
+                {
+                    "type": "queueTrigger",
+                    "queueName": "arg_name"
+                },
+                {
+                    "type": "blob",
+                    "direction": "out",
+                    "path": "outputblob"
+                }
+            ]
+        },
+        "raise_approval": {
+            "filePath": "function_app.py",
+            "pos": 1205,
+            "lineNr": 30,
+            "bindings": [
+                {
+                    "type": "timerTrigger",
+                    "schedule": "schedule"
+                }
+            ]
+        }
+    },
+    "proxies": {}
+}
