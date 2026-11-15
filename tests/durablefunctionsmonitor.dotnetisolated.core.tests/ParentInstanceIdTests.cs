@@ -153,6 +153,42 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        public async Task AsksTheInstancesOwnHistoryWhenTheColumnComesBackAsANull()
+        {
+            // The same row from before the column, as Table Storage itself answers for it: asked for a column
+            // the row does not have, it puts a null in its place, where the emulator leaves the column out.
+            // A null is not the empty string the engine writes for 'no parent': it is 'this row does not say'.
+            this._tables.MissingColumnsComeBackAsNulls = true;
+
+            this._tables.Add(InstancesTable, InstanceRow("child-instance"));
+
+            this._tables.Add(HistoryTable,
+                HistoryRow("child-instance", 0, "OrchestratorStarted"),
+                HistoryRow("child-instance", 1, "ExecutionStarted", ParentInstanceJson("parent-instance")));
+
+            Assert.AreEqual("parent-instance", await this.GetParentAsync("child-instance"));
+
+            Assert.AreEqual(2, this._tables.Requests.Count);
+        }
+
+        [TestMethod]
+        [DataRow("parent-instance", "parent-instance")]
+        [DataRow("", null)]
+        public async Task ARowThatHasTheColumnIsStillAnsweredByItsRowAloneThere(string recorded, string expected)
+        {
+            // And a row of a current engine is one point read on the real service as well: the column is
+            // there, with a parent in it or with the empty string of a top-level instance
+            this._tables.MissingColumnsComeBackAsNulls = true;
+
+            this._tables.Add(InstancesTable, InstanceRow("some-instance", parentInstanceId: recorded));
+            this._tables.Add(HistoryTable, HistoryRow("some-instance", 1, "ExecutionStarted", ParentInstanceJson("what-the-history-says")));
+
+            Assert.AreEqual(expected, await this.GetParentAsync("some-instance"));
+
+            Assert.AreEqual("GetEntity", this._tables.Requests.Single().Kind);
+        }
+
+        [TestMethod]
         [DataRow(null)]
         [DataRow("")]
         [DataRow("null")]

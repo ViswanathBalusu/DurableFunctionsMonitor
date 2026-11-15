@@ -382,6 +382,68 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             }
         }
 
+        [TestMethod]
+        public async Task IsTheSameListFromAServiceThatAnswersAMissingColumnWithANull()
+        {
+            // Rows that lack some of the five columns: no custom status, no last-updated time, nothing but a key.
+            // Table Storage puts a null where a row has no such column; the emulator leaves the column out.
+            this._tables.Add(Table,
+                Row("a-instance", customStatus: null),
+                Row("b-instance", status: "Running", customStatus: "{\"progress\":50}"),
+                new TableEntity("c-bare-instance", string.Empty),
+                new TableEntity("d-half-instance", string.Empty) { ["Name"] = "Half", ["CreatedTime"] = T0 });
+
+            var asTheEmulatorAnswers = Describe(await ListAsync(Query()));
+
+            this._tables.MissingColumnsComeBackAsNulls = true;
+
+            var asTheServiceAnswers = Describe(await ListAsync(Query()));
+
+            Assert.AreEqual(4, asTheServiceAnswers.Length);
+            CollectionAssert.AreEqual(asTheEmulatorAnswers, asTheServiceAnswers);
+        }
+
+        [TestMethod]
+        public async Task NoFilterItSendsHasMoreComparisonsThanTableStorageTakes()
+        {
+            // Table Storage refuses a $filter with more than 15 comparisons, and no emulator does. The longest
+            // one this can send: both ends of a time range, every status there is, the entities left out -
+            // and, around all of that, the PartitionKey range it is read in.
+            this._tables.Add(Table, HexIds(3000, 9).Select((id, i) => Row(id, status: i % 2 == 0 ? "Completed" : "Failed", createdMinute: i % 50)).ToArray());
+            this._tables.ServerPageLimit = 100;
+
+            var everyStatus = Enum.GetValues<OrchestrationRuntimeStatus>();
+
+            foreach (bool readToEnd in new[] { true, false })
+            {
+                this._tables.ClearRequests();
+
+                var instances = await ListAsync(Query(T0, T0.AddMinutes(60), everyStatus), readToEnd);
+
+                Assert.AreEqual(3000, instances.Count);
+
+                int most = this._tables.Requests.Max(r => InMemoryTableClient.CountComparisons(r.Filter));
+
+                Assert.IsTrue(most <= InMemoryTableClient.MaxComparisonsInAFilter, $"{most} comparisons in one filter");
+
+                // And the count is of what was really sent: the ranges, when it was read as ranges
+                Assert.AreEqual(readToEnd ? 14 : 12, most);
+            }
+        }
+
+        [TestMethod]
+        [DataRow("PartitionKey eq 'a'", 1)]
+        [DataRow("(CreatedTime ge datetime'2026-11-14T10:00:00Z') and (RuntimeStatus eq 'Failed' or RuntimeStatus eq 'Running')", 3)]
+        [DataRow("PartitionKey eq 'it''s eq to nothing' and RowKey gt ''", 2)]
+        [DataRow("PartitionKey eq ' ge ' and Name ne ' lt le '", 2)]
+        [DataRow("", 0)]
+        [DataRow(null, 0)]
+        public void ComparisonsAreCountedOutsideTheValues(string filter, int expected)
+        {
+            // The counter the two tests of the limit rest on
+            Assert.AreEqual(expected, InMemoryTableClient.CountComparisons(filter));
+        }
+
         // Ids as the engine makes them up for an instance (32 hex digits), the same ones on every run
         private static List<string> HexIds(int count, int seed)
         {

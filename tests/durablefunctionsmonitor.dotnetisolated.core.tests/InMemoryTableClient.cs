@@ -42,6 +42,14 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         /// <summary>The most rows the "service" puts into one page, whatever is asked for.</summary>
         public int ServerPageLimit { get; set; } = 1000;
 
+        /// <summary>
+        /// What a row says about a column that was asked for and that it does not have. Table Storage puts a
+        /// null in its place; the storage emulator leaves the column out, which is the default here as well
+        /// (false). No test against an emulator can tell the two apart, so the code that reads projected rows
+        /// is run both ways here.
+        /// </summary>
+        public bool MissingColumnsComeBackAsNulls { get; set; }
+
         /// <summary>Called before every request is answered; a test can throw from it, or wait in it.</summary>
         public Func<Request, Task> OnRequest { get; set; }
 
@@ -87,7 +95,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         {
             var request = this.Record("GetAll", tableName, filter, null);
 
-            var rows = this.Rows(tableName).Where(ODataFilter.Parse(filter)).Select(row => Project(row, null)).ToList();
+            var rows = this.Rows(tableName).Where(ODataFilter.Parse(filter)).Select(row => this.Project(row, null)).ToList();
 
             request.RowsScanned = this.Rows(tableName).Count;
             request.RowsReturned = rows.Count;
@@ -161,7 +169,7 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
                 if (matches(row))
                 {
-                    page.Add(Project(row, selected));
+                    page.Add(this.Project(row, selected));
                 }
             }
 
@@ -182,7 +190,28 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
 
             request.RowsReturned = row == null ? 0 : 1;
 
-            return Task.FromResult(row == null ? null : Project(row, selected));
+            return Task.FromResult(row == null ? null : this.Project(row, selected));
+        }
+
+        /// <summary>
+        /// The most comparisons Table Storage takes in one $filter ("no more than 15 discrete comparisons are
+        /// permitted within a $filter string"). The service answers a longer one with an error; nothing that
+        /// runs locally does, this class included, so the filters DfMon sends are counted by its tests.
+        /// </summary>
+        public const int MaxComparisonsInAFilter = 15;
+
+        /// <summary>How many comparisons a filter is made of.</summary>
+        public static int CountComparisons(string filter)
+        {
+            if (string.IsNullOrEmpty(filter))
+            {
+                return 0;
+            }
+
+            // What is inside a quoted value is not part of the expression, whatever it looks like
+            string withoutValues = System.Text.RegularExpressions.Regex.Replace(filter, "'(?:[^']|'')*'", "''");
+
+            return System.Text.RegularExpressions.Regex.Matches(withoutValues, @"\s(eq|ne|gt|ge|lt|le)\s").Count;
         }
 
         public Task ReplaceEntityAsync(string tableName, TableEntity entity) => throw new NotSupportedException();
@@ -218,8 +247,9 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
             return byPartition != 0 ? byPartition : string.CompareOrdinal(a.RowKey, b.RowKey);
         }
 
-        // A projected row holds the listed properties that the row has, and its keys
-        private static TableEntity Project(TableEntity row, IReadOnlyList<string> select)
+        // A projected row holds the listed properties that the row has, and its keys - and, the way the real
+        // service answers, a null for every listed property that the row does not have
+        private TableEntity Project(TableEntity row, IReadOnlyList<string> select)
         {
             var result = new TableEntity(row.PartitionKey, row.RowKey);
 
@@ -233,6 +263,17 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
                 if (select == null || select.Contains(pair.Key))
                 {
                     result[pair.Key] = pair.Value;
+                }
+            }
+
+            if (select != null && this.MissingColumnsComeBackAsNulls)
+            {
+                foreach (string column in select)
+                {
+                    if (column != "PartitionKey" && column != "RowKey" && !result.ContainsKey(column))
+                    {
+                        result[column] = null;
+                    }
                 }
             }
 

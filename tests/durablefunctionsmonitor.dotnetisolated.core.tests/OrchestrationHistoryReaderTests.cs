@@ -381,6 +381,50 @@ namespace durablefunctionsmonitor.dotnetisolated.core.tests
         }
 
         [TestMethod]
+        [DataRow(400, 21, 1000)]
+        [DataRow(3000, 22, 100)]
+        public async Task ReturnsTheSameFromAServiceThatAnswersAMissingColumnWithANull(int size, int seed, int pageLimit)
+        {
+            // Most history rows have a few of the thirteen columns that are asked for. Table Storage puts a
+            // null where a row has none; the emulator, and so every test against it, leaves the column out.
+            var rows = GenerateHistory(size, seed);
+            var expected = ReadEverything(rows);
+
+            this.AddInstance(rows);
+            this._tables.ServerPageLimit = pageLimit;
+            this._tables.MissingColumnsComeBackAsNulls = true;
+
+            var history = (await GetHistoryAsync()).ToList();
+
+            Assert.AreEqual(Serialize(expected), Serialize(history));
+        }
+
+        [TestMethod]
+        public async Task NoFilterItSendsHasMoreComparisonsThanTableStorageTakes()
+        {
+            // Table Storage refuses a $filter with more than 15 comparisons in it, and no emulator does. The
+            // filter of the events names every event type that is shown, so a type added to that list is a
+            // comparison added to every request.
+            var rows = GenerateHistory(3000, 23);
+
+            this.AddInstance(rows);
+            this._tables.ServerPageLimit = 100;
+
+            _ = (await GetHistoryAsync()).ToList();
+
+            var filters = this._tables.Requests.Where(r => r.Kind == "QueryPage").Select(r => r.Filter).Distinct().ToList();
+
+            Assert.IsTrue(filters.Count >= 2, "the events and their completions are two different queries");
+
+            foreach (string filter in filters)
+            {
+                int comparisons = InMemoryTableClient.CountComparisons(filter);
+
+                Assert.IsTrue(comparisons <= InMemoryTableClient.MaxComparisonsInAFilter, $"{comparisons} comparisons in: {filter}");
+            }
+        }
+
+        [TestMethod]
         [DataRow(0, 200)]
         [DataRow(200, 200)]
         [DataRow(950, 200)]

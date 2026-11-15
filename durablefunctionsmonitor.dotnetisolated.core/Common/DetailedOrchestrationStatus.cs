@@ -114,9 +114,12 @@ namespace DurableFunctionsMonitor.DotNetIsolated
             // (1)
             var instanceEntity = await tableClient.GetEntityAsync(instancesTable, instanceId, string.Empty, ParentLookupColumns);
 
-            if (instanceEntity != null && instanceEntity.TryGetValue(ParentInstanceIdColumn, out object recordedParentInstanceId))
+            // 'Has the column' is 'holds a string in it'. Asked for a column a row does not have, Table Storage
+            // answers with a null in its place (an emulator leaves the column out instead): that is a row
+            // from before the framework wrote the column, and it goes on to (2), not a row without a parent.
+            if (instanceEntity != null && instanceEntity.TryGetValue(ParentInstanceIdColumn, out object recorded) && recorded is string recordedParentInstanceId)
             {
-                return NullIfEmpty(recordedParentInstanceId as string);
+                return NullIfEmpty(recordedParentInstanceId);
             }
 
             // (2)
