@@ -1,6 +1,6 @@
 # Change Log
 
-# Unreleased
+# Version 6.18.0
 
 - **Opening an instance no longer scans the history table.** To tell whether an instance is a sub-orchestration, the backend read the `ParentInstanceId` column of its row, and took an empty one for "not known". The Durable Task Framework writes an empty one for every instance that is not a sub-orchestration, so each look at a top-level orchestration went on to scan the whole `History` table for the event that created it, found none, and gave up after 15 seconds. On a large Task Hub that was 15 seconds, and a table scan, for every instance opened. An empty column is now the answer it is: one read of one row. Rows written before the framework had the column are answered from the first event of the instance's own history, and the tables are scanned only when neither says anything - with a time limit, for one row, and for nothing but its keys.
 
